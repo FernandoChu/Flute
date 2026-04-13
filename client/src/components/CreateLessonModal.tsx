@@ -16,14 +16,37 @@ export default function CreateLessonModal({
   const [title, setTitle] = useState("");
   const [textContent, setTextContent] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [audioFile, setAudioFile] = useState<File | null>(null);
   const [error, setError] = useState("");
 
+  async function uploadAudio(lessonId: string) {
+    if (!audioFile) return;
+    const formData = new FormData();
+    formData.append("audio", audioFile);
+    const username = localStorage.getItem("username");
+    const res = await fetch(`/api/lessons/${lessonId}/audio`, {
+      method: "POST",
+      headers: username ? { "x-username": username } : {},
+      body: formData,
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      throw new Error(body?.error?.message || `Audio upload failed: ${res.status}`);
+    }
+  }
+
   const createPaste = useMutation({
-    mutationFn: () =>
-      apiFetch(`/collections/${collectionId}/lessons`, {
-        method: "POST",
-        body: JSON.stringify({ title, textContent }),
-      }),
+    mutationFn: async () => {
+      const res = await apiFetch<{ data: { id: string } }>(
+        `/collections/${collectionId}/lessons`,
+        {
+          method: "POST",
+          body: JSON.stringify({ title, textContent }),
+        },
+      );
+      await uploadAudio(res.data.id);
+      return res;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["lessons", collectionId] });
       queryClient.invalidateQueries({ queryKey: ["collections"] });
@@ -50,7 +73,12 @@ export default function CreateLessonModal({
         const body = await res.json().catch(() => null);
         throw new Error(body?.error?.message || `Upload failed: ${res.status}`);
       }
-      return res.json();
+      const data = await res.json();
+      // Upload audio to the first created lesson if provided
+      if (audioFile && data.data?.[0]?.id) {
+        await uploadAudio(data.data[0].id);
+      }
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["lessons", collectionId] });
@@ -150,6 +178,23 @@ export default function CreateLessonModal({
               )}
             </div>
           )}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Audio (optional)
+            </label>
+            <input
+              type="file"
+              accept=".mp3,.wav,.ogg,.m4a"
+              onChange={(e) => setAudioFile(e.target.files?.[0] ?? null)}
+              className="w-full"
+            />
+            {audioFile && (
+              <p className="text-sm text-gray-500 mt-1">
+                {audioFile.name} ({(audioFile.size / (1024 * 1024)).toFixed(1)} MB)
+              </p>
+            )}
+          </div>
 
           {error && <p className="text-sm text-red-600">{error}</p>}
 

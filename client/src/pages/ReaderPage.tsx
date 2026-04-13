@@ -7,6 +7,7 @@ import { useWordStatuses } from "../hooks/useWordStatuses";
 import TokenizedText from "../components/reader/TokenizedText";
 import WordPopup from "../components/reader/WordPopup";
 import PhrasePopup from "../components/reader/PhrasePopup";
+import AudioPlayer from "../components/reader/AudioPlayer";
 
 interface LessonDetail {
   id: string;
@@ -235,6 +236,8 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
         </Link>
         <h1 className="text-2xl font-bold mt-2">{lessonData.title}</h1>
       </div>
+
+      {lessonData.audioUrl && <AudioPlayer src={lessonData.audioUrl} />}
 
       <div
         ref={textContainerRef}
