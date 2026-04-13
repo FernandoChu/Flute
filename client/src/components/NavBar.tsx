@@ -17,6 +17,12 @@ export default function NavBar() {
           Vocabulary
         </Link>
         <Link
+          href="/review"
+          className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+        >
+          Review
+        </Link>
+        <Link
           href="/settings"
           className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
         >

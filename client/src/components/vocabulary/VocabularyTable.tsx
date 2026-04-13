@@ -35,8 +35,8 @@ const STATUS_OPTIONS = [
 ];
 
 function SortIndicator({ field, sortBy, sortDir }: { field: string; sortBy: string; sortDir: string }) {
-  if (field !== sortBy) return <span className="text-gray-300 ml-1">&#x2195;</span>;
-  return <span className="ml-1">{sortDir === "asc" ? "&#x25B2;" : "&#x25BC;"}</span>;
+  if (field !== sortBy) return <span className="text-gray-300 ml-1">{"\u2195"}</span>;
+  return <span className="ml-1">{sortDir === "asc" ? "\u25B2" : "\u25BC"}</span>;
 }
 
 export default function VocabularyTable({

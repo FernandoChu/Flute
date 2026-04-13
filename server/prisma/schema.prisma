@@ -102,15 +102,19 @@ model Word {
 }
 
 model WordReview {
-  id           String    @id @default(uuid())
-  wordId       String    @unique @map("word_id")
-  easeFactor   Float     @default(2.5) @map("ease_factor")
-  interval     Int       @default(0)
-  repetitions  Int       @default(0)
-  nextReview   DateTime  @default(now()) @map("next_review")
-  lastReviewed DateTime? @map("last_reviewed")
+  id            String    @id @default(uuid())
+  wordId        String    @unique @map("word_id")
+  due           DateTime  @default(now())
+  stability     Float     @default(0)
+  difficulty    Float     @default(0)
+  elapsedDays   Int       @default(0) @map("elapsed_days")
+  scheduledDays Int       @default(0) @map("scheduled_days")
+  reps          Int       @default(0)
+  lapses        Int       @default(0)
+  state         Int       @default(0)
+  lastReview    DateTime? @map("last_review")
 
-  word         Word      @relation(fields: [wordId], references: [id], onDelete: Cascade)
+  word          Word      @relation(fields: [wordId], references: [id], onDelete: Cascade)
 
   @@map("word_reviews")
 }

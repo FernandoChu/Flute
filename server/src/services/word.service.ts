@@ -1,4 +1,5 @@
 import { prisma } from "../index.js";
+import { getEmptyCard } from "./srs.service.js";
 
 export async function getUserWords(userId: string, languageId: number) {
   return prisma.word.findMany({
@@ -41,8 +42,20 @@ export async function createWord(data: {
 
   // Auto-create review when status transitions to Learning (1+)
   if (word.status >= 1 && word.status <= 4 && !word.review) {
+    const card = getEmptyCard();
     await prisma.wordReview.create({
-      data: { wordId: word.id },
+      data: {
+        wordId: word.id,
+        due: card.due,
+        stability: card.stability,
+        difficulty: card.difficulty,
+        elapsedDays: card.elapsed_days,
+        scheduledDays: card.scheduled_days,
+        reps: card.reps,
+        lapses: card.lapses,
+        state: card.state,
+        lastReview: card.last_review ?? null,
+      },
     });
   }
 
@@ -69,8 +82,20 @@ export async function updateWord(
 
   // Auto-create review when status transitions to Learning (1+)
   if (word.status >= 1 && word.status <= 4 && !word.review) {
+    const card = getEmptyCard();
     await prisma.wordReview.create({
-      data: { wordId: word.id },
+      data: {
+        wordId: word.id,
+        due: card.due,
+        stability: card.stability,
+        difficulty: card.difficulty,
+        elapsedDays: card.elapsed_days,
+        scheduledDays: card.scheduled_days,
+        reps: card.reps,
+        lapses: card.lapses,
+        state: card.state,
+        lastReview: card.last_review ?? null,
+      },
     });
   }
 
@@ -99,8 +124,20 @@ export async function batchUpdateStatus(
     });
 
     if (wordsWithoutReview.length > 0) {
+      const card = getEmptyCard();
       await prisma.wordReview.createMany({
-        data: wordsWithoutReview.map((w) => ({ wordId: w.id })),
+        data: wordsWithoutReview.map((w) => ({
+          wordId: w.id,
+          due: card.due,
+          stability: card.stability,
+          difficulty: card.difficulty,
+          elapsedDays: card.elapsed_days,
+          scheduledDays: card.scheduled_days,
+          reps: card.reps,
+          lapses: card.lapses,
+          state: card.state,
+          lastReview: card.last_review ?? null,
+        })),
       });
     }
   }

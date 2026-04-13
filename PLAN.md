@@ -154,26 +154,44 @@ This is the heart of the app — the most complex component.
 
 ## Phase 7: SRS Review System
 
-**Server**: `services/srs.service.ts` — SM-2 algorithm.
+**Library**: `ts-fsrs` ([open-spaced-repetition/ts-fsrs](https://github.com/open-spaced-repetition/ts-fsrs)) — FSRS algorithm (superior to SM-2).
 
-**SM-2 rules**:
-- Quality ≥ 3: interval = 1d → 6d → prev × easeFactor; repetitions++
-- Quality < 3: reset to interval=1, repetitions=0
-- EF = max(1.3, EF + (0.1 - (5-q)(0.08 + (5-q)×0.02)))
+**Database migration**: Update `word_reviews` table to store FSRS card fields:
+| Column | Type | Default | Notes |
+|--------|------|---------|-------|
+| `due` | DateTime | now() | Next review date |
+| `stability` | Float | 0 | Memory strength |
+| `difficulty` | Float | 0 | Card difficulty [1-10] |
+| `elapsed_days` | Int | 0 | Days since last review |
+| `scheduled_days` | Int | 0 | Days until next review |
+| `reps` | Int | 0 | Total reviews completed |
+| `lapses` | Int | 0 | Count of failures |
+| `state` | Int | 0 | 0=New, 1=Learning, 2=Review, 3=Relearning |
+| `last_review` | DateTime? | null | Most recent review timestamp |
+
+Remove old SM-2 columns (`ease_factor`, `interval`, `repetitions`, `next_review`, `last_reviewed`).
+
+**Server**: `services/srs.service.ts` — thin wrapper around `ts-fsrs`.
+- `createScheduler()` — returns `fsrs()` instance
+- `scheduleReview(card, rating)` — calls `scheduler.next(card, now, rating)`, returns updated card + log
+- `getEmptyCard()` — calls `createEmptyCard()` from ts-fsrs
+- `previewRatings(card)` — calls `scheduler.repeat(card, now)`, returns next due dates for all 4 ratings (for UI preview)
 
 **Endpoints**:
-- `GET /api/reviews/due?languageId&limit=20` — words due now
-- `GET /api/reviews/due/count`
-- `POST /api/reviews/:wordId` — `{ quality }` → updated schedule
+- `GET /api/reviews/due?languageId&limit=20` — words with `due <= now`, ordered by due date
+- `GET /api/reviews/due/count` — count of due reviews
+- `POST /api/reviews/:wordId` — `{ rating }` (1=Again, 2=Hard, 3=Good, 4=Easy) → runs FSRS scheduling, updates card in DB, returns updated schedule
+- `GET /api/reviews/preview/:wordId` — returns next due dates for each rating (Again/Hard/Good/Easy) so the UI can show "next review in X" per button
 - `GET /api/reviews/distractors?wordId&count=3` — random translations for multiple choice
 
 **Client files**:
-- `pages/ReviewPage.tsx` — mode selector, progress tracking, session summary
-- `components/review/FlashcardReview.tsx` — flip card, rate: Again(0)/Hard(2)/Good(3)/Easy(5)
-- `components/review/MultipleChoiceReview.tsx` — 4 choices (1 correct + 3 distractors)
-- `components/review/ReviewSummary.tsx`, `ReviewProgress.tsx`
+- `pages/ReviewPage.tsx` — mode selector (flashcard/multiple-choice), progress tracking, session summary
+- `components/review/FlashcardReview.tsx` — flip card, rate buttons: Again / Hard / Good / Easy (show next interval on each button)
+- `components/review/MultipleChoiceReview.tsx` — 4 choices (1 correct + 3 distractors), auto-rate Good on correct / Again on incorrect
+- `components/review/ReviewSummary.tsx` — session stats (reviewed count, again/hard/good/easy breakdown)
+- `components/review/ReviewProgress.tsx` — progress bar for current session
 
-**Auto-create reviews**: When word status transitions to Learning 1+, insert `word_reviews` row with defaults.
+**Auto-create reviews**: When word status transitions to Learning 1+, insert `word_reviews` row with `createEmptyCard()` defaults.
 
 ---
 
@@ -200,14 +218,14 @@ Update `CreateLessonModal` to accept optional audio (.mp3/.wav/.ogg/.m4a).
 - Security: `helmet`, CORS, `express-validator` on all endpoints
 - Logging: `morgan`
 - Styling: Tailwind CSS (`tailwindcss` + `@tailwindcss/vite`)
-- Tests (`vitest`): SM-2 algorithm, tokenizer, file parsers, auth endpoints, CRUD endpoints
+- Tests (`vitest`): FSRS scheduling, tokenizer, file parsers, auth endpoints, CRUD endpoints
 - Dev scripts: `concurrently` for client+server, `tsx` for server dev, `nodemon`
 
 ---
 
 ## Dependencies
 
-**Server**: express, cors, helmet, morgan, @prisma/client, prisma, multer, axios, epub2, srt-parser-2, dotenv  
+**Server**: express, cors, helmet, morgan, @prisma/client, prisma, multer, axios, epub2, srt-parser-2, dotenv, ts-fsrs  
 **Client**: react, react-dom, wouter, @tanstack/react-query, tailwindcss  
 **Dev**: typescript, tsx, nodemon, vitest, concurrently, @vitejs/plugin-react, type packages
 
@@ -223,6 +241,6 @@ Each phase ends with a manual test:
 4. Open lesson, click words, see highlights, change statuses
 5. Configure API key, get translations in reader
 6. Browse/filter/edit vocabulary
-7. Complete a flashcard review session with correct SRS scheduling
+7. Complete a flashcard review session with FSRS scheduling (intervals grow with Good/Easy, reset with Again)
 8. Upload audio, play in reader
 9. Run `vitest`, check error handling

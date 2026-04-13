@@ -4,6 +4,7 @@ import LibraryPage from "./pages/LibraryPage";
 import ReaderPage from "./pages/ReaderPage";
 import SettingsPage from "./pages/SettingsPage";
 import VocabularyPage from "./pages/VocabularyPage";
+import ReviewPage from "./pages/ReviewPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NavBar from "./components/NavBar";
 import { useAuth } from "./hooks/useAuth";
@@ -24,6 +25,11 @@ export default function App() {
         <Route path="/vocabulary">
           <ProtectedRoute>
             <VocabularyPage />
+          </ProtectedRoute>
+        </Route>
+        <Route path="/review">
+          <ProtectedRoute>
+            <ReviewPage />
           </ProtectedRoute>
         </Route>
         <Route path="/settings">

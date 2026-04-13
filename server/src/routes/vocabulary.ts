@@ -74,7 +74,7 @@ router.get("/stats", async (req: Request, res: Response, next: NextFunction) => 
         prisma.wordReview.count({
           where: {
             word: { ...where },
-            nextReview: { lte: new Date() },
+            due: { lte: new Date() },
           },
         }),
       ]);
