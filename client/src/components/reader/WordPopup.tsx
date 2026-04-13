@@ -35,7 +35,10 @@ export default function WordPopup({
   const [notes, setNotes] = useState(word?.notes ?? "");
   const [saving, setSaving] = useState(false);
   const popupRef = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState({ top: 0, left: 0 });
+  const [position, setPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
 
   useEffect(() => {
     const rect = anchorEl.getBoundingClientRect();
@@ -101,7 +104,11 @@ export default function WordPopup({
     <div
       ref={popupRef}
       className="absolute z-50 bg-white rounded-lg shadow-lg border border-gray-200 p-4 w-80"
-      style={{ top: position.top, left: position.left }}
+      style={{
+        top: position?.top ?? 0,
+        left: position?.left ?? 0,
+        visibility: position ? "visible" : "hidden",
+      }}
     >
       <div className="flex items-center justify-between mb-3">
         <h3 className="font-bold text-lg">{term}</h3>

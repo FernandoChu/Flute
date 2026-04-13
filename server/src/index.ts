@@ -1,4 +1,6 @@
 import "dotenv/config";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import express from "express";
 import cors from "cors";
 import { PrismaClient } from "@prisma/client";
@@ -25,6 +27,14 @@ app.use("/api/languages", languageRoutes);
 app.use("/api/words", wordRoutes);
 app.use("/api/collections", collectionRoutes);
 app.use("/api", lessonRoutes);
+
+// Serve client build in production
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const clientDist = path.join(__dirname, "../../client/dist");
+app.use(express.static(clientDist));
+app.get("*", (_req, res, _next) => {
+  res.sendFile(path.join(clientDist, "index.html"));
+});
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
