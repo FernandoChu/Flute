@@ -1,6 +1,6 @@
 import { Route, Switch } from "wouter";
 import LoginPage from "./pages/LoginPage";
-import HomePage from "./pages/HomePage";
+import LibraryPage from "./pages/LibraryPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NavBar from "./components/NavBar";
 import { useAuth } from "./hooks/useAuth";
@@ -15,7 +15,7 @@ export default function App() {
         <Route path="/login" component={LoginPage} />
         <Route path="/">
           <ProtectedRoute>
-            <HomePage />
+            <LibraryPage />
           </ProtectedRoute>
         </Route>
         <Route>
