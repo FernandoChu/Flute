@@ -3,8 +3,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
+import morgan from "morgan";
 import { PrismaClient } from "../prisma/generated/prisma/client/client.js";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { errorHandler } from "./middleware/errorHandler.js";
 import authRoutes from "./routes/auth.js";
 import collectionRoutes from "./routes/collections.js";
 import lessonRoutes from "./routes/lessons.js";
@@ -22,7 +25,9 @@ export const prisma = new PrismaClient({ adapter });
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors());
+app.use(morgan("dev"));
 app.use(express.json());
 
 app.get("/api/health", (_req, res) => {
@@ -39,6 +44,9 @@ app.use("/api/settings", settingsRoutes);
 app.use("/api/translate", translateRoutes);
 app.use("/api/vocabulary", vocabularyRoutes);
 app.use("/api/reviews", reviewRoutes);
+
+// Global error handler
+app.use(errorHandler);
 
 // Serve client build in production
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
