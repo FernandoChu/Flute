@@ -1,9 +1,10 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { normalizeWord } from "shared";
+import { normalizeWord, WordStatus } from "shared";
 import { apiFetch } from "../lib/api";
 import { useWordStatuses } from "../hooks/useWordStatuses";
+import { useKeybindings, matchKeybinding } from "../hooks/useKeybindings";
 import TokenizedText from "../components/reader/TokenizedText";
 import WordPopup from "../components/reader/WordPopup";
 import PhrasePopup from "../components/reader/PhrasePopup";
@@ -163,11 +164,18 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
       isDragging.current = false;
     }
 
+    function onMouseOver(e: MouseEvent) {
+      const idx = tokenIdxFromEvent(e);
+      if (idx !== null) hoveredTokenIdxRef.current = idx;
+    }
+
     container.addEventListener("mousedown", onMouseDown);
+    container.addEventListener("mouseover", onMouseOver);
     document.addEventListener("mousemove", onMouseMove);
     document.addEventListener("mouseup", onMouseUp);
     return () => {
       container.removeEventListener("mousedown", onMouseDown);
+      container.removeEventListener("mouseover", onMouseOver);
       document.removeEventListener("mousemove", onMouseMove);
       document.removeEventListener("mouseup", onMouseUp);
     };
@@ -178,18 +186,251 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
     setPhrasePopup(null);
   }, []);
 
+  // --- Keybinding system ---
+  const { bindings } = useKeybindings();
+  const selectedIdxRef = useRef<number>(-1);
+  const hoveredTokenIdxRef = useRef<number>(-1);
+
+  // When popup opens via click, sync the selected index
+  const syncSelectedIdx = useCallback((element: HTMLElement) => {
+    const idx = element.dataset.tokenIdx;
+    if (idx != null) selectedIdxRef.current = Number(idx);
+  }, []);
+
+  function getWordElements(): HTMLElement[] {
+    if (!textContainerRef.current) return [];
+    return Array.from(
+      textContainerRef.current.querySelectorAll<HTMLElement>("[data-word-token]"),
+    );
+  }
+
+  function selectWordElement(el: HTMLElement) {
+    const term = el.textContent ?? "";
+    el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    selectedIdxRef.current = Number(el.dataset.tokenIdx);
+    closePhrasePopup();
+    setPopup({ term, element: el });
+  }
+
+  function isSentenceBoundary(el: HTMLElement): boolean {
+    return /[.!?]/.test(el.textContent ?? "");
+  }
+
+  function isParagraphBoundary(el: HTMLElement): boolean {
+    return /\n/.test(el.textContent ?? "");
+  }
+
+  function extractSentence(anchorIdx: number): string {
+    const allEls = getTokenElements();
+    const pos = allEls.findIndex((el) => Number(el.dataset.tokenIdx) === anchorIdx);
+    if (pos < 0) return "";
+
+    // Scan backward for sentence boundary
+    let start = 0;
+    for (let i = pos - 1; i >= 0; i--) {
+      if (isSentenceBoundary(allEls[i])) {
+        start = i + 1;
+        break;
+      }
+    }
+    // Scan forward for sentence boundary (inclusive)
+    let end = allEls.length - 1;
+    for (let i = pos; i < allEls.length; i++) {
+      if (isSentenceBoundary(allEls[i])) {
+        end = i;
+        break;
+      }
+    }
+    return allEls
+      .slice(start, end + 1)
+      .map((el) => el.textContent ?? "")
+      .join("")
+      .trim();
+  }
+
+  function extractParagraph(anchorIdx: number): string {
+    const allEls = getTokenElements();
+    const pos = allEls.findIndex((el) => Number(el.dataset.tokenIdx) === anchorIdx);
+    if (pos < 0) return "";
+
+    // Scan backward for paragraph boundary (newline)
+    let start = 0;
+    for (let i = pos - 1; i >= 0; i--) {
+      if (isParagraphBoundary(allEls[i])) {
+        start = i + 1;
+        break;
+      }
+    }
+    // Scan forward for paragraph boundary
+    let end = allEls.length - 1;
+    for (let i = pos + 1; i < allEls.length; i++) {
+      if (isParagraphBoundary(allEls[i])) {
+        end = i - 1;
+        break;
+      }
+    }
+    return allEls
+      .slice(start, end + 1)
+      .map((el) => el.textContent ?? "")
+      .join("")
+      .trim();
+  }
+
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+
+      const action = matchKeybinding(e.key, bindings);
+      if (!action) return;
+      e.preventDefault();
+
+      const wordEls = getWordElements();
+      if (wordEls.length === 0) return;
+
+      // Find current position among word elements
+      const curIdx = wordEls.findIndex(
+        (el) => Number(el.dataset.tokenIdx) === selectedIdxRef.current,
+      );
+
+      switch (action) {
+        case "deselect":
+          setPopup(null);
+          closePhrasePopup();
+          selectedIdxRef.current = -1;
+          break;
+
+        case "prevWord": {
+          const next = curIdx > 0 ? curIdx - 1 : wordEls.length - 1;
+          selectWordElement(wordEls[next]);
+          break;
+        }
+        case "nextWord": {
+          const next = curIdx < wordEls.length - 1 ? curIdx + 1 : 0;
+          selectWordElement(wordEls[next]);
+          break;
+        }
+
+        case "prevUnknown": {
+          // Search backward for a word with New status (0 or undefined)
+          for (let i = 1; i <= wordEls.length; i++) {
+            const idx = (curIdx - i + wordEls.length) % wordEls.length;
+            const term = normalizeWord(wordEls[idx].textContent ?? "");
+            const word = getWord(term);
+            if (!word || word.status === WordStatus.New) {
+              selectWordElement(wordEls[idx]);
+              break;
+            }
+          }
+          break;
+        }
+        case "nextUnknown": {
+          for (let i = 1; i <= wordEls.length; i++) {
+            const idx = (curIdx + i) % wordEls.length;
+            const term = normalizeWord(wordEls[idx].textContent ?? "");
+            const word = getWord(term);
+            if (!word || word.status === WordStatus.New) {
+              selectWordElement(wordEls[idx]);
+              break;
+            }
+          }
+          break;
+        }
+
+        case "prevSentence": {
+          // Get all token elements, find sentence boundary before current position
+          const allEls = getTokenElements();
+          const curTokenIdx = selectedIdxRef.current >= 0 ? selectedIdxRef.current : 0;
+          // Scan backward for sentence-ending punctuation
+          for (let i = curTokenIdx - 1; i >= 0; i--) {
+            const el = allEls[i];
+            if (el && isSentenceBoundary(el)) {
+              // Find first word token after this boundary
+              for (let j = i + 1; j < allEls.length; j++) {
+                if (allEls[j].hasAttribute("data-word-token")) {
+                  selectWordElement(allEls[j]);
+                  return;
+                }
+              }
+            }
+          }
+          // No boundary found — go to first word
+          if (wordEls.length > 0) selectWordElement(wordEls[0]);
+          break;
+        }
+        case "nextSentence": {
+          const allEls = getTokenElements();
+          const curTokenIdx = selectedIdxRef.current >= 0 ? selectedIdxRef.current : 0;
+          // Scan forward for sentence-ending punctuation
+          for (let i = curTokenIdx + 1; i < allEls.length; i++) {
+            const el = allEls[i];
+            if (el && isSentenceBoundary(el)) {
+              // Find first word token after this boundary
+              for (let j = i + 1; j < allEls.length; j++) {
+                if (allEls[j].hasAttribute("data-word-token")) {
+                  selectWordElement(allEls[j]);
+                  return;
+                }
+              }
+            }
+          }
+          // No boundary found — go to last word
+          if (wordEls.length > 0) selectWordElement(wordEls[wordEls.length - 1]);
+          break;
+        }
+
+        // Status updates — only if a word is selected
+        case "setStatus1":
+          if (popup) updateWord(popup.term, { status: WordStatus.Learning1 });
+          break;
+        case "setStatus2":
+          if (popup) updateWord(popup.term, { status: WordStatus.Learning2 });
+          break;
+        case "setStatus3":
+          if (popup) updateWord(popup.term, { status: WordStatus.Learning3 });
+          break;
+        case "setStatus4":
+          if (popup) updateWord(popup.term, { status: WordStatus.Learning4 });
+          break;
+        case "setStatusKnown":
+          if (popup) updateWord(popup.term, { status: WordStatus.Known });
+          break;
+        case "setStatusIgnored":
+          if (popup) updateWord(popup.term, { status: WordStatus.Ignored });
+          break;
+
+        // Copy actions — use hovered token position
+        case "copySentence": {
+          const text = extractSentence(hoveredTokenIdxRef.current);
+          if (text) navigator.clipboard.writeText(text);
+          break;
+        }
+        case "copyParagraph": {
+          const text = extractParagraph(hoveredTokenIdxRef.current);
+          if (text) navigator.clipboard.writeText(text);
+          break;
+        }
+      }
+    }
+
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [bindings, popup, getWord, updateWord, closePhrasePopup]);
+
   const handleWordClick = useCallback(
     (term: string, element: HTMLElement) => {
       closePhrasePopup();
+      syncSelectedIdx(element);
       setPopup((prev) => {
         // Toggle off if clicking the same word
         if (prev && normalizeWord(prev.term) === normalizeWord(term)) {
+          selectedIdxRef.current = -1;
           return null;
         }
         return { term, element };
       });
     },
-    [closePhrasePopup],
+    [closePhrasePopup, syncSelectedIdx],
   );
 
   const handleUpdateWord = useCallback(
