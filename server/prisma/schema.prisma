@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String       @id @default(uuid())
+  username        String       @unique
+  nativeLanguageId Int?        @map("native_language_id")
+  studyLanguageId  Int?        @map("study_language_id")
+  createdAt       DateTime     @default(now()) @map("created_at")
+
+  nativeLanguage  Language?    @relation("NativeLanguage", fields: [nativeLanguageId], references: [id])
+  studyLanguage   Language?    @relation("StudyLanguage", fields: [studyLanguageId], references: [id])
+  collections     Collection[]
+  words           Word[]
+  apiKeys         ApiKey[]
+
+  @@map("users")
+}
+
+model ApiKey {
+  id              String   @id @default(uuid())
+  userId          String   @map("user_id")
+  provider        String
+  apiKeyEncrypted String   @map("api_key_encrypted")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider])
+  @@map("api_keys")
+}
+
+model Language {
+  id   Int    @id @default(autoincrement())
+  code String @unique
+  name String
+
+  nativeUsers       User[]       @relation("NativeLanguage")
+  studyUsers        User[]       @relation("StudyLanguage")
+  sourceCollections Collection[] @relation("SourceLanguage")
+  targetCollections Collection[] @relation("TargetLanguage")
+  words             Word[]
+
+  @@map("languages")
+}
+
+model Collection {
+  id               String   @id @default(uuid())
+  userId           String   @map("user_id")
+  title            String
+  sourceLanguageId Int      @map("source_language_id")
+  targetLanguageId Int      @map("target_language_id")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourceLanguage   Language @relation("SourceLanguage", fields: [sourceLanguageId], references: [id])
+  targetLanguage   Language @relation("TargetLanguage", fields: [targetLanguageId], references: [id])
+  lessons          Lesson[]
+
+  @@map("collections")
+}
+
+model Lesson {
+  id           String   @id @default(uuid())
+  collectionId String   @map("collection_id")
+  title        String
+  textContent  String   @map("text_content")
+  audioUrl     String?  @map("audio_url")
+  position     Int      @default(0)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
+  @@map("lessons")
+}
+
+model Word {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  languageId  Int      @map("language_id")
+  term        String
+  translation String?
+  status      Int      @default(0)
+  notes       String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  language    Language @relation(fields: [languageId], references: [id])
+  review      WordReview?
+
+  @@unique([userId, languageId, term])
+  @@map("words")
+}
+
+model WordReview {
+  id           String    @id @default(uuid())
+  wordId       String    @unique @map("word_id")
+  easeFactor   Float     @default(2.5) @map("ease_factor")
+  interval     Int       @default(0)
+  repetitions  Int       @default(0)
+  nextReview   DateTime  @default(now()) @map("next_review")
+  lastReviewed DateTime? @map("last_reviewed")
+
+  word         Word      @relation(fields: [wordId], references: [id], onDelete: Cascade)
+
+  @@map("word_reviews")
+}
