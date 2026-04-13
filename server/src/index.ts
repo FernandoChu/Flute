@@ -12,6 +12,7 @@ import languageRoutes from "./routes/languages.js";
 import wordRoutes from "./routes/words.js";
 import settingsRoutes from "./routes/settings.js";
 import translateRoutes from "./routes/translate.js";
+import vocabularyRoutes from "./routes/vocabulary.js";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 export const prisma = new PrismaClient({ adapter });
@@ -33,6 +34,7 @@ app.use("/api/collections", collectionRoutes);
 app.use("/api", lessonRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/translate", translateRoutes);
+app.use("/api/vocabulary", vocabularyRoutes);
 
 // Serve client build in production
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

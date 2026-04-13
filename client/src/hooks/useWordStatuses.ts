@@ -62,7 +62,7 @@ export function useWordStatuses(languageId: number | null) {
   const loadedLangRef = useRef<number | null>(null);
 
   // Subscribe to store version to trigger re-render when any word changes
-  useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
+  const version = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
 
   useEffect(() => {
     if (!languageId || languageId === loadedLangRef.current) return;
@@ -123,5 +123,5 @@ export function useWordStatuses(languageId: number | null) {
     [languageId, store],
   );
 
-  return { getWord, updateWord, getAllWords: store.getAllWords };
+  return { getWord, updateWord, getAllWords: store.getAllWords, version };
 }

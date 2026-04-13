@@ -119,4 +119,57 @@ router.patch(
   },
 );
 
+// DELETE /api/words/batch
+router.delete(
+  "/batch",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { wordIds } = req.body;
+
+      if (!Array.isArray(wordIds) || wordIds.length === 0) {
+        res
+          .status(400)
+          .json({ error: { message: "wordIds array is required" } });
+        return;
+      }
+
+      await prisma.word.deleteMany({
+        where: { id: { in: wordIds }, userId: req.user.id },
+      });
+
+      res.json({ data: { deleted: wordIds.length } });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// DELETE /api/words/:id
+router.delete(
+  "/:id",
+  async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+    try {
+      const id = req.params.id;
+
+      const existing = await prisma.word.findUnique({
+        where: { id },
+        select: { userId: true },
+      });
+      if (!existing) {
+        res.status(404).json({ error: { message: "Word not found" } });
+        return;
+      }
+      if (existing.userId !== req.user.id) {
+        res.status(403).json({ error: { message: "Forbidden" } });
+        return;
+      }
+
+      await prisma.word.delete({ where: { id } });
+      res.json({ data: { success: true } });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
 export default router;

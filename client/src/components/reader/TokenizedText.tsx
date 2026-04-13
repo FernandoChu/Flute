@@ -6,12 +6,14 @@ import WordToken from "./WordToken";
 interface TokenizedTextProps {
   text: string;
   getWord: (term: string) => Word | undefined;
+  wordVersion: number;
   onWordClick: (term: string, element: HTMLElement) => void;
 }
 
 function TokenizedTextInner({
   text,
   getWord,
+  wordVersion: _wordVersion,
   onWordClick,
 }: TokenizedTextProps) {
   const tokens = useMemo(() => tokenize(text), [text]);

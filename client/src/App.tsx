@@ -3,6 +3,7 @@ import LoginPage from "./pages/LoginPage";
 import LibraryPage from "./pages/LibraryPage";
 import ReaderPage from "./pages/ReaderPage";
 import SettingsPage from "./pages/SettingsPage";
+import VocabularyPage from "./pages/VocabularyPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NavBar from "./components/NavBar";
 import { useAuth } from "./hooks/useAuth";
@@ -18,6 +19,11 @@ export default function App() {
         <Route path="/">
           <ProtectedRoute>
             <LibraryPage />
+          </ProtectedRoute>
+        </Route>
+        <Route path="/vocabulary">
+          <ProtectedRoute>
+            <VocabularyPage />
           </ProtectedRoute>
         </Route>
         <Route path="/settings">

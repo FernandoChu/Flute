@@ -22,6 +22,15 @@ interface LessonSummary {
   audioUrl: string | null;
 }
 
+interface DashboardStats {
+  total: number;
+  new: number;
+  learning: number;
+  known: number;
+  ignored: number;
+  dueReviews: number;
+}
+
 export default function LibraryPage() {
   const queryClient = useQueryClient();
   const [showCreateCollection, setShowCreateCollection] = useState(false);
@@ -36,6 +45,11 @@ export default function LibraryPage() {
     queryKey: ["collections"],
     queryFn: () =>
       apiFetch<{ data: CollectionWithMeta[] }>("/collections"),
+  });
+
+  const { data: statsData } = useQuery({
+    queryKey: ["vocabulary-stats"],
+    queryFn: () => apiFetch<{ data: DashboardStats }>("/vocabulary/stats"),
   });
 
   const { data: lessons } = useQuery({
@@ -81,6 +95,31 @@ export default function LibraryPage() {
           New Collection
         </button>
       </div>
+
+      {statsData?.data && statsData.data.total > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
+          <div className="bg-white rounded-lg border border-gray-200 p-3 text-center">
+            <p className="text-xl font-bold text-blue-600">{statsData.data.new}</p>
+            <p className="text-xs text-gray-500">New</p>
+          </div>
+          <div className="bg-white rounded-lg border border-gray-200 p-3 text-center">
+            <p className="text-xl font-bold text-yellow-600">{statsData.data.learning}</p>
+            <p className="text-xs text-gray-500">Learning</p>
+          </div>
+          <div className="bg-white rounded-lg border border-gray-200 p-3 text-center">
+            <p className="text-xl font-bold text-green-600">{statsData.data.known}</p>
+            <p className="text-xs text-gray-500">Known</p>
+          </div>
+          <div className="bg-white rounded-lg border border-gray-200 p-3 text-center">
+            <p className="text-xl font-bold text-gray-800">{statsData.data.total}</p>
+            <p className="text-xs text-gray-500">Total words</p>
+          </div>
+          <div className="bg-white rounded-lg border border-gray-200 p-3 text-center">
+            <p className="text-xl font-bold text-red-600">{statsData.data.dueReviews}</p>
+            <p className="text-xs text-gray-500">Due reviews</p>
+          </div>
+        </div>
+      )}
 
       {collections?.data.length === 0 && (
         <div className="text-center py-16 text-gray-500">

@@ -40,7 +40,7 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
   });
 
   const languageId = lesson?.data.collection.sourceLanguageId ?? null;
-  const { getWord, updateWord } = useWordStatuses(languageId);
+  const { getWord, updateWord, version: wordVersion } = useWordStatuses(languageId);
 
   // -- Custom whole-word selection via mousedown/mousemove/mouseup --
   const dragStartIdx = useRef<number | null>(null);
@@ -243,6 +243,7 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
         <TokenizedText
           text={lessonData.textContent}
           getWord={getWord}
+          wordVersion={wordVersion}
           onWordClick={handleWordClick}
         />
       </div>

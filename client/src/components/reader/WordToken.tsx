@@ -10,12 +10,12 @@ interface WordTokenProps {
 
 const STATUS_CLASSES: Record<number, string> = {
   [WordStatus.New]: "bg-blue-200 hover:bg-blue-300",
-  [WordStatus.Learning1]: "bg-yellow-100 hover:bg-yellow-200",
+  [WordStatus.Learning1]: "bg-yellow-300 hover:bg-yellow-400",
   [WordStatus.Learning2]: "bg-yellow-200 hover:bg-yellow-300",
-  [WordStatus.Learning3]: "bg-yellow-300 hover:bg-yellow-400",
-  [WordStatus.Learning4]: "bg-yellow-400 hover:bg-yellow-500",
+  [WordStatus.Learning3]: "bg-yellow-100 hover:bg-yellow-200",
+  [WordStatus.Learning4]: "bg-yellow-50 hover:bg-yellow-100",
   [WordStatus.Known]: "",
-  [WordStatus.Ignored]: "opacity-50",
+  [WordStatus.Ignored]: "text-gray-400",
 };
 
 function WordTokenInner({ tokenIdx, text, status, onClick }: WordTokenProps) {

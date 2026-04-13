@@ -11,6 +11,12 @@ export default function NavBar() {
       </Link>
       <div className="flex items-center gap-4">
         <Link
+          href="/vocabulary"
+          className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+        >
+          Vocabulary
+        </Link>
+        <Link
           href="/settings"
           className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
         >
