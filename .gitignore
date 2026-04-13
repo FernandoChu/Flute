@@ -9,3 +9,4 @@ uploads/
 server/prisma/*.db
 server/prisma/*.db-journal
 server/prisma/migrations/**/migration_lock.toml
+server/prisma/generated/

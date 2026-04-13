@@ -10,6 +10,12 @@ export default function NavBar() {
         Flute
       </Link>
       <div className="flex items-center gap-4">
+        <Link
+          href="/settings"
+          className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+        >
+          Settings
+        </Link>
         <span className="text-sm text-gray-600">{username}</span>
         <button
           onClick={logout}

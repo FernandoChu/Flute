@@ -3,14 +3,18 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import express from "express";
 import cors from "cors";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "../prisma/generated/prisma/client/client.js";
+import { PrismaPg } from "@prisma/adapter-pg";
 import authRoutes from "./routes/auth.js";
 import collectionRoutes from "./routes/collections.js";
 import lessonRoutes from "./routes/lessons.js";
 import languageRoutes from "./routes/languages.js";
 import wordRoutes from "./routes/words.js";
+import settingsRoutes from "./routes/settings.js";
+import translateRoutes from "./routes/translate.js";
 
-export const prisma = new PrismaClient();
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+export const prisma = new PrismaClient({ adapter });
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -27,6 +31,8 @@ app.use("/api/languages", languageRoutes);
 app.use("/api/words", wordRoutes);
 app.use("/api/collections", collectionRoutes);
 app.use("/api", lessonRoutes);
+app.use("/api/settings", settingsRoutes);
+app.use("/api/translate", translateRoutes);
 
 // Serve client build in production
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

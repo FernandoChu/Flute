@@ -1,10 +1,10 @@
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "./generated/prisma/client"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -113,4 +113,17 @@ model WordReview {
   word         Word      @relation(fields: [wordId], references: [id], onDelete: Cascade)
 
   @@map("word_reviews")
+}
+
+model TranslationCache {
+  id             String   @id @default(uuid())
+  sourceLang     String   @map("source_lang")
+  targetLang     String   @map("target_lang")
+  term           String
+  provider       String
+  translation    String
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@unique([sourceLang, targetLang, term, provider])
+  @@map("translation_cache")
 }

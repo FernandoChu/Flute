@@ -159,6 +159,8 @@ router.get(
               title: true,
               sourceLanguageId: true,
               targetLanguageId: true,
+              sourceLanguage: { select: { code: true } },
+              targetLanguage: { select: { code: true } },
             },
           },
         },

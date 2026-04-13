@@ -2,11 +2,14 @@ import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { WordStatus } from "shared";
 import type { Word } from "shared";
+import { apiFetch } from "../../lib/api";
 
 interface WordPopupProps {
   term: string;
   word: Word | undefined;
   anchorEl: HTMLElement;
+  sourceLang?: string;
+  targetLang?: string;
   onUpdateWord: (data: {
     translation?: string;
     status?: number;
@@ -28,12 +31,16 @@ export default function WordPopup({
   term,
   word,
   anchorEl,
+  sourceLang,
+  targetLang,
   onUpdateWord,
   onClose,
 }: WordPopupProps) {
   const [translation, setTranslation] = useState(word?.translation ?? "");
   const [notes, setNotes] = useState(word?.notes ?? "");
   const [saving, setSaving] = useState(false);
+  const [translating, setTranslating] = useState(false);
+  const [translateError, setTranslateError] = useState<string | null>(null);
   const popupRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState<{
     top: number;
@@ -87,6 +94,30 @@ export default function WordPopup({
     }
   };
 
+  const handleTranslate = async () => {
+    if (!sourceLang || !targetLang) return;
+    setTranslating(true);
+    setTranslateError(null);
+    try {
+      const res = await apiFetch<{ data: { translation: string } }>(
+        "/translate/word",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            term,
+            sourceLang,
+            targetLang,
+          }),
+        },
+      );
+      setTranslation(res.data.translation);
+    } catch (err: any) {
+      setTranslateError(err.message || "Translation failed");
+    } finally {
+      setTranslating(false);
+    }
+  };
+
   const handleSaveTranslation = async () => {
     setSaving(true);
     try {
@@ -121,16 +152,31 @@ export default function WordPopup({
       </div>
 
       <div className="mb-3">
-        <input
-          type="text"
-          value={translation}
-          onChange={(e) => setTranslation(e.target.value)}
-          placeholder="Translation"
-          className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          onKeyDown={(e) => {
-            if (e.key === "Enter") handleSaveTranslation();
-          }}
-        />
+        <div className="flex gap-1.5">
+          <input
+            type="text"
+            value={translation}
+            onChange={(e) => setTranslation(e.target.value)}
+            placeholder="Translation"
+            className="flex-1 px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleSaveTranslation();
+            }}
+          />
+          {sourceLang && targetLang && (
+            <button
+              onClick={handleTranslate}
+              disabled={translating}
+              className="px-2.5 py-1.5 bg-blue-50 text-blue-600 border border-blue-200 rounded text-sm hover:bg-blue-100 transition-colors disabled:opacity-50"
+              title="Auto-translate"
+            >
+              {translating ? "..." : "T"}
+            </button>
+          )}
+        </div>
+        {translateError && (
+          <p className="text-xs text-red-500 mt-1">{translateError}</p>
+        )}
       </div>
 
       <div className="mb-3">

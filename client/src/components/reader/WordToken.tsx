@@ -2,6 +2,7 @@ import { memo } from "react";
 import { WordStatus } from "shared";
 
 interface WordTokenProps {
+  tokenIdx: number;
   text: string;
   status: number | undefined;
   onClick: (e: React.MouseEvent) => void;
@@ -17,15 +18,17 @@ const STATUS_CLASSES: Record<number, string> = {
   [WordStatus.Ignored]: "opacity-50",
 };
 
-function WordTokenInner({ text, status, onClick }: WordTokenProps) {
+function WordTokenInner({ tokenIdx, text, status, onClick }: WordTokenProps) {
   // Undefined status = new (never seen)
   const effectiveStatus = status ?? WordStatus.New;
   const className = STATUS_CLASSES[effectiveStatus] ?? "";
 
   return (
     <span
+      data-token-idx={tokenIdx}
+      data-word-token
       onClick={onClick}
-      className={`cursor-pointer rounded-sm px-[1px] transition-colors ${className}`}
+      className={`cursor-pointer rounded-sm px-[1px] ${className}`}
     >
       {text}
     </span>
@@ -33,5 +36,5 @@ function WordTokenInner({ text, status, onClick }: WordTokenProps) {
 }
 
 export default memo(WordTokenInner, (prev, next) => {
-  return prev.text === next.text && prev.status === next.status;
+  return prev.tokenIdx === next.tokenIdx && prev.text === next.text && prev.status === next.status;
 });

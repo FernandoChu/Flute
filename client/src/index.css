@@ -1,1 +1,16 @@
 @import "tailwindcss";
+
+.phrase-selected {
+  background-color: rgb(147 197 253) !important;
+  border-radius: 0;
+}
+
+.phrase-selected-start {
+  border-top-left-radius: 3px;
+  border-bottom-left-radius: 3px;
+}
+
+.phrase-selected-end {
+  border-top-right-radius: 3px;
+  border-bottom-right-radius: 3px;
+}

@@ -20,7 +20,11 @@ function TokenizedTextInner({
     <div className="text-lg leading-relaxed whitespace-pre-wrap">
       {tokens.map((token, i) => {
         if (!token.isWord) {
-          return <span key={i}>{token.text}</span>;
+          return (
+            <span key={i} data-token-idx={i}>
+              {token.text}
+            </span>
+          );
         }
 
         const normalized = normalizeWord(token.text);
@@ -29,6 +33,7 @@ function TokenizedTextInner({
         return (
           <WordToken
             key={i}
+            tokenIdx={i}
             text={token.text}
             status={word?.status}
             onClick={(e) =>
