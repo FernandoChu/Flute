@@ -1,6 +1,7 @@
 import { Route, Switch } from "wouter";
 import LoginPage from "./pages/LoginPage";
 import LibraryPage from "./pages/LibraryPage";
+import ReaderPage from "./pages/ReaderPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NavBar from "./components/NavBar";
 import { useAuth } from "./hooks/useAuth";
@@ -17,6 +18,13 @@ export default function App() {
           <ProtectedRoute>
             <LibraryPage />
           </ProtectedRoute>
+        </Route>
+        <Route path="/reader/:lessonId">
+          {(params) => (
+            <ProtectedRoute>
+              <ReaderPage lessonId={params.lessonId} />
+            </ProtectedRoute>
+          )}
         </Route>
         <Route>
           <div className="flex items-center justify-center min-h-screen">

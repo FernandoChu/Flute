@@ -6,6 +6,7 @@ import authRoutes from "./routes/auth.js";
 import collectionRoutes from "./routes/collections.js";
 import lessonRoutes from "./routes/lessons.js";
 import languageRoutes from "./routes/languages.js";
+import wordRoutes from "./routes/words.js";
 
 export const prisma = new PrismaClient();
 
@@ -21,6 +22,7 @@ app.get("/api/health", (_req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/languages", languageRoutes);
+app.use("/api/words", wordRoutes);
 app.use("/api/collections", collectionRoutes);
 app.use("/api", lessonRoutes);
 
