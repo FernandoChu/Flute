@@ -10,6 +10,7 @@ interface Options {
   hoveredTokenIdxRef: React.RefObject<number>;
   getWord: (term: string) => Word | undefined;
   updateWord: (term: string, data: { translation?: string; status?: number; notes?: string }) => Promise<unknown>;
+  onExpandPopup?: () => void;
 }
 
 function getTokenElements(container: HTMLElement): HTMLElement[] {
@@ -86,7 +87,7 @@ function extractParagraph(container: HTMLElement, anchorIdx: number): string {
 
 export function useReaderNavigation(
   textContainerRef: React.RefObject<HTMLDivElement | null>,
-  { popup, setPopup, closePhrasePopup, hoveredTokenIdxRef, getWord, updateWord }: Options,
+  { popup, setPopup, closePhrasePopup, hoveredTokenIdxRef, getWord, updateWord, onExpandPopup }: Options,
 ) {
   const { bindings } = useKeybindings();
   const selectedIdxRef = useRef<number>(-1);
@@ -101,7 +102,7 @@ export function useReaderNavigation(
     if (!container) return;
 
     function selectWordElement(el: HTMLElement) {
-      const term = el.textContent ?? "";
+      const term = el.dataset.wordText ?? el.textContent ?? "";
       el.scrollIntoView({ block: "nearest", behavior: "smooth" });
       selectedIdxRef.current = Number(el.dataset.tokenIdx);
       closePhrasePopup();
@@ -124,6 +125,10 @@ export function useReaderNavigation(
       );
 
       switch (action) {
+        case "expandPopup":
+          if (popup && onExpandPopup) onExpandPopup();
+          break;
+
         case "deselect":
           setPopup(null);
           closePhrasePopup();
@@ -235,7 +240,7 @@ export function useReaderNavigation(
 
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
-  }, [bindings, popup, getWord, updateWord, closePhrasePopup, setPopup, textContainerRef, hoveredTokenIdxRef]);
+  }, [bindings, popup, getWord, updateWord, closePhrasePopup, setPopup, textContainerRef, hoveredTokenIdxRef, onExpandPopup]);
 
   return { selectedIdxRef, syncSelectedIdx };
 }

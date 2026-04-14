@@ -8,6 +8,7 @@ interface TokenizedTextProps {
   getWord: (term: string) => Word | undefined;
   wordVersion: number;
   onWordClick: (term: string, element: HTMLElement) => void;
+  persistedTranslations?: Map<number, string>;
 }
 
 function TokenizedTextInner({
@@ -15,6 +16,7 @@ function TokenizedTextInner({
   getWord,
   wordVersion: _wordVersion,
   onWordClick,
+  persistedTranslations,
 }: TokenizedTextProps) {
   const tokens = useMemo(() => tokenize(text), [text]);
 
@@ -31,6 +33,7 @@ function TokenizedTextInner({
 
         const normalized = normalizeWord(token.text);
         const word = getWord(normalized);
+        const translation = persistedTranslations?.get(i);
 
         return (
           <WordToken
@@ -38,6 +41,7 @@ function TokenizedTextInner({
             tokenIdx={i}
             text={token.text}
             status={word?.status}
+            translation={translation}
             onClick={(e) =>
               onWordClick(token.text, e.currentTarget as HTMLElement)
             }

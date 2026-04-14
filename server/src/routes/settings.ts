@@ -129,4 +129,48 @@ router.post(
   },
 );
 
+// GET /api/settings/languages — get user's language preferences
+router.get(
+  "/languages",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      res.json({
+        data: {
+          nativeLanguageId: req.user.nativeLanguageId,
+          studyLanguageId: req.user.studyLanguageId,
+        },
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// PUT /api/settings/languages — update user's language preferences
+router.put(
+  "/languages",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { nativeLanguageId, studyLanguageId } = req.body;
+
+      const user = await prisma.user.update({
+        where: { id: req.user.id },
+        data: {
+          nativeLanguageId: nativeLanguageId ?? null,
+          studyLanguageId: studyLanguageId ?? null,
+        },
+      });
+
+      res.json({
+        data: {
+          nativeLanguageId: user.nativeLanguageId,
+          studyLanguageId: user.studyLanguageId,
+        },
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
 export default router;

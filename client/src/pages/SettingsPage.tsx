@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { TRANSLATION_PROVIDERS } from "shared";
 import { apiFetch } from "../lib/api";
@@ -9,6 +9,17 @@ interface ApiKeyInfo {
   provider: string;
   hasKey: boolean;
   createdAt: string;
+}
+
+interface Language {
+  id: number;
+  code: string;
+  name: string;
+}
+
+interface LanguagePrefs {
+  nativeLanguageId: number | null;
+  studyLanguageId: number | null;
 }
 
 export default function SettingsPage() {
@@ -22,6 +33,44 @@ export default function SettingsPage() {
     error?: string;
   } | null>(null);
   const [testing, setTesting] = useState(false);
+
+  const [nativeLangId, setNativeLangId] = useState("");
+  const [studyLangId, setStudyLangId] = useState("");
+
+  const { data: languages } = useQuery({
+    queryKey: ["languages"],
+    queryFn: () => apiFetch<{ data: Language[] }>("/languages"),
+  });
+
+  const { data: langPrefs } = useQuery({
+    queryKey: ["language-prefs"],
+    queryFn: () => apiFetch<{ data: LanguagePrefs }>("/settings/languages"),
+  });
+
+  useEffect(() => {
+    if (langPrefs?.data) {
+      setNativeLangId(langPrefs.data.nativeLanguageId?.toString() ?? "");
+      setStudyLangId(langPrefs.data.studyLanguageId?.toString() ?? "");
+    }
+  }, [langPrefs]);
+
+  const saveLangMutation = useMutation({
+    mutationFn: (data: { nativeLanguageId: number | null; studyLanguageId: number | null }) =>
+      apiFetch("/settings/languages", {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["language-prefs"] });
+    },
+  });
+
+  const handleSaveLanguages = () => {
+    saveLangMutation.mutate({
+      nativeLanguageId: nativeLangId ? Number(nativeLangId) : null,
+      studyLanguageId: studyLangId ? Number(studyLangId) : null,
+    });
+  };
 
   const { data: keys, isLoading } = useQuery({
     queryKey: ["api-keys"],
@@ -78,6 +127,70 @@ export default function SettingsPage() {
   return (
     <div className="max-w-2xl mx-auto p-6">
       <h1 className="text-2xl font-bold mb-6">Settings</h1>
+
+      <section className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+        <h2 className="text-lg font-semibold mb-4">Language Preferences</h2>
+        <p className="text-sm text-gray-600 mb-4">
+          Set your native and study languages. These will be used as defaults
+          when creating new collections.
+        </p>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Native language
+            </label>
+            <select
+              value={nativeLangId}
+              onChange={(e) => setNativeLangId(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Select language</option>
+              {languages?.data.map((lang) => (
+                <option key={lang.id} value={lang.id}>
+                  {lang.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Currently learning
+            </label>
+            <select
+              value={studyLangId}
+              onChange={(e) => setStudyLangId(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Select language</option>
+              {languages?.data.map((lang) => (
+                <option key={lang.id} value={lang.id}>
+                  {lang.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleSaveLanguages}
+              disabled={saveLangMutation.isPending}
+              className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+            >
+              {saveLangMutation.isPending ? "Saving..." : "Save"}
+            </button>
+            {saveLangMutation.isSuccess && (
+              <p className="text-sm text-green-600">Saved.</p>
+            )}
+            {saveLangMutation.isError && (
+              <p className="text-sm text-red-600">
+                {(saveLangMutation.error as Error).message}
+              </p>
+            )}
+          </div>
+        </div>
+      </section>
 
       <section className="bg-white rounded-lg border border-gray-200 p-6">
         <h2 className="text-lg font-semibold mb-4">Translation API Keys</h2>

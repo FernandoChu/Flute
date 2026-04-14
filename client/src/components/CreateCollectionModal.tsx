@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "../lib/api";
 
@@ -6,6 +6,11 @@ interface Language {
   id: number;
   code: string;
   name: string;
+}
+
+interface LanguagePrefs {
+  nativeLanguageId: number | null;
+  studyLanguageId: number | null;
 }
 
 export default function CreateCollectionModal({
@@ -23,6 +28,22 @@ export default function CreateCollectionModal({
     queryKey: ["languages"],
     queryFn: () => apiFetch<{ data: Language[] }>("/languages"),
   });
+
+  const { data: langPrefs } = useQuery({
+    queryKey: ["language-prefs"],
+    queryFn: () => apiFetch<{ data: LanguagePrefs }>("/settings/languages"),
+  });
+
+  useEffect(() => {
+    if (langPrefs?.data) {
+      if (langPrefs.data.studyLanguageId && !sourceLanguageId) {
+        setSourceLanguageId(langPrefs.data.studyLanguageId.toString());
+      }
+      if (langPrefs.data.nativeLanguageId && !targetLanguageId) {
+        setTargetLanguageId(langPrefs.data.nativeLanguageId.toString());
+      }
+    }
+  }, [langPrefs]);
 
   const create = useMutation({
     mutationFn: () =>

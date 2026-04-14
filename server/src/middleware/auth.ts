@@ -4,7 +4,7 @@ import { prisma } from "../index.js";
 declare global {
   namespace Express {
     interface Request {
-      user: { id: string; username: string };
+      user: { id: string; username: string; nativeLanguageId: number | null; studyLanguageId: number | null };
     }
   }
 }
@@ -29,7 +29,7 @@ export async function requireAuth(
       return;
     }
 
-    req.user = { id: user.id, username: user.username };
+    req.user = { id: user.id, username: user.username, nativeLanguageId: user.nativeLanguageId, studyLanguageId: user.studyLanguageId };
     next();
   } catch (err) {
     next(err);

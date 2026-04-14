@@ -1,8 +1,9 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 
-interface PhraseSelection {
+export interface PhraseSelection {
   phrase: string;
   rect: DOMRect;
+  anchorWordIdx: number;
 }
 
 function getTokenElements(container: HTMLElement): HTMLElement[] {
@@ -46,6 +47,7 @@ export function useTextSelection(
         "phrase-selected",
         "phrase-selected-start",
         "phrase-selected-end",
+        "inline-translation-space",
       );
     }
   }
@@ -87,6 +89,10 @@ export function useTextSelection(
         return;
       }
 
+      // Add spacer to first token so the line expands to fit the translation
+      highlighted[0].classList.add("inline-translation-space");
+
+      // Compute rect after spacer is applied (getBoundingClientRect forces reflow)
       const first = highlighted[0].getBoundingClientRect();
       const last = highlighted[highlighted.length - 1].getBoundingClientRect();
       const rect = new DOMRect(
@@ -96,13 +102,22 @@ export function useTextSelection(
         last.bottom - first.top,
       );
 
+      const anchorWordIdx = Number(wordTokens[0].dataset.tokenIdx);
+
       onClearWordPopup();
-      setPhrasePopup({ phrase: trimmed, rect });
+      setPhrasePopup({ phrase: trimmed, rect, anchorWordIdx });
     }
 
     function onMouseDown(e: MouseEvent) {
+      if (e.button !== 0) return; // Only handle left-click
       const idx = tokenIdxFromEvent(e);
-      if (idx === null) return;
+      if (idx === null) {
+        // Clicking whitespace dismisses word and phrase selections
+        onClearWordPopup();
+        clearHighlightFrom(container!);
+        setPhrasePopup(null);
+        return;
+      }
       clearHighlightFrom(container!);
       dragStartIdx.current = idx;
       isDragging.current = false;
