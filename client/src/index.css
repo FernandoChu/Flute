@@ -5,23 +5,13 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-.inline-translation-space {
-  display: inline-block;
-  margin-top: 1.6em;
-}
-
 .phrase-selected {
   background-color: rgb(16 185 129) !important;
   color: white !important;
   border-radius: 0;
 }
 
-.phrase-selected-start {
-  border-top-left-radius: 5px;
-  border-bottom-left-radius: 5px;
-}
-
-.phrase-selected-end {
-  border-top-right-radius: 5px;
-  border-bottom-right-radius: 5px;
+.inline-translation-space {
+  display: inline-block;
+  margin-top: 1.6em;
 }

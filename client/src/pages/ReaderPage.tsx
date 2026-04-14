@@ -45,6 +45,8 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
     Map<number, string>
   >(new Map());
   const [showTranslations, setShowTranslations] = useState(true);
+  // Maps anchor token index → all word token indices in the phrase
+  const [phraseGroups, setPhraseGroups] = useState<Map<number, number[]>>(new Map());
   const { settings: readerSettings } = useReaderSettings();
 
   const { data: lesson, isLoading } = useQuery({
@@ -203,8 +205,14 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
       setPersistedTranslations((prev) =>
         new Map(prev).set(phrasePopup.anchorWordIdx, translation),
       );
+      setPhraseGroups((prev) => {
+        const next = new Map(prev);
+        next.set(phrasePopup.anchorWordIdx, phrasePopup.wordTokenIndices);
+        return next;
+      });
+      closePhrasePopup();
     },
-    [phrasePopup],
+    [phrasePopup, closePhrasePopup],
   );
 
   const handleWordClick = useCallback(
@@ -287,6 +295,7 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
           wordVersion={wordVersion}
           onWordClick={handleWordClick}
           persistedTranslations={showTranslations ? persistedTranslations : undefined}
+          phraseGroups={showTranslations ? phraseGroups : undefined}
           tokenOffset={page.tokenOffset}
         />
       </div>

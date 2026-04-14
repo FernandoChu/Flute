@@ -4,6 +4,7 @@ export interface PhraseSelection {
   phrase: string;
   rect: DOMRect;
   anchorWordIdx: number;
+  wordTokenIndices: number[];
 }
 
 function getTokenElements(container: HTMLElement): HTMLElement[] {
@@ -34,21 +35,13 @@ export function useTextSelection(
     const hi = Math.max(startIdx, endIdx);
     for (const el of getTokenElements(container)) {
       const idx = Number(el.dataset.tokenIdx);
-      const inRange = idx >= lo && idx <= hi;
-      el.classList.toggle("phrase-selected", inRange);
-      el.classList.toggle("phrase-selected-start", inRange && idx === lo);
-      el.classList.toggle("phrase-selected-end", inRange && idx === hi);
+      el.classList.toggle("phrase-selected", idx >= lo && idx <= hi);
     }
   }
 
   function clearHighlightFrom(container: HTMLElement) {
     for (const el of getTokenElements(container)) {
-      el.classList.remove(
-        "phrase-selected",
-        "phrase-selected-start",
-        "phrase-selected-end",
-        "inline-translation-space",
-      );
+      el.classList.remove("phrase-selected", "inline-translation-space");
     }
   }
 
@@ -89,8 +82,10 @@ export function useTextSelection(
         return;
       }
 
-      // Add spacer to first token so the line expands to fit the translation
-      highlighted[0].classList.add("inline-translation-space");
+      // Add spacer to all tokens so the line expands to fit the translation
+      for (const el of highlighted) {
+        el.classList.add("inline-translation-space");
+      }
 
       // Compute rect after spacer is applied (getBoundingClientRect forces reflow)
       const first = highlighted[0].getBoundingClientRect();
@@ -103,9 +98,10 @@ export function useTextSelection(
       );
 
       const anchorWordIdx = Number(wordTokens[0].dataset.tokenIdx);
+      const wordTokenIndices = wordTokens.map((el) => Number(el.dataset.tokenIdx));
 
       onClearWordPopup();
-      setPhrasePopup({ phrase: trimmed, rect, anchorWordIdx });
+      setPhrasePopup({ phrase: trimmed, rect, anchorWordIdx, wordTokenIndices });
     }
 
     function onMouseDown(e: MouseEvent) {

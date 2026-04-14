@@ -6,6 +6,7 @@ interface WordTokenProps {
   text: string;
   status: number | undefined;
   translation?: string;
+  inPhrase?: boolean;
   onClick: (e: React.MouseEvent) => void;
 }
 
@@ -19,10 +20,24 @@ const STATUS_CLASSES: Record<number, string> = {
   [WordStatus.Ignored]: "text-gray-400",
 };
 
-function WordTokenInner({ tokenIdx, text, status, translation, onClick }: WordTokenProps) {
+function WordTokenInner({ tokenIdx, text, status, translation, inPhrase, onClick }: WordTokenProps) {
   // Undefined status = new (never seen)
   const effectiveStatus = status ?? WordStatus.New;
   const className = STATUS_CLASSES[effectiveStatus] ?? "";
+
+  if (inPhrase && !translation) {
+    return (
+      <span
+        data-token-idx={tokenIdx}
+        data-word-token
+        data-word-text={text}
+        onClick={onClick}
+        className="cursor-pointer text-white"
+      >
+        {text}
+      </span>
+    );
+  }
 
   if (translation) {
     return (
@@ -74,6 +89,7 @@ export default memo(WordTokenInner, (prev, next) => {
     prev.tokenIdx === next.tokenIdx &&
     prev.text === next.text &&
     prev.status === next.status &&
-    prev.translation === next.translation
+    prev.translation === next.translation &&
+    prev.inPhrase === next.inPhrase
   );
 });
