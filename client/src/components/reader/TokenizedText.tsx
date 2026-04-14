@@ -107,7 +107,7 @@ function TokenizedTextInner({
       if (!token.isWord) {
         phraseChildren.push(
           <span key={gIdx} data-token-idx={gIdx}>
-            {token.text}
+            {token.text.replace(/\n/g, " ")}
           </span>,
         );
       } else {
