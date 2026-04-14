@@ -206,12 +206,12 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
     if (phrasePopup === phrasePopupRef.current) return;
     phrasePopupRef.current = phrasePopup;
 
-    const { anchorWordIdx, wordTokenIndices, phrase } = phrasePopup;
+    const { anchorWordIdx, allTokenIndices, phrase } = phrasePopup;
     const sourceLang = lesson.data.collection.sourceLanguage?.code;
     const targetLang = lesson.data.collection.targetLanguage?.code;
 
     // Immediately persist phrase group with placeholder so in-flow space is created
-    setPhraseGroups((prev) => new Map(prev).set(anchorWordIdx, wordTokenIndices));
+    setPhraseGroups((prev) => new Map(prev).set(anchorWordIdx, allTokenIndices));
     setPersistedTranslations((prev) => new Map(prev).set(anchorWordIdx, "\u2026"));
     closePhrasePopup();
 

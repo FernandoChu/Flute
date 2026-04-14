@@ -5,6 +5,7 @@ export interface PhraseSelection {
   rect: DOMRect;
   anchorWordIdx: number;
   wordTokenIndices: number[];
+  allTokenIndices: number[];
 }
 
 function getTokenElements(container: HTMLElement): HTMLElement[] {
@@ -93,9 +94,10 @@ export function useTextSelection(
 
       const anchorWordIdx = Number(wordTokens[0].dataset.tokenIdx);
       const wordTokenIndices = wordTokens.map((el) => Number(el.dataset.tokenIdx));
+      const allTokenIndices = highlighted.map((el) => Number(el.dataset.tokenIdx));
 
       onClearWordPopup();
-      setPhrasePopup({ phrase: trimmed, rect, anchorWordIdx, wordTokenIndices });
+      setPhrasePopup({ phrase: trimmed, rect, anchorWordIdx, wordTokenIndices, allTokenIndices });
     }
 
     function onMouseDown(e: MouseEvent) {
