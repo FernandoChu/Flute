@@ -114,12 +114,12 @@ function TokenizedTextInner({
     elements.push(
       <span
         key={`phrase-${anchorIdx}`}
-        className="inline-block text-center leading-none"
+        className="inline-block leading-none"
       >
         {translation && (
           <>
             <span
-              className="block text-base italic whitespace-nowrap pointer-events-none"
+              className="block text-base italic text-center pointer-events-none"
               style={{ color: "rgb(16 185 129)" }}
             >
               {translation}
