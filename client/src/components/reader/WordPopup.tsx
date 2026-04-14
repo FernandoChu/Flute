@@ -19,12 +19,12 @@ interface WordPopupProps {
 }
 
 const STATUS_BUTTONS = [
-  { label: "1", value: WordStatus.Learning1, color: "bg-yellow-100" },
-  { label: "2", value: WordStatus.Learning2, color: "bg-yellow-200" },
-  { label: "3", value: WordStatus.Learning3, color: "bg-yellow-300" },
-  { label: "4", value: WordStatus.Learning4, color: "bg-yellow-400" },
-  { label: "K", value: WordStatus.Known, color: "bg-green-200" },
-  { label: "X", value: WordStatus.Ignored, color: "bg-gray-200" },
+  { label: "1", value: WordStatus.Learning1, color: "bg-status-learning1" },
+  { label: "2", value: WordStatus.Learning2, color: "bg-status-learning2" },
+  { label: "3", value: WordStatus.Learning3, color: "bg-status-learning3" },
+  { label: "4", value: WordStatus.Learning4, color: "bg-status-learning4" },
+  { label: "K", value: WordStatus.Known, color: "bg-status-known-light" },
+  { label: "X", value: WordStatus.Ignored, color: "bg-status-ignored" },
 ];
 
 export default function WordPopup({

@@ -104,8 +104,7 @@ export default function InlineTranslation({
       onClick={onClick}
     >
       <span
-        className="text-base italic whitespace-nowrap"
-        style={{ color: "rgb(16 185 129)" }}
+        className="text-base italic whitespace-nowrap text-pill"
       >
         {content}
       </span>
@@ -117,7 +116,7 @@ export default function InlineTranslation({
           height: 0,
           borderLeft: "7px solid transparent",
           borderRight: "7px solid transparent",
-          borderBottom: "7px solid rgb(16 185 129)",
+          borderBottom: "7px solid var(--color-pill)",
         }}
       />
     </div>,

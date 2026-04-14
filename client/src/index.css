@@ -1,12 +1,49 @@
 @import "tailwindcss";
 
+@theme {
+  /* Word status colors — light backgrounds for reader tokens (dark text) */
+  --color-status-new: #bfdbfe;          /* blue-200 */
+  --color-status-learning1: #fecaca;    /* red-200 */
+  --color-status-learning2: #fed7aa;    /* orange-200 */
+  --color-status-learning3: #fef08a;    /* yellow-200 */
+  --color-status-learning4: #d9f99d;    /* lime-200 */
+  --color-status-known: transparent;
+  --color-status-ignored: #e5e7eb;      /* gray-200 */
+
+  /* Saturated shade for dots and in-phrase backgrounds (white text) */
+  --color-status-new-vivid: #2563eb;    /* blue-600 */
+  --color-status-learning1-vivid: #dc2626; /* red-600 */
+  --color-status-learning2-vivid: #ea580c; /* orange-600 */
+  --color-status-learning3-vivid: #ca8a04; /* yellow-600 */
+  --color-status-learning4-vivid: #65a30d; /* lime-600 */
+
+  /* Badge: light bg + dark text pairs */
+  --color-status-new-light: #dbeafe;    /* blue-100 */
+  --color-status-new-text: #1d4ed8;     /* blue-700 */
+  --color-status-learning1-light: #fee2e2; /* red-100 */
+  --color-status-learning1-text: #b91c1c;  /* red-700 */
+  --color-status-learning2-light: #ffedd5; /* orange-100 */
+  --color-status-learning2-text: #c2410c;  /* orange-700 */
+  --color-status-learning3-light: #fef9c3; /* yellow-100 */
+  --color-status-learning3-text: #a16207;  /* yellow-700 */
+  --color-status-learning4-light: #ecfccb; /* lime-100 */
+  --color-status-learning4-text: #4d7c0f;  /* lime-700 */
+  --color-status-known-light: #dcfce7;  /* green-100 */
+  --color-status-known-text: #15803d;   /* green-700 */
+  --color-status-ignored-light: #f3f4f6; /* gray-100 */
+  --color-status-ignored-text: #6b7280; /* gray-500 */
+
+  /* Translation pill accent */
+  --color-pill: #7c3aed;               /* violet-600 */
+}
+
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 .phrase-selected {
-  background-color: rgb(16 185 129) !important;
+  background-color: var(--color-pill) !important;
   color: white !important;
   border-radius: 0;
 }

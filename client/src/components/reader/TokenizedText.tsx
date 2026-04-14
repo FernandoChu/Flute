@@ -88,7 +88,7 @@ function TokenizedTextInner({
       const token = tokens[i];
       if (!token.isWord) {
         phraseChildren.push(
-          <span key={gIdx} data-token-idx={gIdx} className="text-white">
+          <span key={gIdx} data-token-idx={gIdx}>
             {token.text}
           </span>,
         );
@@ -119,8 +119,7 @@ function TokenizedTextInner({
         {translation && (
           <>
             <span
-              className="block text-base italic text-center pointer-events-none"
-              style={{ color: "rgb(16 185 129)" }}
+              className="block text-base italic text-center pointer-events-none text-pill"
             >
               {translation}
             </span>
@@ -131,14 +130,13 @@ function TokenizedTextInner({
                 height: 0,
                 borderLeft: "7px solid transparent",
                 borderRight: "7px solid transparent",
-                borderBottom: "7px solid rgb(16 185 129)",
+                borderBottom: "7px solid var(--color-pill)",
               }}
             />
           </>
         )}
         <span
-          className="rounded px-2 py-1 text-white leading-normal"
-          style={{ backgroundColor: "rgb(16 185 129)" }}
+          className="rounded px-1.5 py-0.5 leading-normal border-2 border-pill"
         >
           {phraseChildren}
         </span>

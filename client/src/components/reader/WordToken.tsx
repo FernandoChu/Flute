@@ -11,13 +11,29 @@ interface WordTokenProps {
 }
 
 const STATUS_CLASSES: Record<number, string> = {
-  [WordStatus.New]: "bg-blue-200 hover:bg-blue-300",
-  [WordStatus.Learning1]: "bg-yellow-300 hover:bg-yellow-400",
-  [WordStatus.Learning2]: "bg-yellow-200 hover:bg-yellow-300",
-  [WordStatus.Learning3]: "bg-yellow-100 hover:bg-yellow-200",
-  [WordStatus.Learning4]: "bg-yellow-50 hover:bg-yellow-100",
+  [WordStatus.New]: "bg-status-new hover:brightness-90",
+  [WordStatus.Learning1]: "bg-status-learning1 hover:brightness-90",
+  [WordStatus.Learning2]: "bg-status-learning2 hover:brightness-90",
+  [WordStatus.Learning3]: "bg-status-learning3 hover:brightness-90",
+  [WordStatus.Learning4]: "bg-status-learning4 hover:brightness-90",
   [WordStatus.Known]: "",
   [WordStatus.Ignored]: "text-gray-400",
+};
+
+const STATUS_VIVID: Record<number, string> = {
+  [WordStatus.New]: "var(--color-status-new-vivid)",
+  [WordStatus.Learning1]: "var(--color-status-learning1-vivid)",
+  [WordStatus.Learning2]: "var(--color-status-learning2-vivid)",
+  [WordStatus.Learning3]: "var(--color-status-learning3-vivid)",
+  [WordStatus.Learning4]: "var(--color-status-learning4-vivid)",
+};
+
+const STATUS_BG: Record<number, string> = {
+  [WordStatus.New]: "var(--color-status-new)",
+  [WordStatus.Learning1]: "var(--color-status-learning1)",
+  [WordStatus.Learning2]: "var(--color-status-learning2)",
+  [WordStatus.Learning3]: "var(--color-status-learning3)",
+  [WordStatus.Learning4]: "var(--color-status-learning4)",
 };
 
 function WordTokenInner({ tokenIdx, text, status, translation, inPhrase, onClick }: WordTokenProps) {
@@ -26,13 +42,15 @@ function WordTokenInner({ tokenIdx, text, status, translation, inPhrase, onClick
   const className = STATUS_CLASSES[effectiveStatus] ?? "";
 
   if (inPhrase && !translation) {
+    const bgColor = STATUS_BG[effectiveStatus];
     return (
       <span
         data-token-idx={tokenIdx}
         data-word-token
         data-word-text={text}
         onClick={onClick}
-        className="cursor-pointer text-white"
+        className="cursor-pointer rounded-sm px-[1px]"
+        style={bgColor ? { backgroundColor: bgColor, color: "#1f2937" } : { color: "white" }}
       >
         {text}
       </span>
@@ -40,6 +58,7 @@ function WordTokenInner({ tokenIdx, text, status, translation, inPhrase, onClick
   }
 
   if (translation) {
+    const dotColor = STATUS_VIVID[effectiveStatus];
     return (
       <span
         data-token-idx={tokenIdx}
@@ -49,8 +68,7 @@ function WordTokenInner({ tokenIdx, text, status, translation, inPhrase, onClick
         className="inline-block text-center cursor-pointer leading-none"
       >
         <span
-          className="block text-base italic whitespace-nowrap pointer-events-none"
-          style={{ color: "rgb(16 185 129)" }}
+          className="block text-base italic whitespace-nowrap pointer-events-none text-pill"
         >
           {translation}
         </span>
@@ -61,11 +79,17 @@ function WordTokenInner({ tokenIdx, text, status, translation, inPhrase, onClick
             height: 0,
             borderLeft: "7px solid transparent",
             borderRight: "7px solid transparent",
-            borderBottom: "7px solid rgb(16 185 129)",
+            borderBottom: "7px solid var(--color-pill)",
           }}
         />
-        <span className="rounded px-2 py-1 text-white leading-normal" style={{ backgroundColor: "rgb(16 185 129)" }}>
+        <span className="relative rounded px-2 py-1 text-white leading-normal bg-pill">
           {text}
+          {dotColor && (
+            <span
+              className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border border-white pointer-events-none"
+              style={{ backgroundColor: dotColor }}
+            />
+          )}
         </span>
       </span>
     );
