@@ -31,7 +31,7 @@ function WordTokenInner({ tokenIdx, text, status, translation, onClick }: WordTo
         data-word-token
         data-word-text={text}
         onClick={onClick}
-        className="inline-block text-center cursor-pointer"
+        className="inline-block text-center cursor-pointer leading-none"
       >
         <span
           className="block text-base italic whitespace-nowrap pointer-events-none"
@@ -49,7 +49,7 @@ function WordTokenInner({ tokenIdx, text, status, translation, onClick }: WordTo
             borderBottom: "7px solid rgb(16 185 129)",
           }}
         />
-        <span className="rounded px-2 py-1 text-white" style={{ backgroundColor: "rgb(16 185 129)" }}>
+        <span className="rounded px-2 py-1 text-white leading-normal" style={{ backgroundColor: "rgb(16 185 129)" }}>
           {text}
         </span>
       </span>
