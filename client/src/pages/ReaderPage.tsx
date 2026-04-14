@@ -41,6 +41,7 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
   const [persistedTranslations, setPersistedTranslations] = useState<
     Map<number, string>
   >(new Map());
+  const [showTranslations, setShowTranslations] = useState(true);
 
   const { data: lesson, isLoading } = useQuery({
     queryKey: ["lesson", lessonId],
@@ -70,6 +71,10 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
     if (popup) setWordPopupTarget(popup);
   }, [popup]);
 
+  const handleToggleTranslations = useCallback(() => {
+    setShowTranslations((prev) => !prev);
+  }, []);
+
   const { syncSelectedIdx } = useReaderNavigation(textContainerRef, {
     popup,
     setPopup: handleSetPopup,
@@ -78,6 +83,7 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
     getWord,
     updateWord,
     onExpandPopup: handleExpandPopup,
+    onToggleTranslations: handleToggleTranslations,
   });
 
   // Fetch translation when a word is clicked
@@ -167,6 +173,7 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
       closePhrasePopup();
       syncSelectedIdx(element);
       setWordPopupTarget(null);
+      setShowTranslations(true);
       setPopup((prev) => {
         if (prev && normalizeWord(prev.term) === normalizeWord(term)) {
           return null;
@@ -233,7 +240,7 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
           getWord={getWord}
           wordVersion={wordVersion}
           onWordClick={handleWordClick}
-          persistedTranslations={persistedTranslations}
+          persistedTranslations={showTranslations ? persistedTranslations : undefined}
         />
       </div>
 

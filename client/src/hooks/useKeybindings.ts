@@ -25,6 +25,8 @@ const DEFAULT_BINDINGS: KeyBinding[] = [
   { action: "setStatus4", label: "Set status to 4", group: "status", key: "4", enabled: true },
   { action: "setStatusKnown", label: "Set status to Known", group: "status", key: "5", enabled: true },
   { action: "setStatusIgnored", label: "Set status to Ignored", group: "status", key: "6", enabled: true },
+  // Display
+  { action: "toggleTranslations", label: "Toggle translation pills", group: "navigation", key: "t", enabled: true },
   // Copy
   { action: "copySentence", label: "Copy hovered sentence", group: "copy", key: "c", enabled: true },
   { action: "copyParagraph", label: "Copy hovered paragraph", group: "copy", key: "C", enabled: true },
