@@ -161,6 +161,10 @@ router.get(
               targetLanguageId: true,
               sourceLanguage: { select: { code: true } },
               targetLanguage: { select: { code: true } },
+              lessons: {
+                select: { id: true, title: true, position: true },
+                orderBy: { position: "asc" },
+              },
             },
           },
         },

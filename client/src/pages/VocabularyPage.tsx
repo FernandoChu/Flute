@@ -138,9 +138,30 @@ export default function VocabularyPage() {
     invalidateAndClearSelection();
   };
 
+  const handleDeleteAll = async () => {
+    if (!stats || stats.total === 0) return;
+    if (
+      !confirm(
+        `Are you sure you want to delete ALL ${stats.total} words? This action cannot be undone.`,
+      )
+    )
+      return;
+    await apiFetch("/words/all", { method: "DELETE" });
+    invalidateAndClearSelection();
+  };
+
   return (
     <div className="max-w-6xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">Vocabulary</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">Vocabulary</h1>
+        <button
+          onClick={handleDeleteAll}
+          disabled={!stats || stats.total === 0}
+          className="px-3 py-1.5 text-sm text-red-600 border border-red-300 rounded hover:bg-red-50 disabled:opacity-30 disabled:cursor-not-allowed"
+        >
+          Delete All
+        </button>
+      </div>
 
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 mb-6">

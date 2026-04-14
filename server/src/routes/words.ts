@@ -119,6 +119,21 @@ router.patch(
   },
 );
 
+// DELETE /api/words/all
+router.delete(
+  "/all",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await prisma.word.deleteMany({
+        where: { userId: req.user.id },
+      });
+      res.json({ data: { deleted: result.count } });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
 // DELETE /api/words/batch
 router.delete(
   "/batch",

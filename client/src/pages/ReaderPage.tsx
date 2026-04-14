@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { normalizeWord, tokenize, WordStatus } from "shared";
 import { apiFetch } from "../lib/api";
 import { useWordStatuses } from "../hooks/useWordStatuses";
@@ -12,6 +12,12 @@ import AudioPlayer from "../components/reader/AudioPlayer";
 import ReaderSettingsPanel from "../components/reader/ReaderSettingsPanel";
 import { useReaderSettings } from "../hooks/useReaderSettings";
 import { useReaderPagination } from "../hooks/useReaderPagination";
+
+interface SiblingLesson {
+  id: string;
+  title: string;
+  position: number;
+}
 
 interface LessonDetail {
   id: string;
@@ -25,7 +31,98 @@ interface LessonDetail {
     targetLanguageId: number;
     sourceLanguage?: { code: string };
     targetLanguage?: { code: string };
+    lessons: SiblingLesson[];
   };
+}
+
+function PageProgressBar({
+  currentPage,
+  totalPages,
+  onGoToPage,
+}: {
+  currentPage: number;
+  totalPages: number;
+  onGoToPage: (page: number) => void;
+}) {
+  if (totalPages <= 1) return null;
+
+  return (
+    <div className="flex items-center gap-1 mt-4">
+      {Array.from({ length: totalPages }, (_, i) => (
+        <button
+          key={i}
+          onClick={() => onGoToPage(i)}
+          className={`h-1.5 flex-1 rounded-full transition-colors ${
+            i === currentPage
+              ? "bg-blue-600"
+              : i < currentPage
+                ? "bg-blue-300"
+                : "bg-gray-200"
+          } hover:opacity-70`}
+          title={`Page ${i + 1}`}
+        />
+      ))}
+    </div>
+  );
+}
+
+function LessonSelector({
+  lessons,
+  currentLessonId,
+}: {
+  lessons: SiblingLesson[];
+  currentLessonId: string;
+}) {
+  const [, navigate] = useLocation();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const currentIndex = lessons.findIndex((l) => l.id === currentLessonId);
+  const currentLesson = lessons[currentIndex];
+
+  useEffect(() => {
+    if (!open) return;
+    const handleClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative mt-2">
+      <button
+        onClick={() => { if (lessons.length > 1) setOpen((v) => !v); }}
+        className={`text-left text-2xl font-bold flex items-start gap-2 ${lessons.length > 1 ? "cursor-pointer" : ""}`}
+      >
+        <span>{currentLesson?.title}</span>
+        {lessons.length > 1 && (
+          <span className="shrink-0 mt-1.5 flex items-center gap-1.5 text-sm font-normal text-gray-400">
+            {currentIndex + 1}/{lessons.length}
+            <svg className={`w-3.5 h-3.5 transition-transform ${open ? "rotate-180" : ""}`} viewBox="0 0 12 12" fill="currentColor"><path d="M3 5l3 3 3-3" /></svg>
+          </span>
+        )}
+      </button>
+      {open && (
+        <div className="absolute z-50 mt-1 left-0 w-full max-h-64 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg">
+          {lessons.map((lesson, i) => (
+            <button
+              key={lesson.id}
+              onClick={() => {
+                setOpen(false);
+                if (lesson.id !== currentLessonId) navigate(`/reader/${lesson.id}`);
+              }}
+              className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 ${
+                lesson.id === currentLessonId ? "bg-blue-50 text-blue-700 font-medium" : "text-gray-700"
+              }`}
+            >
+              <span className="text-gray-400 mr-2">{i + 1}.</span>
+              {lesson.title}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function ReaderPage({ lessonId }: { lessonId: string }) {
@@ -54,7 +151,7 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
   });
 
   const fullText = lesson?.data.textContent ?? "";
-  const { page, currentPage, totalPages, goNext, goPrev, perPage, setPerPage } = useReaderPagination(fullText);
+  const { page, currentPage, totalPages, goNext, goPrev, goToPage, perPage, setPerPage } = useReaderPagination(fullText);
 
   const languageId = lesson?.data.collection.sourceLanguageId ?? null;
   const { getWord, updateWord, version: wordVersion } =
@@ -299,7 +396,10 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
         >
           &larr; {lessonData.collection.title}
         </Link>
-        <h1 className="text-2xl font-bold mt-2">{lessonData.title}</h1>
+        <LessonSelector
+          lessons={lessonData.collection.lessons}
+          currentLessonId={lessonId}
+        />
       </div>
 
       {lessonData.audioUrl && <AudioPlayer src={lessonData.audioUrl} />}
@@ -326,25 +426,32 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
       </div>
 
       {totalPages > 1 && (
-        <div className="flex items-center justify-between mt-4">
-          <button
-            onClick={handlePrevPage}
-            disabled={currentPage === 0}
-            className="px-4 py-2 text-sm rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
-          >
-            &larr; Previous
-          </button>
-          <span className="text-sm text-gray-500">
-            {currentPage + 1} / {totalPages}
-          </span>
-          <button
-            onClick={handleNextPage}
-            disabled={currentPage === totalPages - 1}
-            className="px-4 py-2 text-sm rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
-          >
-            Next &rarr;
-          </button>
-        </div>
+        <>
+          <PageProgressBar
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onGoToPage={goToPage}
+          />
+          <div className="flex items-center justify-between mt-2">
+            <button
+              onClick={handlePrevPage}
+              disabled={currentPage === 0}
+              className="px-4 py-2 text-sm rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              &larr; Previous
+            </button>
+            <span className="text-sm text-gray-500">
+              {currentPage + 1} / {totalPages}
+            </span>
+            <button
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages - 1}
+              className="px-4 py-2 text-sm rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              Next &rarr;
+            </button>
+          </div>
+        </>
       )}
 
       {wordPopupTarget && (
