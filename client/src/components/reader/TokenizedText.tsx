@@ -1,4 +1,4 @@
-import { memo, useMemo } from "react";
+import { memo, useMemo, useRef, useLayoutEffect } from "react";
 import { tokenize, normalizeWord } from "shared";
 import type { Word } from "shared";
 import WordToken from "./WordToken";
@@ -22,6 +22,7 @@ function TokenizedTextInner({
   phraseGroups,
   tokenOffset = 0,
 }: TokenizedTextProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const tokens = useMemo(() => tokenize(text), [text]);
 
   // Build a lookup: globalIdx → anchorIdx if this token is inside a phrase range
@@ -140,7 +141,25 @@ function TokenizedTextInner({
     );
   }
 
-  return <div className="whitespace-pre-wrap">{elements}</div>;
+  // Mark word-slots that wrap to multiple lines as full-width
+  useLayoutEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const slots = el.querySelectorAll<HTMLElement>(".word-slot");
+    for (const slot of slots) slot.classList.remove("word-slot-block");
+    const multiline: HTMLElement[] = [];
+    for (const slot of slots) {
+      const style = getComputedStyle(slot);
+      const lineHeight = parseFloat(style.lineHeight) || 24;
+      const paddingTop = parseFloat(style.paddingTop);
+      if (slot.clientHeight > paddingTop + lineHeight * 1.5) {
+        multiline.push(slot);
+      }
+    }
+    for (const slot of multiline) slot.classList.add("word-slot-block");
+  });
+
+  return <div ref={containerRef} className="whitespace-pre-wrap">{elements}</div>;
 }
 
 export default memo(TokenizedTextInner);

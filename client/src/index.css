@@ -50,6 +50,11 @@
   vertical-align: baseline;
 }
 
+.word-slot-block {
+  display: block;
+  width: 100%;
+}
+
 /* Translation text positioned in the padding-top area */
 .word-slot-annotation {
   position: absolute;
