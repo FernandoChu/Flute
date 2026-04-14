@@ -18,6 +18,8 @@ const DEFAULT_BINDINGS: KeyBinding[] = [
   { action: "prevSentence", label: "Move to previous sentence", group: "navigation", key: "", enabled: false },
   { action: "nextSentence", label: "Move to next sentence", group: "navigation", key: "", enabled: false },
   { action: "expandPopup", label: "Open word details", group: "navigation", key: "Enter", enabled: true },
+  { action: "prevPage", label: "Previous page", group: "navigation", key: "PageUp", enabled: true },
+  { action: "nextPage", label: "Next page", group: "navigation", key: "PageDown", enabled: true },
   // Status
   { action: "setStatus1", label: "Set status to 1", group: "status", key: "1", enabled: true },
   { action: "setStatus2", label: "Set status to 2", group: "status", key: "2", enabled: true },

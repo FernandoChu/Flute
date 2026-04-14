@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { normalizeWord } from "shared";
+import { normalizeWord, tokenize, WordStatus } from "shared";
 import { apiFetch } from "../lib/api";
 import { useWordStatuses } from "../hooks/useWordStatuses";
 import { useTextSelection } from "../hooks/useTextSelection";
@@ -12,6 +12,7 @@ import InlineTranslation from "../components/reader/InlineTranslation";
 import AudioPlayer from "../components/reader/AudioPlayer";
 import ReaderSettingsPanel from "../components/reader/ReaderSettingsPanel";
 import { useReaderSettings } from "../hooks/useReaderSettings";
+import { useReaderPagination } from "../hooks/useReaderPagination";
 
 interface LessonDetail {
   id: string;
@@ -51,6 +52,9 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
     queryFn: () => apiFetch<{ data: LessonDetail }>(`/lessons/${lessonId}`),
   });
 
+  const fullText = lesson?.data.textContent ?? "";
+  const { page, currentPage, totalPages, goNext, goPrev, perPage, setPerPage } = useReaderPagination(fullText);
+
   const languageId = lesson?.data.collection.sourceLanguageId ?? null;
   const { getWord, updateWord, version: wordVersion } =
     useWordStatuses(languageId);
@@ -78,6 +82,36 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
     setShowTranslations((prev) => !prev);
   }, []);
 
+  const handlePrevPage = useCallback(() => {
+    setPopup(null);
+    setWordPopupTarget(null);
+    closePhrasePopup();
+    goPrev();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [goPrev, closePhrasePopup]);
+
+  const handleNextPage = useCallback(() => {
+    // Mark all New words on the current page as Known
+    const tokens = tokenize(page.text);
+    const seen = new Set<string>();
+    for (const token of tokens) {
+      if (!token.isWord) continue;
+      const term = normalizeWord(token.text);
+      if (seen.has(term)) continue;
+      seen.add(term);
+      const word = getWord(term);
+      if (!word || word.status === WordStatus.New) {
+        updateWord(token.text, { status: WordStatus.Known });
+      }
+    }
+
+    setPopup(null);
+    setWordPopupTarget(null);
+    closePhrasePopup();
+    goNext();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [goNext, closePhrasePopup, page.text, getWord, updateWord]);
+
   const { syncSelectedIdx } = useReaderNavigation(textContainerRef, {
     popup,
     setPopup: handleSetPopup,
@@ -87,6 +121,8 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
     updateWord,
     onExpandPopup: handleExpandPopup,
     onToggleTranslations: handleToggleTranslations,
+    onPrevPage: handlePrevPage,
+    onNextPage: handleNextPage,
   });
 
   // Fetch translation when a word is clicked
@@ -222,7 +258,7 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
 
   return (
     <div className="max-w-3xl mx-auto p-6">
-      <ReaderSettingsPanel />
+      <ReaderSettingsPanel perPage={perPage} onPerPageChange={setPerPage} />
       <div className="mb-6">
         <Link
           href="/"
@@ -246,13 +282,36 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
         }}
       >
         <TokenizedText
-          text={lessonData.textContent}
+          text={page.text}
           getWord={getWord}
           wordVersion={wordVersion}
           onWordClick={handleWordClick}
           persistedTranslations={showTranslations ? persistedTranslations : undefined}
+          tokenOffset={page.tokenOffset}
         />
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-4">
+          <button
+            onClick={handlePrevPage}
+            disabled={currentPage === 0}
+            className="px-4 py-2 text-sm rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            &larr; Previous
+          </button>
+          <span className="text-sm text-gray-500">
+            {currentPage + 1} / {totalPages}
+          </span>
+          <button
+            onClick={handleNextPage}
+            disabled={currentPage === totalPages - 1}
+            className="px-4 py-2 text-sm rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            Next &rarr;
+          </button>
+        </div>
+      )}
 
       {wordPopupTarget && (
         <WordPopup

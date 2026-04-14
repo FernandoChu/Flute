@@ -7,7 +7,12 @@ const FONT_OPTIONS = [
   { label: "Monospace", value: "monospace" },
 ];
 
-export default function ReaderSettingsPanel() {
+interface Props {
+  perPage: number;
+  onPerPageChange: (n: number) => void;
+}
+
+export default function ReaderSettingsPanel({ perPage, onPerPageChange }: Props) {
   const [open, setOpen] = useState(false);
   const { settings, update, reset } = useReaderSettings();
 
@@ -114,6 +119,22 @@ export default function ReaderSettingsPanel() {
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Paragraphs per page */}
+          <div>
+            <label className="text-xs text-gray-500 block mb-1">
+              Paragraphs per page: {perPage}
+            </label>
+            <input
+              type="range"
+              min={2}
+              max={30}
+              step={1}
+              value={perPage}
+              onChange={(e) => onPerPageChange(Number(e.target.value))}
+              className="w-full"
+            />
           </div>
         </div>
       )}

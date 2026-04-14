@@ -12,6 +12,8 @@ interface Options {
   updateWord: (term: string, data: { translation?: string; status?: number; notes?: string }) => Promise<unknown>;
   onExpandPopup?: () => void;
   onToggleTranslations?: () => void;
+  onPrevPage?: () => void;
+  onNextPage?: () => void;
 }
 
 function getTokenElements(container: HTMLElement): HTMLElement[] {
@@ -88,7 +90,7 @@ function extractParagraph(container: HTMLElement, anchorIdx: number): string {
 
 export function useReaderNavigation(
   textContainerRef: React.RefObject<HTMLDivElement | null>,
-  { popup, setPopup, closePhrasePopup, hoveredTokenIdxRef, getWord, updateWord, onExpandPopup, onToggleTranslations }: Options,
+  { popup, setPopup, closePhrasePopup, hoveredTokenIdxRef, getWord, updateWord, onExpandPopup, onToggleTranslations, onPrevPage, onNextPage }: Options,
 ) {
   const { bindings } = useKeybindings();
   const selectedIdxRef = useRef<number>(-1);
@@ -128,6 +130,14 @@ export function useReaderNavigation(
       switch (action) {
         case "toggleTranslations":
           if (onToggleTranslations) onToggleTranslations();
+          break;
+
+        case "prevPage":
+          if (onPrevPage) onPrevPage();
+          break;
+
+        case "nextPage":
+          if (onNextPage) onNextPage();
           break;
 
         case "expandPopup":
@@ -252,7 +262,7 @@ export function useReaderNavigation(
 
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
-  }, [bindings, popup, getWord, updateWord, closePhrasePopup, setPopup, textContainerRef, hoveredTokenIdxRef, onExpandPopup, onToggleTranslations]);
+  }, [bindings, popup, getWord, updateWord, closePhrasePopup, setPopup, textContainerRef, hoveredTokenIdxRef, onExpandPopup, onToggleTranslations, onPrevPage, onNextPage]);
 
   return { selectedIdxRef, syncSelectedIdx };
 }

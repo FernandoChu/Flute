@@ -9,6 +9,7 @@ interface TokenizedTextProps {
   wordVersion: number;
   onWordClick: (term: string, element: HTMLElement) => void;
   persistedTranslations?: Map<number, string>;
+  tokenOffset?: number;
 }
 
 function TokenizedTextInner({
@@ -17,15 +18,18 @@ function TokenizedTextInner({
   wordVersion: _wordVersion,
   onWordClick,
   persistedTranslations,
+  tokenOffset = 0,
 }: TokenizedTextProps) {
   const tokens = useMemo(() => tokenize(text), [text]);
 
   return (
     <div className="whitespace-pre-wrap">
       {tokens.map((token, i) => {
+        const globalIdx = tokenOffset + i;
+
         if (!token.isWord) {
           return (
-            <span key={i} data-token-idx={i}>
+            <span key={globalIdx} data-token-idx={globalIdx}>
               {token.text}
             </span>
           );
@@ -33,12 +37,12 @@ function TokenizedTextInner({
 
         const normalized = normalizeWord(token.text);
         const word = getWord(normalized);
-        const translation = persistedTranslations?.get(i);
+        const translation = persistedTranslations?.get(globalIdx);
 
         return (
           <WordToken
-            key={i}
-            tokenIdx={i}
+            key={globalIdx}
+            tokenIdx={globalIdx}
             text={token.text}
             status={word?.status}
             translation={translation}
