@@ -41,7 +41,7 @@ export function useTextSelection(
 
   function clearHighlightFrom(container: HTMLElement) {
     for (const el of getTokenElements(container)) {
-      el.classList.remove("phrase-selected", "inline-translation-space");
+      el.classList.remove("phrase-selected");
     }
   }
 
@@ -82,12 +82,6 @@ export function useTextSelection(
         return;
       }
 
-      // Add spacer to all tokens so the line expands to fit the translation
-      for (const el of highlighted) {
-        el.classList.add("inline-translation-space");
-      }
-
-      // Compute rect after spacer is applied (getBoundingClientRect forces reflow)
       const first = highlighted[0].getBoundingClientRect();
       const last = highlighted[highlighted.length - 1].getBoundingClientRect();
       const rect = new DOMRect(

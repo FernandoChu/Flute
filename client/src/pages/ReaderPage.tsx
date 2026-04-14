@@ -8,7 +8,6 @@ import { useTextSelection } from "../hooks/useTextSelection";
 import { useReaderNavigation } from "../hooks/useReaderNavigation";
 import TokenizedText from "../components/reader/TokenizedText";
 import WordPopup from "../components/reader/WordPopup";
-import InlineTranslation from "../components/reader/InlineTranslation";
 import AudioPlayer from "../components/reader/AudioPlayer";
 import ReaderSettingsPanel from "../components/reader/ReaderSettingsPanel";
 import { useReaderSettings } from "../hooks/useReaderSettings";
@@ -198,22 +197,48 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
     return () => container.removeEventListener("contextmenu", handleContextMenu);
   });
 
-  // Persist a phrase translation (anchored to first word token)
-  const handlePhraseTranslated = useCallback(
-    (translation: string) => {
-      if (!phrasePopup) return;
-      setPersistedTranslations((prev) =>
-        new Map(prev).set(phrasePopup.anchorWordIdx, translation),
-      );
-      setPhraseGroups((prev) => {
-        const next = new Map(prev);
-        next.set(phrasePopup.anchorWordIdx, phrasePopup.wordTokenIndices);
-        return next;
+  // Fetch phrase translation (mirrors single-word flow: placeholder → real translation)
+  const phrasePopupRef = useRef(phrasePopup);
+  useEffect(() => {
+    if (!phrasePopup || !lesson?.data) return;
+    // Avoid re-processing the same selection (closePhrasePopup nulls phrasePopup,
+    // triggering a re-run that early-returns, but guard against edge cases)
+    if (phrasePopup === phrasePopupRef.current) return;
+    phrasePopupRef.current = phrasePopup;
+
+    const { anchorWordIdx, wordTokenIndices, phrase } = phrasePopup;
+    const sourceLang = lesson.data.collection.sourceLanguage?.code;
+    const targetLang = lesson.data.collection.targetLanguage?.code;
+
+    // Immediately persist phrase group with placeholder so in-flow space is created
+    setPhraseGroups((prev) => new Map(prev).set(anchorWordIdx, wordTokenIndices));
+    setPersistedTranslations((prev) => new Map(prev).set(anchorWordIdx, "\u2026"));
+    closePhrasePopup();
+
+    if (!sourceLang || !targetLang) return;
+
+    apiFetch<{ data: { translation: string } }>("/translate/sentence", {
+      method: "POST",
+      body: JSON.stringify({ sentence: phrase, sourceLang, targetLang }),
+    })
+      .then((res) => {
+        setPersistedTranslations((prev) =>
+          new Map(prev).set(anchorWordIdx, res.data.translation),
+        );
+      })
+      .catch(() => {
+        setPersistedTranslations((prev) => {
+          const next = new Map(prev);
+          next.delete(anchorWordIdx);
+          return next;
+        });
+        setPhraseGroups((prev) => {
+          const next = new Map(prev);
+          next.delete(anchorWordIdx);
+          return next;
+        });
       });
-      closePhrasePopup();
-    },
-    [phrasePopup, closePhrasePopup],
-  );
+  }, [phrasePopup, lesson, closePhrasePopup]);
 
   const handleWordClick = useCallback(
     (term: string, element: HTMLElement) => {
@@ -334,16 +359,6 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
         />
       )}
 
-      {phrasePopup && (
-        <InlineTranslation
-          text={phrasePopup.phrase}
-          type="phrase"
-          sourceLang={lessonData.collection.sourceLanguage?.code}
-          targetLang={lessonData.collection.targetLanguage?.code}
-          anchorRect={phrasePopup.rect}
-          onTranslated={handlePhraseTranslated}
-        />
-      )}
     </div>
   );
 }
