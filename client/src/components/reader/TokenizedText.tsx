@@ -112,35 +112,17 @@ function TokenizedTextInner({
     }
 
     elements.push(
-      <span
+      <ruby
         key={`phrase-${anchorIdx}`}
-        className="inline-block leading-none"
+        className="border-b-2 border-pill"
       >
-        {translation && (
-          <>
-            <span
-              className="block text-base italic text-center pointer-events-none text-pill"
-            >
-              {translation}
-            </span>
-            <span
-              className="block mx-auto pointer-events-none"
-              style={{
-                width: 0,
-                height: 0,
-                borderLeft: "7px solid transparent",
-                borderRight: "7px solid transparent",
-                borderBottom: "7px solid var(--color-pill)",
-              }}
-            />
-          </>
+        {phraseChildren}
+        {translation ? (
+          <rt className="text-base italic text-pill rb-base">{translation}</rt>
+        ) : (
+          <rt />
         )}
-        <span
-          className="rounded px-1.5 py-0.5 leading-normal border-2 border-pill"
-        >
-          {phraseChildren}
-        </span>
-      </span>,
+      </ruby>,
     );
   }
 

@@ -42,15 +42,13 @@ function WordTokenInner({ tokenIdx, text, status, translation, inPhrase, onClick
   const className = STATUS_CLASSES[effectiveStatus] ?? "";
 
   if (inPhrase && !translation) {
-    const bgColor = STATUS_BG[effectiveStatus];
     return (
       <span
         data-token-idx={tokenIdx}
         data-word-token
         data-word-text={text}
         onClick={onClick}
-        className="cursor-pointer rounded-sm px-[1px]"
-        style={bgColor ? { backgroundColor: bgColor, color: "#1f2937" } : { color: "white" }}
+        className={`cursor-pointer rounded-sm px-[1px] ${className}`}
       >
         {text}
       </span>

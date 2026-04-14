@@ -48,3 +48,9 @@
   border-radius: 0;
 }
 
+ruby rt.rb-base {
+  ruby-align: center;
+  font-size: 1rem;
+  line-height: 1;
+}
+
