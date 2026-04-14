@@ -42,15 +42,31 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* Every word gets a fixed-height slot so lines never shift */
+.word-slot {
+  display: inline-block;
+  position: relative;
+  padding-top: 1.2rem;
+  vertical-align: baseline;
+}
+
+/* Translation text positioned in the padding-top area */
+.word-slot-annotation {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 0.875rem;
+  font-style: italic;
+  line-height: 1.2rem;
+  pointer-events: none;
+}
+
 .phrase-selected {
   background-color: var(--color-pill) !important;
   color: white !important;
   border-radius: 0;
 }
 
-ruby rt.rb-base {
-  ruby-align: center;
-  font-size: 1rem;
-  line-height: 1;
-}
 

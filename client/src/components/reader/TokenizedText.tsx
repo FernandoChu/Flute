@@ -60,18 +60,35 @@ function TokenizedTextInner({
         const normalized = normalizeWord(token.text);
         const word = getWord(normalized);
         const translation = persistedTranslations?.get(globalIdx);
-        elements.push(
-          <WordToken
-            key={globalIdx}
-            tokenIdx={globalIdx}
-            text={token.text}
-            status={word?.status}
-            translation={translation}
-            onClick={(e) =>
-              onWordClick(token.text, e.currentTarget as HTMLElement)
-            }
-          />,
-        );
+        if (translation) {
+          elements.push(
+            <span key={globalIdx} className="word-slot border-b-2 border-pill">
+              <span className="word-slot-annotation text-pill">
+                {translation}
+              </span>
+              <WordToken
+                tokenIdx={globalIdx}
+                text={token.text}
+                status={word?.status}
+                onClick={(e) =>
+                  onWordClick(token.text, e.currentTarget as HTMLElement)
+                }
+              />
+            </span>,
+          );
+        } else {
+          elements.push(
+            <WordToken
+              key={globalIdx}
+              tokenIdx={globalIdx}
+              text={token.text}
+              status={word?.status}
+              onClick={(e) =>
+                onWordClick(token.text, e.currentTarget as HTMLElement)
+              }
+            />,
+          );
+        }
       }
       i++;
       continue;
@@ -83,6 +100,7 @@ function TokenizedTextInner({
     const translation = persistedTranslations?.get(anchorIdx);
 
     const phraseChildren: React.ReactNode[] = [];
+    let firstWordInPhrase = true;
     while (i < tokens.length && tokenOffset + i <= maxIdx) {
       const gIdx = tokenOffset + i;
       const token = tokens[i];
@@ -95,34 +113,46 @@ function TokenizedTextInner({
       } else {
         const normalized = normalizeWord(token.text);
         const word = getWord(normalized);
-        phraseChildren.push(
-          <WordToken
-            key={gIdx}
-            tokenIdx={gIdx}
-            text={token.text}
-            status={word?.status}
-            inPhrase
-            onClick={(e) =>
-              onWordClick(token.text, e.currentTarget as HTMLElement)
-            }
-          />,
-        );
+        if (firstWordInPhrase && translation) {
+          phraseChildren.push(
+            <span key={gIdx} className="word-slot">
+              <span className="word-slot-annotation text-pill">
+                {translation}
+              </span>
+              <WordToken
+                tokenIdx={gIdx}
+                text={token.text}
+                status={word?.status}
+                inPhrase
+                onClick={(e) =>
+                  onWordClick(token.text, e.currentTarget as HTMLElement)
+                }
+              />
+            </span>,
+          );
+        } else {
+          phraseChildren.push(
+            <WordToken
+              key={gIdx}
+              tokenIdx={gIdx}
+              text={token.text}
+              status={word?.status}
+              inPhrase
+              onClick={(e) =>
+                onWordClick(token.text, e.currentTarget as HTMLElement)
+              }
+            />,
+          );
+        }
+        firstWordInPhrase = false;
       }
       i++;
     }
 
     elements.push(
-      <ruby
-        key={`phrase-${anchorIdx}`}
-        className="border-b-2 border-pill"
-      >
+      <span key={`phrase-${anchorIdx}`} className="border-b-2 border-pill">
         {phraseChildren}
-        {translation ? (
-          <rt className="text-base italic text-pill rb-base">{translation}</rt>
-        ) : (
-          <rt />
-        )}
-      </ruby>,
+      </span>,
     );
   }
 
