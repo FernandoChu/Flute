@@ -207,23 +207,30 @@ export function useReaderNavigation(
         }
 
         case "setStatus1":
-          if (popup) updateWord(popup.term, { status: WordStatus.Learning1 });
-          break;
         case "setStatus2":
-          if (popup) updateWord(popup.term, { status: WordStatus.Learning2 });
-          break;
         case "setStatus3":
-          if (popup) updateWord(popup.term, { status: WordStatus.Learning3 });
-          break;
         case "setStatus4":
-          if (popup) updateWord(popup.term, { status: WordStatus.Learning4 });
-          break;
         case "setStatusKnown":
-          if (popup) updateWord(popup.term, { status: WordStatus.Known });
+        case "setStatusIgnored": {
+          let term = popup?.term;
+          if (!term) {
+            const hoveredEl = wordEls.find(
+              (el) => Number(el.dataset.tokenIdx) === hoveredTokenIdxRef.current,
+            );
+            if (hoveredEl) term = hoveredEl.dataset.wordText ?? hoveredEl.textContent ?? "";
+          }
+          if (!term) break;
+          const statusMap: Record<string, number> = {
+            setStatus1: WordStatus.Learning1,
+            setStatus2: WordStatus.Learning2,
+            setStatus3: WordStatus.Learning3,
+            setStatus4: WordStatus.Learning4,
+            setStatusKnown: WordStatus.Known,
+            setStatusIgnored: WordStatus.Ignored,
+          };
+          updateWord(term, { status: statusMap[action] });
           break;
-        case "setStatusIgnored":
-          if (popup) updateWord(popup.term, { status: WordStatus.Ignored });
-          break;
+        }
 
         case "copySentence": {
           const text = extractSentence(container!, hoveredTokenIdxRef.current);
