@@ -21,7 +21,7 @@ function TokenizedTextInner({
   const tokens = useMemo(() => tokenize(text), [text]);
 
   return (
-    <div className="text-lg leading-relaxed whitespace-pre-wrap">
+    <div className="whitespace-pre-wrap">
       {tokens.map((token, i) => {
         if (!token.isWord) {
           return (

@@ -10,6 +10,8 @@ import TokenizedText from "../components/reader/TokenizedText";
 import WordPopup from "../components/reader/WordPopup";
 import InlineTranslation from "../components/reader/InlineTranslation";
 import AudioPlayer from "../components/reader/AudioPlayer";
+import ReaderSettingsPanel from "../components/reader/ReaderSettingsPanel";
+import { useReaderSettings } from "../hooks/useReaderSettings";
 
 interface LessonDetail {
   id: string;
@@ -42,6 +44,7 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
     Map<number, string>
   >(new Map());
   const [showTranslations, setShowTranslations] = useState(true);
+  const { settings: readerSettings } = useReaderSettings();
 
   const { data: lesson, isLoading } = useQuery({
     queryKey: ["lesson", lessonId],
@@ -219,6 +222,7 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
 
   return (
     <div className="max-w-3xl mx-auto p-6">
+      <ReaderSettingsPanel />
       <div className="mb-6">
         <Link
           href="/"
@@ -234,6 +238,12 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
       <div
         ref={textContainerRef}
         className="bg-white rounded-lg border border-gray-200 p-6 select-none"
+        style={{
+          fontSize: `${readerSettings.fontSize}px`,
+          fontFamily: readerSettings.fontFamily,
+          textAlign: readerSettings.textAlign,
+          lineHeight: readerSettings.lineHeight,
+        }}
       >
         <TokenizedText
           text={lessonData.textContent}
