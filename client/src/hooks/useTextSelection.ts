@@ -31,12 +31,30 @@ export function useTextSelection(
   const dragStartIdx = useRef<number | null>(null);
   const isDragging = useRef(false);
 
+  const TRAILING_PUNCT = /^[.?!]+$/;
+
   function applyHighlight(container: HTMLElement, startIdx: number, endIdx: number) {
     const lo = Math.min(startIdx, endIdx);
     const hi = Math.max(startIdx, endIdx);
-    for (const el of getTokenElements(container)) {
+    const tokens = getTokenElements(container);
+
+    // Extend past hi to include trailing sentence-ending punctuation tokens.
+    // Non-word tokens may contain punctuation + space (e.g. ". "), so check
+    // the raw text without trimming — only match pure punctuation tokens.
+    let extHi = hi;
+    for (const el of tokens) {
       const idx = Number(el.dataset.tokenIdx);
-      el.classList.toggle("phrase-selected", idx >= lo && idx <= hi);
+      if (idx <= hi) continue;
+      if (!el.hasAttribute("data-word-token") && TRAILING_PUNCT.test(el.textContent ?? "")) {
+        extHi = idx;
+      } else {
+        break;
+      }
+    }
+
+    for (const el of tokens) {
+      const idx = Number(el.dataset.tokenIdx);
+      el.classList.toggle("phrase-selected", idx >= lo && idx <= extHi);
     }
   }
 

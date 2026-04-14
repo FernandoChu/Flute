@@ -83,7 +83,7 @@ export function tokenize(text: string): Token[] {
   const tokens: Token[] = [];
   // Match word characters (including unicode letters, accented chars, apostrophes, hyphens)
   // or non-word sequences
-  const regex = /[\p{L}\p{M}\p{N}'-]+|[^\p{L}\p{M}\p{N}'-]+/gu;
+  const regex = /[\p{L}\p{M}\p{N}'-]+|\s+|[^\p{L}\p{M}\p{N}'\-\s]+/gu;
   let match: RegExpExecArray | null;
 
   while ((match = regex.exec(text)) !== null) {

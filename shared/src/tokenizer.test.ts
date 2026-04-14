@@ -13,11 +13,12 @@ describe("tokenize", () => {
 
   it("handles punctuation as separate non-word tokens", () => {
     const tokens = tokenize("Hello, world!");
-    expect(tokens).toHaveLength(4);
+    expect(tokens).toHaveLength(5);
     expect(tokens[0]).toEqual({ text: "Hello", isWord: true });
-    expect(tokens[1]).toEqual({ text: ", ", isWord: false });
-    expect(tokens[2]).toEqual({ text: "world", isWord: true });
-    expect(tokens[3]).toEqual({ text: "!", isWord: false });
+    expect(tokens[1]).toEqual({ text: ",", isWord: false });
+    expect(tokens[2]).toEqual({ text: " ", isWord: false });
+    expect(tokens[3]).toEqual({ text: "world", isWord: true });
+    expect(tokens[4]).toEqual({ text: "!", isWord: false });
   });
 
   it("handles apostrophes and hyphens within words", () => {
@@ -74,4 +75,5 @@ describe("normalizeWord", () => {
   it("handles already-normalized text", () => {
     expect(normalizeWord("hello")).toBe("hello");
   });
+
 });
