@@ -73,19 +73,33 @@ export default function VocabularyPage() {
     [sortBy],
   );
 
-  const handleFilterChange = useCallback((setter: (v: string) => void) => {
-    return (value: string) => {
-      setter(value);
-      setPage(1);
-      setSelectedIds(new Set());
-    };
+  const handleLanguageChange = useCallback((value: string) => {
+    setLanguageId(value);
+    setPage(1);
+    setSelectedIds(new Set());
+  }, []);
+
+  const handleStatusChange = useCallback((value: string) => {
+    setStatus(value);
+    setPage(1);
+    setSelectedIds(new Set());
+  }, []);
+
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
+    setPage(1);
+    setSelectedIds(new Set());
   }, []);
 
   const invalidate = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ["vocabulary"] });
     queryClient.invalidateQueries({ queryKey: ["vocabulary-stats"] });
-    setSelectedIds(new Set());
   }, [queryClient]);
+
+  const invalidateAndClearSelection = useCallback(() => {
+    invalidate();
+    setSelectedIds(new Set());
+  }, [invalidate]);
 
   const handleToggleSelect = useCallback((id: string) => {
     setSelectedIds((prev) => {
@@ -111,7 +125,7 @@ export default function VocabularyPage() {
       method: "PATCH",
       body: JSON.stringify({ wordIds: [...selectedIds], status: newStatus }),
     });
-    invalidate();
+    invalidateAndClearSelection();
   };
 
   const handleBulkDelete = async () => {
@@ -121,7 +135,7 @@ export default function VocabularyPage() {
       method: "DELETE",
       body: JSON.stringify({ wordIds: [...selectedIds] }),
     });
-    invalidate();
+    invalidateAndClearSelection();
   };
 
   return (
@@ -145,9 +159,9 @@ export default function VocabularyPage() {
             languageId={languageId}
             status={status}
             search={search}
-            onLanguageChange={handleFilterChange(setLanguageId)}
-            onStatusChange={handleFilterChange(setStatus)}
-            onSearchChange={handleFilterChange(setSearch)}
+            onLanguageChange={handleLanguageChange}
+            onStatusChange={handleStatusChange}
+            onSearchChange={handleSearchChange}
           />
 
           {selectedIds.size > 0 && (

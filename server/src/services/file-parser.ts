@@ -31,14 +31,21 @@ export async function parseEpub(buffer: Buffer): Promise<ParsedLesson[]> {
         const raw = await epub.getChapterAsync(chapter.id);
         // Strip HTML tags to get plain text
         const text = raw
-          .replace(/<[^>]+>/g, " ")
+          // Convert block-level tags to newlines to preserve paragraph breaks
+          .replace(/<br\s*\/?>/gi, "\n")
+          .replace(/<\/?(p|div|h[1-6]|blockquote|li|tr)\b[^>]*>/gi, "\n")
+          // Strip remaining HTML tags
+          .replace(/<[^>]+>/g, "")
           .replace(/&nbsp;/g, " ")
           .replace(/&amp;/g, "&")
           .replace(/&lt;/g, "<")
           .replace(/&gt;/g, ">")
           .replace(/&quot;/g, '"')
           .replace(/&#39;/g, "'")
-          .replace(/\s+/g, " ")
+          // Collapse spaces/tabs within lines but preserve newlines
+          .replace(/[^\S\n]+/g, " ")
+          // Collapse multiple blank lines into one
+          .replace(/\n{3,}/g, "\n\n")
           .trim();
         if (text.length > 0) {
           const title = chapter.title || `Chapter ${lessons.length + 1}`;
