@@ -22,6 +22,7 @@ export default function CreateCollectionModal({
   const [title, setTitle] = useState("");
   const [sourceLanguageId, setSourceLanguageId] = useState("");
   const [targetLanguageId, setTargetLanguageId] = useState("");
+  const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState("");
 
   const { data: languages } = useQuery({
@@ -46,15 +47,38 @@ export default function CreateCollectionModal({
   }, [langPrefs]);
 
   const create = useMutation({
-    mutationFn: () =>
-      apiFetch("/collections", {
+    mutationFn: async () => {
+      const res = await apiFetch<{ data: { id: string } }>("/collections", {
         method: "POST",
         body: JSON.stringify({
           title,
           sourceLanguageId: Number(sourceLanguageId),
           targetLanguageId: Number(targetLanguageId),
         }),
-      }),
+      });
+
+      if (file) {
+        const formData = new FormData();
+        formData.append("file", file);
+        const username = localStorage.getItem("username");
+        const uploadRes = await fetch(
+          `/api/collections/${res.data.id}/lessons/upload`,
+          {
+            method: "POST",
+            headers: username ? { "x-username": username } : {},
+            body: formData,
+          },
+        );
+        if (!uploadRes.ok) {
+          const body = await uploadRes.json().catch(() => null);
+          throw new Error(
+            body?.error?.message || `File upload failed: ${uploadRes.status}`,
+          );
+        }
+      }
+
+      return res;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["collections"] });
       onClose();
@@ -127,6 +151,26 @@ export default function CreateCollectionModal({
                 </option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Import file (optional)
+            </label>
+            <input
+              type="file"
+              accept=".txt,.epub,.srt"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              className="w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              .txt, .epub, or .srt — lessons will be created automatically
+            </p>
+            {file && (
+              <p className="text-sm text-gray-500 mt-1">
+                {file.name} ({(file.size / 1024).toFixed(1)} KB)
+              </p>
+            )}
           </div>
 
           {error && <p className="text-sm text-red-600">{error}</p>}
