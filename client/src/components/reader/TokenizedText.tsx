@@ -100,7 +100,6 @@ function TokenizedTextInner({
     const translation = persistedTranslations?.get(anchorIdx);
 
     const phraseChildren: React.ReactNode[] = [];
-    let firstWordInPhrase = true;
     while (i < tokens.length && tokenOffset + i <= maxIdx) {
       const gIdx = tokenOffset + i;
       const token = tokens[i];
@@ -113,44 +112,29 @@ function TokenizedTextInner({
       } else {
         const normalized = normalizeWord(token.text);
         const word = getWord(normalized);
-        if (firstWordInPhrase && translation) {
-          phraseChildren.push(
-            <span key={gIdx} className="word-slot">
-              <span className="word-slot-annotation text-pill">
-                {translation}
-              </span>
-              <WordToken
-                tokenIdx={gIdx}
-                text={token.text}
-                status={word?.status}
-                inPhrase
-                onClick={(e) =>
-                  onWordClick(token.text, e.currentTarget as HTMLElement)
-                }
-              />
-            </span>,
-          );
-        } else {
-          phraseChildren.push(
-            <WordToken
-              key={gIdx}
-              tokenIdx={gIdx}
-              text={token.text}
-              status={word?.status}
-              inPhrase
-              onClick={(e) =>
-                onWordClick(token.text, e.currentTarget as HTMLElement)
-              }
-            />,
-          );
-        }
-        firstWordInPhrase = false;
+        phraseChildren.push(
+          <WordToken
+            key={gIdx}
+            tokenIdx={gIdx}
+            text={token.text}
+            status={word?.status}
+            inPhrase
+            onClick={(e) =>
+              onWordClick(token.text, e.currentTarget as HTMLElement)
+            }
+          />,
+        );
       }
       i++;
     }
 
     elements.push(
-      <span key={`phrase-${anchorIdx}`} className="border-b-2 border-pill">
+      <span key={`phrase-${anchorIdx}`} className="word-slot border-b-2 border-pill">
+        {translation && (
+          <span className="word-slot-annotation text-pill">
+            {translation}
+          </span>
+        )}
         {phraseChildren}
       </span>,
     );
