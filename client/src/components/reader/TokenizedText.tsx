@@ -130,11 +130,12 @@ function TokenizedTextInner({
     }
 
     elements.push(
-      <span key={`phrase-${anchorIdx}`} className="word-slot border-b-2 border-pill">
+      <span
+        key={`phrase-${anchorIdx}`}
+        className="word-slot border-b-2 border-pill"
+      >
         {translation && (
-          <span className="word-slot-annotation text-pill">
-            {translation}
-          </span>
+          <span className="word-slot-annotation text-pill">{translation}</span>
         )}
         {phraseChildren}
       </span>,
@@ -159,7 +160,11 @@ function TokenizedTextInner({
     for (const slot of multiline) slot.classList.add("word-slot-block");
   });
 
-  return <div ref={containerRef} className="whitespace-pre-wrap">{elements}</div>;
+  return (
+    <div ref={containerRef} className="whitespace-pre-wrap">
+      {elements}
+    </div>
+  );
 }
 
 export default memo(TokenizedTextInner);
