@@ -3,7 +3,8 @@ import { requireAuth } from "../middleware/auth.js";
 import { prisma } from "../index.js";
 import { encrypt, decrypt } from "../services/encryption.js";
 import { getProvider } from "../services/translation/factory.js";
-import { TRANSLATION_PROVIDERS } from "shared";
+import { getTtsProvider } from "../services/tts/factory.js";
+import { TRANSLATION_PROVIDERS, TTS_PROVIDERS } from "shared";
 
 const router = Router();
 router.use(requireAuth);
@@ -46,9 +47,10 @@ router.post(
         return;
       }
 
-      if (!TRANSLATION_PROVIDERS.includes(provider)) {
+      const ALL_PROVIDERS = [...TRANSLATION_PROVIDERS, ...TTS_PROVIDERS];
+      if (!ALL_PROVIDERS.includes(provider)) {
         res.status(400).json({
-          error: { message: `Invalid provider. Must be one of: ${TRANSLATION_PROVIDERS.join(", ")}` },
+          error: { message: `Invalid provider. Must be one of: ${ALL_PROVIDERS.join(", ")}` },
         });
         return;
       }
@@ -114,8 +116,13 @@ router.post(
         return;
       }
 
-      const translationProvider = getProvider(provider, apiKey);
-      await translationProvider.translateWord("hello", "en", "es");
+      if ((TTS_PROVIDERS as readonly string[]).includes(provider)) {
+        const ttsProvider = getTtsProvider(provider, apiKey);
+        await ttsProvider.synthesize("hello", "en-US");
+      } else {
+        const translationProvider = getProvider(provider, apiKey);
+        await translationProvider.translateWord("hello", "en", "es");
+      }
 
       res.json({ data: { valid: true } });
     } catch (err: any) {

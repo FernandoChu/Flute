@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { normalizeWord, tokenize, WordStatus } from "shared";
 import { apiFetch } from "../lib/api";
@@ -125,7 +125,56 @@ function LessonSelector({
   );
 }
 
+function LessonAudio({ lessonId, audioUrl }: { lessonId: string; audioUrl: string | null }) {
+  const queryClient = useQueryClient();
+  const generateTts = useMutation({
+    mutationFn: () =>
+      apiFetch<{ data: { audioUrl: string } }>(`/tts/generate/${lessonId}`, {
+        method: "POST",
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["lesson", lessonId] });
+    },
+  });
+
+  if (audioUrl) {
+    return (
+      <div className="flex items-center gap-2">
+        <div className="flex-1">
+          <AudioPlayer src={audioUrl} />
+        </div>
+        <button
+          onClick={() => generateTts.mutate()}
+          disabled={generateTts.isPending}
+          title="Regenerate audio"
+          className="shrink-0 px-2 py-2 text-xs text-gray-500 hover:text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+        >
+          {generateTts.isPending ? "..." : "Regen"}
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mb-4">
+      <button
+        onClick={() => generateTts.mutate()}
+        disabled={generateTts.isPending}
+        className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+      >
+        {generateTts.isPending ? "Generating audio..." : "Generate Audio (TTS)"}
+      </button>
+      {generateTts.isError && (
+        <p className="text-sm text-red-600 mt-2">
+          {(generateTts.error as Error).message}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function ReaderPage({ lessonId }: { lessonId: string }) {
+  const queryClient = useQueryClient();
   const [popup, setPopup] = useState<{
     term: string;
     element: HTMLElement;
@@ -404,7 +453,7 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
         />
       </div>
 
-      {lessonData.audioUrl && <AudioPlayer src={lessonData.audioUrl} />}
+      <LessonAudio lessonId={lessonId} audioUrl={lessonData.audioUrl} />
 
       <div
         ref={textContainerRef}

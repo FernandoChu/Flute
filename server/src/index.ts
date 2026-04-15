@@ -18,6 +18,7 @@ import translateRoutes from "./routes/translate.js";
 import vocabularyRoutes from "./routes/vocabulary.js";
 import reviewRoutes from "./routes/reviews.js";
 import audioRoutes from "./routes/audio.js";
+import ttsRoutes from "./routes/tts.js";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 export const prisma = new PrismaClient({ adapter });
@@ -44,6 +45,7 @@ app.use("/api/settings", settingsRoutes);
 app.use("/api/translate", translateRoutes);
 app.use("/api/vocabulary", vocabularyRoutes);
 app.use("/api/reviews", reviewRoutes);
+app.use("/api/tts", ttsRoutes);
 
 // Global error handler
 app.use(errorHandler);
