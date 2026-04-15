@@ -217,7 +217,6 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
     hoveredTokenIdxRef,
     getWord,
     updateWord,
-    wordPopupOpen: !!wordPopupTarget,
     onExpandPopup: handleExpandPopup,
     onToggleTranslations: handleToggleTranslations,
     onPrevPage: handlePrevPage,
