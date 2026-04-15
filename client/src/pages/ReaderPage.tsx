@@ -217,6 +217,7 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
     hoveredTokenIdxRef,
     getWord,
     updateWord,
+    wordPopupOpen: !!wordPopupTarget,
     onExpandPopup: handleExpandPopup,
     onToggleTranslations: handleToggleTranslations,
     onPrevPage: handlePrevPage,
@@ -245,16 +246,18 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
     // Show green pill with placeholder immediately
     setPersistedTranslations((prev) => new Map(prev).set(idx, "\u2026"));
 
+    const term = popup.term;
     let cancelled = false;
     apiFetch<{ data: { translation: string } }>("/translate/word", {
       method: "POST",
-      body: JSON.stringify({ term: popup.term, sourceLang, targetLang }),
+      body: JSON.stringify({ term, sourceLang, targetLang }),
     })
       .then((res) => {
         if (!cancelled) {
           setPersistedTranslations((prev) =>
             new Map(prev).set(idx, res.data.translation),
           );
+          updateWord(term, { translation: res.data.translation });
         }
       })
       .catch(() => {
@@ -270,7 +273,7 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
     return () => {
       cancelled = true;
     };
-  }, [popup, getWord, lesson]);
+  }, [popup, getWord, updateWord, lesson]);
 
   // Right-click opens WordPopup (no dep array — must re-run when container mounts after loading)
   useEffect(() => {
