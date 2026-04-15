@@ -423,6 +423,13 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
           wordVersion={wordVersion}
           onWordClick={handleWordClick}
           persistedTranslations={showTranslations ? persistedTranslations : undefined}
+          onRemoveTranslation={(idx) => {
+            setPersistedTranslations((prev) => {
+              const next = new Map(prev);
+              next.delete(idx);
+              return next;
+            });
+          }}
           phraseGroups={showTranslations ? phraseGroups : undefined}
           tokenOffset={page.tokenOffset}
         />

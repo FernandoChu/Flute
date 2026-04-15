@@ -9,6 +9,7 @@ interface TokenizedTextProps {
   wordVersion: number;
   onWordClick: (term: string, element: HTMLElement) => void;
   persistedTranslations?: Map<number, string>;
+  onRemoveTranslation?: (tokenIdx: number) => void;
   phraseGroups?: Map<number, number[]>;
   tokenOffset?: number;
 }
@@ -19,6 +20,7 @@ function TokenizedTextInner({
   wordVersion: _wordVersion,
   onWordClick,
   persistedTranslations,
+  onRemoveTranslation,
   phraseGroups,
   tokenOffset = 0,
 }: TokenizedTextProps) {
@@ -64,7 +66,11 @@ function TokenizedTextInner({
         if (translation) {
           elements.push(
             <span key={globalIdx} className="word-slot border-b-2 border-pill">
-              <span className="word-slot-annotation text-pill">
+              <span
+                className="word-slot-annotation text-pill hover:opacity-70"
+                onMouseDown={(e) => e.stopPropagation()}
+                onClick={() => onRemoveTranslation?.(globalIdx)}
+              >
                 {translation}
               </span>
               <WordToken
@@ -135,7 +141,13 @@ function TokenizedTextInner({
         className="word-slot border-b-2 border-pill"
       >
         {translation && (
-          <span className="word-slot-annotation text-pill">{translation}</span>
+          <span
+            className="word-slot-annotation text-pill hover:opacity-70"
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={() => onRemoveTranslation?.(anchorIdx)}
+          >
+            {translation}
+          </span>
         )}
         {phraseChildren}
       </span>,

@@ -16,7 +16,7 @@ const STATUS_CLASSES: Record<number, string> = {
   [WordStatus.Learning3]: "bg-status-learning3 hover:brightness-90",
   [WordStatus.Learning4]: "bg-status-learning4 hover:brightness-90",
   [WordStatus.Known]: "",
-  [WordStatus.Ignored]: "text-gray-400",
+  [WordStatus.Ignored]: "",
 };
 
 const STATUS_BG: Record<number, string> = {

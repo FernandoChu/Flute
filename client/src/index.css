@@ -8,7 +8,7 @@
   --color-status-learning3: #fef08a;    /* yellow-200 */
   --color-status-learning4: #d9f99d;    /* lime-200 */
   --color-status-known: transparent;
-  --color-status-ignored: #e5e7eb;      /* gray-200 */
+  --color-status-ignored: transparent;
 
   /* Saturated shade for dots and in-phrase backgrounds (white text) */
   --color-status-new-vivid: #2563eb;    /* blue-600 */
@@ -65,7 +65,7 @@
   font-size: 0.875rem;
   font-style: italic;
   line-height: 1.2rem;
-  pointer-events: none;
+  cursor: pointer;
 }
 
 .phrase-selected {
