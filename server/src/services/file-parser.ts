@@ -16,6 +16,38 @@ export function parseTxt(buffer: Buffer, filename: string): ParsedLesson[] {
   return [{ title, textContent: text }];
 }
 
+const PARA = "\u0000P\u0000";
+const LINE = "\u0000L\u0000";
+// Escaped versions for use in regex
+const PARA_RE = "\\u0000P\\u0000";
+const LINE_RE = "\\u0000L\\u0000";
+
+export function htmlToText(html: string): string {
+  return (
+    html
+      // Block-level closing tags → paragraph break marker
+      .replace(/<\/(p|div|h[1-6]|blockquote|li|tr)>/gi, PARA)
+      // <br> → line break marker
+      .replace(/<br\s*\/?>/gi, LINE)
+      // Strip remaining HTML tags
+      .replace(/<[^>]+>/g, "")
+      // Decode HTML entities
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      // Collapse all whitespace (including source newlines) to single spaces
+      .replace(/\s+/g, " ")
+      // Any run of markers (with optional spaces) containing at least one PARA → paragraph break
+      .replace(new RegExp(`(?:\\s*(?:${PARA_RE}|${LINE_RE})\\s*)*(?:\\s*${PARA_RE}\\s*)(?:\\s*(?:${PARA_RE}|${LINE_RE})\\s*)*`, "g"), "\n\n")
+      // Remaining LINE markers → single newline
+      .replace(new RegExp(`\\s*${LINE_RE}\\s*`, "g"), "\n")
+      .trim()
+  );
+}
+
 export async function parseEpub(buffer: Buffer): Promise<ParsedLesson[]> {
   // epub2 requires a file path, so write buffer to a temp file
   const tempPath = join(tmpdir(), `flute-${randomUUID()}.epub`);
@@ -29,24 +61,7 @@ export async function parseEpub(buffer: Buffer): Promise<ParsedLesson[]> {
       if (!chapter.id) continue;
       try {
         const raw = await epub.getChapterAsync(chapter.id);
-        // Strip HTML tags to get plain text
-        const text = raw
-          // Convert block-level tags to newlines to preserve paragraph breaks
-          .replace(/<br\s*\/?>/gi, "\n")
-          .replace(/<\/?(p|div|h[1-6]|blockquote|li|tr)\b[^>]*>/gi, "\n")
-          // Strip remaining HTML tags
-          .replace(/<[^>]+>/g, "")
-          .replace(/&nbsp;/g, " ")
-          .replace(/&amp;/g, "&")
-          .replace(/&lt;/g, "<")
-          .replace(/&gt;/g, ">")
-          .replace(/&quot;/g, '"')
-          .replace(/&#39;/g, "'")
-          // Collapse spaces/tabs within lines but preserve newlines
-          .replace(/[^\S\n]+/g, " ")
-          // Collapse multiple blank lines into one
-          .replace(/\n{3,}/g, "\n\n")
-          .trim();
+        const text = htmlToText(raw);
         if (text.length > 0) {
           const title = chapter.title || `Chapter ${lessons.length + 1}`;
           lessons.push({ title, textContent: text });

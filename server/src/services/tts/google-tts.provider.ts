@@ -24,11 +24,14 @@ export class GoogleTtsProvider implements TtsProvider {
     const chunks = splitText(text, MAX_BYTES);
     const buffers: Buffer[] = [];
 
-    // Build voice config — if a specific voice name is provided, use it directly;
-    // otherwise fall back to language + NEUTRAL gender
+    // Build voice config — if a specific voice name is provided, use it directly
+    // and derive the languageCode from the voice name (e.g. "nl-NL-Wavenet-A" → "nl-NL")
+    // to avoid mismatches between bare codes like "nl" and voice locales like "nl-NL".
     const voice: Record<string, string> = { languageCode };
     if (options?.voice) {
       voice.name = options.voice;
+      const match = options.voice.match(/^([a-z]{2,3}-[A-Z]{2})/i);
+      if (match) voice.languageCode = match[1];
     } else {
       voice.ssmlGender = "NEUTRAL";
     }
