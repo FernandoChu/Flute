@@ -10,10 +10,15 @@ const FONT_OPTIONS = [
 interface Props {
   perPage: number;
   onPerPageChange: (n: number) => void;
+  hasAudio: boolean;
+  isGenerating: boolean;
+  generateError: Error | null;
+  onGenerateAudio: () => void;
 }
 
-export default function ReaderSettingsPanel({ perPage, onPerPageChange }: Props) {
+export default function ReaderSettingsPanel({ perPage, onPerPageChange, hasAudio, isGenerating, generateError, onGenerateAudio }: Props) {
   const [open, setOpen] = useState(false);
+  const [showAudioConfirm, setShowAudioConfirm] = useState(false);
   const { settings, update, reset } = useReaderSettings();
 
   return (
@@ -135,6 +140,56 @@ export default function ReaderSettingsPanel({ perPage, onPerPageChange }: Props)
               onChange={(e) => onPerPageChange(Number(e.target.value))}
               className="w-full"
             />
+          </div>
+
+          {/* Generate Audio */}
+          <div className="border-t border-gray-200 pt-4">
+            <label className="text-xs text-gray-500 block mb-2">Audio</label>
+            <button
+              onClick={() => setShowAudioConfirm(true)}
+              disabled={isGenerating}
+              className="w-full text-xs px-3 py-2 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
+            >
+              {isGenerating
+                ? "Generating..."
+                : hasAudio
+                  ? "Regenerate Audio (TTS)"
+                  : "Generate Audio (TTS)"}
+            </button>
+            {generateError && (
+              <p className="text-xs text-red-600 mt-1">{generateError.message}</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation modal */}
+      {showAudioConfirm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm mx-4">
+            <h3 className="font-semibold text-gray-800 mb-2">Generate Audio?</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              This will use your TTS API to generate audio for the entire lesson
+              text. Depending on the length of the lesson and your provider, this
+              can be expensive.
+            </p>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setShowAudioConfirm(false)}
+                className="px-4 py-2 text-sm rounded border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setShowAudioConfirm(false);
+                  onGenerateAudio();
+                }}
+                className="px-4 py-2 text-sm rounded bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+              >
+                Generate
+              </button>
+            </div>
           </div>
         </div>
       )}

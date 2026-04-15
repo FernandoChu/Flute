@@ -125,9 +125,9 @@ function LessonSelector({
   );
 }
 
-function LessonAudio({ lessonId, audioUrl }: { lessonId: string; audioUrl: string | null }) {
+function useGenerateTts(lessonId: string) {
   const queryClient = useQueryClient();
-  const generateTts = useMutation({
+  return useMutation({
     mutationFn: () =>
       apiFetch<{ data: { audioUrl: string } }>(`/tts/generate/${lessonId}`, {
         method: "POST",
@@ -136,41 +136,6 @@ function LessonAudio({ lessonId, audioUrl }: { lessonId: string; audioUrl: strin
       queryClient.invalidateQueries({ queryKey: ["lesson", lessonId] });
     },
   });
-
-  if (audioUrl) {
-    return (
-      <div className="flex items-center gap-2">
-        <div className="flex-1">
-          <AudioPlayer src={audioUrl} />
-        </div>
-        <button
-          onClick={() => generateTts.mutate()}
-          disabled={generateTts.isPending}
-          title="Regenerate audio"
-          className="shrink-0 px-2 py-2 text-xs text-gray-500 hover:text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
-        >
-          {generateTts.isPending ? "..." : "Regen"}
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="mb-4">
-      <button
-        onClick={() => generateTts.mutate()}
-        disabled={generateTts.isPending}
-        className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
-      >
-        {generateTts.isPending ? "Generating audio..." : "Generate Audio (TTS)"}
-      </button>
-      {generateTts.isError && (
-        <p className="text-sm text-red-600 mt-2">
-          {(generateTts.error as Error).message}
-        </p>
-      )}
-    </div>
-  );
 }
 
 export default function ReaderPage({ lessonId }: { lessonId: string }) {
@@ -193,6 +158,7 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
   // Maps anchor token index → all word token indices in the phrase
   const [phraseGroups, setPhraseGroups] = useState<Map<number, number[]>>(new Map());
   const { settings: readerSettings } = useReaderSettings();
+  const generateTts = useGenerateTts(lessonId);
 
   const { data: lesson, isLoading } = useQuery({
     queryKey: ["lesson", lessonId],
@@ -498,7 +464,14 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
 
   return (
     <div className="max-w-3xl mx-auto p-6">
-      <ReaderSettingsPanel perPage={perPage} onPerPageChange={setPerPage} />
+      <ReaderSettingsPanel
+        perPage={perPage}
+        onPerPageChange={setPerPage}
+        hasAudio={!!lessonData.audioUrl}
+        isGenerating={generateTts.isPending}
+        generateError={generateTts.isError ? (generateTts.error as Error) : null}
+        onGenerateAudio={() => generateTts.mutate()}
+      />
       <div className="mb-6">
         <Link
           href="/"
@@ -512,7 +485,7 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
         />
       </div>
 
-      <LessonAudio lessonId={lessonId} audioUrl={lessonData.audioUrl} />
+      {lessonData.audioUrl && <AudioPlayer src={lessonData.audioUrl} />}
 
       <div
         ref={textContainerRef}
