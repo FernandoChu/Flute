@@ -229,6 +229,53 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
     setShowTranslations((prev) => !prev);
   }, []);
 
+  // TTS playback with client-side audio cache
+  const ttsAudioCache = useRef(new Map<string, string>());
+  const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
+  const lastPhraseRef = useRef<string | null>(null);
+
+  const handlePlayTts = useCallback(
+    async () => {
+      const text = lastPhraseRef.current;
+      const lang = lesson?.data.collection.sourceLanguage?.code;
+      if (!text || !lang) return;
+
+      const cacheKey = `${lang}|${text}`;
+
+      // Stop any currently playing TTS audio
+      if (ttsAudioRef.current) {
+        ttsAudioRef.current.pause();
+        ttsAudioRef.current = null;
+      }
+
+      let blobUrl = ttsAudioCache.current.get(cacheKey);
+      if (!blobUrl) {
+        try {
+          const username = localStorage.getItem("username");
+          const res = await fetch("/api/tts/speak", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(username ? { "x-username": username } : {}),
+            },
+            body: JSON.stringify({ text, lang }),
+          });
+          if (!res.ok) return;
+          const blob = await res.blob();
+          blobUrl = URL.createObjectURL(blob);
+          ttsAudioCache.current.set(cacheKey, blobUrl);
+        } catch {
+          return;
+        }
+      }
+
+      const audio = new Audio(blobUrl);
+      ttsAudioRef.current = audio;
+      audio.play();
+    },
+    [lesson],
+  );
+
   const handlePrevPage = useCallback(() => {
     setPopup(null);
     setWordPopupTarget(null);
@@ -270,6 +317,7 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
     onToggleTranslations: handleToggleTranslations,
     onPrevPage: handlePrevPage,
     onNextPage: handleNextPage,
+    onPlayTts: handlePlayTts,
   });
 
   // Fetch translation when a word is clicked
@@ -355,6 +403,7 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
     phrasePopupRef.current = phrasePopup;
 
     const { anchorWordIdx, allTokenIndices, phrase } = phrasePopup;
+    lastPhraseRef.current = phrase;
     const sourceLang = lesson.data.collection.sourceLanguage?.code;
     const targetLang = lesson.data.collection.targetLanguage?.code;
 

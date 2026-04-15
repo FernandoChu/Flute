@@ -3,7 +3,7 @@ import { useSyncExternalStore, useCallback } from "react";
 export interface KeyBinding {
   action: string;
   label: string;
-  group: "navigation" | "status" | "copy";
+  group: "navigation" | "status" | "copy" | "audio";
   key: string;
   enabled: boolean;
 }
@@ -32,6 +32,8 @@ const DEFAULT_BINDINGS: KeyBinding[] = [
   // Copy
   { action: "copySentence", label: "Copy hovered sentence", group: "copy", key: "c", enabled: true },
   { action: "copyParagraph", label: "Copy hovered paragraph", group: "copy", key: "C", enabled: true },
+  // Audio
+  { action: "playTts", label: "Play TTS for current phrase", group: "audio", key: "p", enabled: true },
 ];
 
 const STORAGE_KEY = "readerKeybindings";

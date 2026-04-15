@@ -5,6 +5,7 @@ const GROUPS: { key: KeyBinding["group"]; label: string }[] = [
   { key: "navigation", label: "Navigation" },
   { key: "status", label: "Update status" },
   { key: "copy", label: "Copy" },
+  { key: "audio", label: "Audio" },
 ];
 
 export default function KeybindingsSettings() {

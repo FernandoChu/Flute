@@ -14,6 +14,7 @@ interface Options {
   onToggleTranslations?: () => void;
   onPrevPage?: () => void;
   onNextPage?: () => void;
+  onPlayTts?: () => void;
 }
 
 function getTokenElements(container: HTMLElement): HTMLElement[] {
@@ -90,7 +91,7 @@ function extractParagraph(container: HTMLElement, anchorIdx: number): string {
 
 export function useReaderNavigation(
   textContainerRef: React.RefObject<HTMLDivElement | null>,
-  { popup, setPopup, closePhrasePopup, hoveredTokenIdxRef, getWord, updateWord, onExpandPopup, onToggleTranslations, onPrevPage, onNextPage }: Options,
+  { popup, setPopup, closePhrasePopup, hoveredTokenIdxRef, getWord, updateWord, onExpandPopup, onToggleTranslations, onPrevPage, onNextPage, onPlayTts }: Options,
 ) {
   const { bindings } = useKeybindings();
   const selectedIdxRef = useRef<number>(-1);
@@ -246,6 +247,11 @@ export function useReaderNavigation(
           break;
         }
 
+        case "playTts": {
+          if (onPlayTts) onPlayTts();
+          break;
+        }
+
         case "copySentence": {
           const text = extractSentence(container!, hoveredTokenIdxRef.current);
           if (text) navigator.clipboard.writeText(text);
@@ -261,7 +267,7 @@ export function useReaderNavigation(
 
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
-  }, [bindings, popup, getWord, updateWord, closePhrasePopup, setPopup, textContainerRef, hoveredTokenIdxRef, onExpandPopup, onToggleTranslations, onPrevPage, onNextPage]);
+  }, [bindings, popup, getWord, updateWord, closePhrasePopup, setPopup, textContainerRef, hoveredTokenIdxRef, onExpandPopup, onToggleTranslations, onPrevPage, onNextPage, onPlayTts]);
 
   return { selectedIdxRef, syncSelectedIdx };
 }

@@ -182,4 +182,56 @@ router.post(
   },
 );
 
+// POST /api/tts/speak — synthesize a short phrase and return audio (with disk cache)
+router.post(
+  "/speak",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { text, lang } = req.body as { text?: string; lang?: string };
+      if (!text || !lang) {
+        res.status(400).json({ error: { message: "text and lang are required" } });
+        return;
+      }
+
+      const apiKey = await resolveApiKey(req.user.id, res);
+      if (!apiKey) return;
+
+      // Get user's TTS voice preference
+      const user = await prisma.user.findUnique({
+        where: { id: req.user.id },
+        select: { ttsVoice: true },
+      });
+      const voice = user?.ttsVoice ?? undefined;
+
+      // Build a cache key from text + lang + voice
+      const { createHash } = await import("node:crypto");
+      const hash = createHash("sha256")
+        .update(`${lang}|${voice ?? ""}|${text}`)
+        .digest("hex");
+
+      const cacheDir = path.join(UPLOADS_BASE, req.user.id, "tts-cache");
+      const cachePath = path.join(cacheDir, `${hash}.mp3`);
+
+      // Serve from cache if available
+      if (fs.existsSync(cachePath)) {
+        res.setHeader("Content-Type", "audio/mpeg");
+        fs.createReadStream(cachePath).pipe(res);
+        return;
+      }
+
+      const provider = getTtsProvider("google-tts", apiKey);
+      const result = await provider.synthesize(text, lang, { voice });
+
+      // Write to cache
+      fs.mkdirSync(cacheDir, { recursive: true });
+      fs.writeFileSync(cachePath, result.audioContent);
+
+      res.setHeader("Content-Type", "audio/mpeg");
+      res.send(result.audioContent);
+    } catch (err) {
+      handleServiceError(err, res, next);
+    }
+  },
+);
+
 export default router;
