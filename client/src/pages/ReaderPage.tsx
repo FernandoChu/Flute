@@ -447,6 +447,7 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
         if (prev && normalizeWord(prev.term) === normalizeWord(term)) {
           return null;
         }
+        lastPhraseRef.current = term;
         return { term, element };
       });
     },
