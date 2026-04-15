@@ -99,3 +99,20 @@ export function tokenize(text: string): Token[] {
 export function normalizeWord(word: string): string {
   return word.toLowerCase().trim();
 }
+
+/**
+ * Extract the sentence containing the given term from a text.
+ * Splits on sentence-ending punctuation (.!?), newlines, or CJK sentence markers.
+ * Returns the first sentence that contains the term (case-insensitive).
+ */
+export function extractSentence(text: string, term: string): string | null {
+  // Split on sentence boundaries: .!? followed by space/newline, or newlines
+  const sentences = text.split(/(?<=[.!?。！？])\s+|\n+/).filter((s) => s.trim());
+  const normalized = term.toLowerCase();
+  for (const sentence of sentences) {
+    if (sentence.toLowerCase().includes(normalized)) {
+      return sentence.trim();
+    }
+  }
+  return null;
+}

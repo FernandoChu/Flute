@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { apiFetch } from "../../lib/api";
 
 interface ReviewItem {
@@ -8,6 +8,7 @@ interface ReviewItem {
     term: string;
     translation: string | null;
     notes: string | null;
+    contextSentence: string | null;
     language: { name: string };
   };
 }
@@ -19,6 +20,27 @@ interface FlashcardReviewProps {
 
 interface Preview {
   [key: string]: string;
+}
+
+function HighlightedSentence({ sentence, term }: { sentence: string; term: string }) {
+  const parts = useMemo(() => {
+    const regex = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
+    return sentence.split(regex);
+  }, [sentence, term]);
+
+  return (
+    <span>
+      {parts.map((part, i) =>
+        part.toLowerCase() === term.toLowerCase() ? (
+          <span key={i} className="text-blue-600 font-bold underline underline-offset-4">
+            {part}
+          </span>
+        ) : (
+          <span key={i}>{part}</span>
+        ),
+      )}
+    </span>
+  );
 }
 
 export default function FlashcardReview({ item, onRate }: FlashcardReviewProps) {
@@ -55,6 +77,8 @@ export default function FlashcardReview({ item, onRate }: FlashcardReviewProps) 
     return () => document.removeEventListener("keydown", handleKey);
   }, [flipped, onRate]);
 
+  const hasSentence = !!item.word.contextSentence;
+
   return (
     <div className="max-w-lg mx-auto">
       <div
@@ -64,7 +88,17 @@ export default function FlashcardReview({ item, onRate }: FlashcardReviewProps) 
         }`}
       >
         <p className="text-xs text-gray-400 mb-3">{item.word.language.name}</p>
-        <p className="text-3xl font-bold mb-4">{item.word.term}</p>
+
+        {hasSentence ? (
+          <p className="text-xl leading-relaxed mb-4">
+            <HighlightedSentence
+              sentence={item.word.contextSentence!}
+              term={item.word.term}
+            />
+          </p>
+        ) : (
+          <p className="text-3xl font-bold mb-4">{item.word.term}</p>
+        )}
 
         {flipped ? (
           <div>

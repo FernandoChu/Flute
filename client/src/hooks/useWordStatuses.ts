@@ -92,7 +92,7 @@ export function useWordStatuses(languageId: number | null) {
   const updateWord = useCallback(
     async (
       term: string,
-      data: { translation?: string; status?: number; notes?: string },
+      data: { translation?: string; status?: number; notes?: string; contextSentence?: string },
       existingWordId?: string,
     ): Promise<Word> => {
       const normalized = term.toLowerCase();

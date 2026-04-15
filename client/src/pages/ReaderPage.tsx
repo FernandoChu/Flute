@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
-import { normalizeWord, tokenize, WordStatus } from "shared";
+import { normalizeWord, tokenize, extractSentence, WordStatus } from "shared";
 import { apiFetch } from "../lib/api";
 import { useWordStatuses } from "../hooks/useWordStatuses";
 import { useTextSelection } from "../hooks/useTextSelection";
@@ -295,7 +295,8 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
       seen.add(term);
       const word = getWord(term);
       if (!word || word.status === WordStatus.New) {
-        updateWord(token.text, { status: WordStatus.Known });
+        const contextSentence = extractSentence(page.text, term) ?? undefined;
+        updateWord(token.text, { status: WordStatus.Known, contextSentence });
       }
     }
 
@@ -353,7 +354,11 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
           setPersistedTranslations((prev) =>
             new Map(prev).set(idx, res.data.translation),
           );
-          updateWord(term, { translation: res.data.translation });
+          const existing = getWord(term);
+          const contextSentence = !existing?.contextSentence
+            ? extractSentence(page.text, term) ?? undefined
+            : undefined;
+          updateWord(term, { translation: res.data.translation, contextSentence });
         }
       })
       .catch(() => {
@@ -369,7 +374,7 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
     return () => {
       cancelled = true;
     };
-  }, [popup, getWord, updateWord, lesson]);
+  }, [popup, getWord, updateWord, lesson, page.text]);
 
   // Right-click opens WordPopup (no dep array — must re-run when container mounts after loading)
   useEffect(() => {
@@ -461,9 +466,13 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
       notes?: string;
     }) => {
       if (!wordPopupTarget) return;
-      await updateWord(wordPopupTarget.term, data);
+      const existing = getWord(wordPopupTarget.term);
+      const contextSentence = !existing?.contextSentence
+        ? extractSentence(page.text, wordPopupTarget.term) ?? undefined
+        : undefined;
+      await updateWord(wordPopupTarget.term, { ...data, contextSentence });
     },
-    [wordPopupTarget, updateWord],
+    [wordPopupTarget, updateWord, page.text, getWord],
   );
 
   if (isLoading) {

@@ -24,6 +24,7 @@ interface ReviewItem {
     translation: string | null;
     status: number;
     notes: string | null;
+    contextSentence: string | null;
     languageId: number;
     language: { code: string; name: string };
   };

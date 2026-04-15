@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { apiFetch } from "../../lib/api";
 
 interface ReviewItem {
@@ -7,6 +7,7 @@ interface ReviewItem {
     id: string;
     term: string;
     translation: string | null;
+    contextSentence: string | null;
     language: { name: string };
   };
 }
@@ -19,6 +20,27 @@ interface MultipleChoiceReviewProps {
 interface Distractor {
   id: string;
   translation: string | null;
+}
+
+function HighlightedSentence({ sentence, term }: { sentence: string; term: string }) {
+  const parts = useMemo(() => {
+    const regex = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
+    return sentence.split(regex);
+  }, [sentence, term]);
+
+  return (
+    <span>
+      {parts.map((part, i) =>
+        part.toLowerCase() === term.toLowerCase() ? (
+          <span key={i} className="text-blue-600 font-bold underline underline-offset-4">
+            {part}
+          </span>
+        ) : (
+          <span key={i}>{part}</span>
+        ),
+      )}
+    </span>
+  );
 }
 
 export default function MultipleChoiceReview({
@@ -69,11 +91,22 @@ export default function MultipleChoiceReview({
     }, 800);
   };
 
+  const hasSentence = !!item.word.contextSentence;
+
   return (
     <div className="max-w-lg mx-auto">
       <div className="bg-white rounded-xl border-2 border-gray-200 p-8 text-center mb-6">
         <p className="text-xs text-gray-400 mb-3">{item.word.language.name}</p>
-        <p className="text-3xl font-bold">{item.word.term}</p>
+        {hasSentence ? (
+          <p className="text-xl leading-relaxed">
+            <HighlightedSentence
+              sentence={item.word.contextSentence!}
+              term={item.word.term}
+            />
+          </p>
+        ) : (
+          <p className="text-3xl font-bold">{item.word.term}</p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-3">

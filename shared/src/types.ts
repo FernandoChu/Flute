@@ -51,6 +51,7 @@ export interface Word {
   translation: string | null;
   status: WordStatus;
   notes: string | null;
+  contextSentence: string | null;
   createdAt: Date;
   updatedAt: Date;
 }

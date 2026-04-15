@@ -88,10 +88,11 @@ model Word {
   id          String   @id @default(uuid())
   userId      String   @map("user_id")
   languageId  Int      @map("language_id")
-  term        String
-  translation String?
-  status      Int      @default(0)
-  notes       String?
+  term            String
+  translation     String?
+  status          Int      @default(0)
+  notes           String?
+  contextSentence String?  @map("context_sentence")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 

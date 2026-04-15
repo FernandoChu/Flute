@@ -36,6 +36,7 @@ router.get("/due", async (req: Request, res: Response, next: NextFunction) => {
             translation: true,
             status: true,
             notes: true,
+            contextSentence: true,
             languageId: true,
             language: { select: { code: true, name: true } },
           },
