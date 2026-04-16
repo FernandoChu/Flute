@@ -195,6 +195,11 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
     setShowTranslations((prev) => !prev);
   }, []);
 
+  const handleClearTranslations = useCallback(() => {
+    setPersistedTranslations(new Map());
+    setPhraseGroups(new Map());
+  }, []);
+
   // TTS playback with client-side audio cache
   const ttsAudioCache = useRef(new Map<string, string>());
   const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -282,6 +287,7 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
     updateWord,
     onExpandPopup: handleExpandPopup,
     onToggleTranslations: handleToggleTranslations,
+    onClearTranslations: handleClearTranslations,
     onPrevPage: handlePrevPage,
     onNextPage: handleNextPage,
     onPlayTts: handlePlayTts,
