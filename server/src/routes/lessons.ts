@@ -4,6 +4,7 @@ import { prisma } from "../index.js";
 import { requireAuth } from "../middleware/auth.js";
 import { assertOwnership, NotFoundError, ForbiddenError } from "../services/authorization.js";
 import { parseFile } from "../services/file-parser.js";
+import { tokenize, normalizeWord } from "shared";
 
 const router = Router();
 router.use(requireAuth);
@@ -42,6 +43,11 @@ router.get(
       const collectionId = req.params.collectionId;
       await assertOwnership(req.user.id, "collection", collectionId);
 
+      const collection = await prisma.collection.findUniqueOrThrow({
+        where: { id: collectionId },
+        select: { sourceLanguageId: true },
+      });
+
       const lessons = await prisma.lesson.findMany({
         where: { collectionId },
         select: {
@@ -49,12 +55,59 @@ router.get(
           title: true,
           position: true,
           audioUrl: true,
+          textContent: true,
           createdAt: true,
           updatedAt: true,
         },
         orderBy: { position: "asc" },
       });
-      res.json({ data: lessons });
+
+      // Collect all unique normalized terms across all lessons
+      const allTerms = new Set<string>();
+      const lessonTerms = lessons.map((lesson) => {
+        const tokens = tokenize(lesson.textContent);
+        const terms = new Set<string>();
+        for (const t of tokens) {
+          if (t.isWord) {
+            const norm = normalizeWord(t.text);
+            terms.add(norm);
+            allTerms.add(norm);
+          }
+        }
+        return terms;
+      });
+
+      // Batch-fetch all word statuses for these terms
+      const wordStatusMap = new Map<string, number>();
+      if (allTerms.size > 0) {
+        const words = await prisma.word.findMany({
+          where: {
+            userId: req.user.id,
+            languageId: collection.sourceLanguageId,
+            term: { in: [...allTerms] },
+          },
+          select: { term: true, status: true },
+        });
+        for (const w of words) {
+          wordStatusMap.set(w.term, w.status);
+        }
+      }
+
+      // Build response with status counts (excluding textContent)
+      const data = lessons.map((lesson, i) => {
+        const terms = lessonTerms[i];
+        const statusCounts: Record<number, number> = {
+          0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0,
+        };
+        for (const term of terms) {
+          const status = wordStatusMap.get(term) ?? 0; // unknown = New
+          statusCounts[status]++;
+        }
+        const { textContent: _, ...rest } = lesson;
+        return { ...rest, statusCounts };
+      });
+
+      res.json({ data });
     } catch (err) {
       handleServiceError(err, res, next);
     }

@@ -11,7 +11,7 @@
   --color-status-ignored: transparent;
 
   /* Saturated shade for dots and in-phrase backgrounds (white text) */
-  --color-status-new-vivid: #2563eb;    /* blue-600 */
+  --color-status-new-vivid: #38bdf8;    /* sky-400 */
   --color-status-learning1-vivid: #dc2626; /* red-600 */
   --color-status-learning2-vivid: #ea580c; /* orange-600 */
   --color-status-learning3-vivid: #ca8a04; /* yellow-600 */
@@ -29,7 +29,7 @@
   --color-status-learning4-light: #ecfccb; /* lime-100 */
   --color-status-learning4-text: #4d7c0f;  /* lime-700 */
   --color-status-known-light: #dcfce7;  /* green-100 */
-  --color-status-known-text: #15803d;   /* green-700 */
+  --color-status-known-text: #16a34a;   /* green-600 */
   --color-status-ignored-light: #f3f4f6; /* gray-100 */
   --color-status-ignored-text: #6b7280; /* gray-500 */
 

@@ -1,9 +1,43 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
+import { WordStatus } from "shared";
 import { apiFetch } from "../lib/api";
 import CreateCollectionModal from "../components/CreateCollectionModal";
 import CreateLessonModal from "../components/CreateLessonModal";
+
+const STATUS_SEGMENTS: { status: number; label: string; color: string }[] = [
+  { status: WordStatus.Known, label: "Known", color: "var(--color-status-known-text)" },
+  { status: WordStatus.Learning4, label: "Learning 4", color: "var(--color-status-learning4-vivid)" },
+  { status: WordStatus.Learning3, label: "Learning 3", color: "var(--color-status-learning3-vivid)" },
+  { status: WordStatus.Learning2, label: "Learning 2", color: "var(--color-status-learning2-vivid)" },
+  { status: WordStatus.Learning1, label: "Learning 1", color: "var(--color-status-learning1-vivid)" },
+  { status: WordStatus.New, label: "New", color: "var(--color-status-new-vivid)" },
+  { status: WordStatus.Ignored, label: "Ignored", color: "var(--color-status-ignored-text)" },
+];
+
+function LessonProgressBar({ statusCounts }: { statusCounts: Record<number, number> }) {
+  const total = Object.values(statusCounts).reduce((a, b) => a + b, 0);
+  if (total === 0) return null;
+
+  return (
+    <div className="flex h-2 w-full rounded-full overflow-hidden bg-gray-100 group relative">
+      {STATUS_SEGMENTS.map(({ status, label, color }) => {
+        const count = statusCounts[status] ?? 0;
+        if (count === 0) return null;
+        const pct = (count / total) * 100;
+        return (
+          <div
+            key={status}
+            className="h-full relative"
+            style={{ width: `${pct}%`, backgroundColor: color }}
+            title={`${label}: ${count} (${Math.round(pct)}%)`}
+          />
+        );
+      })}
+    </div>
+  );
+}
 
 interface CollectionWithMeta {
   id: string;
@@ -20,6 +54,7 @@ interface LessonSummary {
   title: string;
   position: number;
   audioUrl: string | null;
+  statusCounts: Record<number, number>;
 }
 
 interface DashboardStats {
@@ -183,24 +218,31 @@ export default function LibraryPage() {
                     {lessons.data.map((lesson) => (
                       <li
                         key={lesson.id}
-                        className="flex items-center justify-between py-2 px-3 rounded hover:bg-gray-50"
+                        className="py-2 px-3 rounded hover:bg-gray-50"
                       >
-                        <Link
-                          href={`/reader/${lesson.id}`}
-                          className="text-blue-600 hover:underline"
-                        >
-                          {lesson.title}
-                        </Link>
-                        <button
-                          onClick={() => {
-                            if (confirm("Delete this lesson?")) {
-                              deleteLesson.mutate(lesson.id);
-                            }
-                          }}
-                          className="text-sm text-red-500 hover:text-red-700"
-                        >
-                          Delete
-                        </button>
+                        <div className="flex items-center justify-between">
+                          <Link
+                            href={`/reader/${lesson.id}`}
+                            className="text-blue-600 hover:underline"
+                          >
+                            {lesson.title}
+                          </Link>
+                          <button
+                            onClick={() => {
+                              if (confirm("Delete this lesson?")) {
+                                deleteLesson.mutate(lesson.id);
+                              }
+                            }}
+                            className="text-sm text-red-500 hover:text-red-700"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                        {lesson.statusCounts && (
+                          <div className="mt-1">
+                            <LessonProgressBar statusCounts={lesson.statusCounts} />
+                          </div>
+                        )}
                       </li>
                     ))}
                   </ul>
