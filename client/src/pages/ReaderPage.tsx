@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { normalizeWord, tokenize, extractSentence, WordStatus } from "shared";
@@ -169,6 +169,19 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
   const { page, currentPage, totalPages, goNext, goPrev, goToPage, perPage, setPerPage } = useReaderPagination(fullText);
 
   const languageId = lesson?.data.collection.sourceLanguageId ?? null;
+
+  const { data: dictionaryData } = useQuery({
+    queryKey: ["dictionaries"],
+    queryFn: () =>
+      apiFetch<{
+        data: { languageId: number; label: string; urlTemplate: string }[];
+      }>("/settings/dictionaries"),
+  });
+  const dictionaryLinks = useMemo(
+    () =>
+      dictionaryData?.data.filter((d) => d.languageId === languageId) ?? [],
+    [dictionaryData, languageId],
+  );
   const { getWord, updateWord, version: wordVersion } =
     useWordStatuses(languageId);
 
@@ -564,6 +577,7 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
           anchorEl={wordPopupTarget.element}
           sourceLang={lessonData.collection.sourceLanguage?.code}
           targetLang={lessonData.collection.targetLanguage?.code}
+          dictionaryLinks={dictionaryLinks}
           onUpdateWord={handleUpdateWord}
           onClose={() => setWordPopupTarget(null)}
         />

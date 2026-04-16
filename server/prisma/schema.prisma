@@ -21,6 +21,7 @@ model User {
   collections     Collection[]
   words           Word[]
   apiKeys         ApiKey[]
+  dictionaryUrls  DictionaryUrl[]
 
   @@map("users")
 }
@@ -48,6 +49,7 @@ model Language {
   sourceCollections Collection[] @relation("SourceLanguage")
   targetCollections Collection[] @relation("TargetLanguage")
   words             Word[]
+  dictionaryUrls    DictionaryUrl[]
 
   @@map("languages")
 }
@@ -120,6 +122,21 @@ model WordReview {
   word          Word      @relation(fields: [wordId], references: [id], onDelete: Cascade)
 
   @@map("word_reviews")
+}
+
+model DictionaryUrl {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  languageId  Int      @map("language_id")
+  label       String
+  urlTemplate String   @map("url_template")
+  position    Int      @default(0)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  language    Language @relation(fields: [languageId], references: [id])
+
+  @@map("dictionary_urls")
 }
 
 model TranslationCache {

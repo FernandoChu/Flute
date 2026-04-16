@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { TRANSLATION_PROVIDERS, TTS_PROVIDERS } from "shared";
 import { apiFetch } from "../lib/api";
 import KeybindingsSettings from "../components/settings/KeybindingsSettings";
+import DictionarySettings from "../components/settings/DictionarySettings";
 
 interface ApiKeyInfo {
   id: string;
@@ -676,6 +677,8 @@ export default function SettingsPage() {
         hasTtsKey={existingProviders.has("google-tts")}
         studyLangCode={languages?.data.find((l) => l.id === Number(studyLangId))?.code}
       />
+
+      <DictionarySettings />
 
       <KeybindingsSettings />
     </div>

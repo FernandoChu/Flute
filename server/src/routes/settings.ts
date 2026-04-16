@@ -180,4 +180,60 @@ router.put(
   },
 );
 
+// GET /api/settings/dictionaries — list all dictionary URLs for the user
+router.get(
+  "/dictionaries",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const urls = await prisma.dictionaryUrl.findMany({
+        where: { userId: req.user.id },
+        orderBy: [{ languageId: "asc" }, { position: "asc" }],
+      });
+      res.json({ data: urls });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// PUT /api/settings/dictionaries — replace all dictionary URLs for the user
+router.put(
+  "/dictionaries",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { entries } = req.body as {
+        entries: { languageId: number; label: string; urlTemplate: string }[];
+      };
+
+      if (!Array.isArray(entries)) {
+        res.status(400).json({ error: { message: "entries array is required" } });
+        return;
+      }
+
+      await prisma.$transaction([
+        prisma.dictionaryUrl.deleteMany({ where: { userId: req.user.id } }),
+        ...entries.map((e, i) =>
+          prisma.dictionaryUrl.create({
+            data: {
+              userId: req.user.id,
+              languageId: e.languageId,
+              label: e.label.trim(),
+              urlTemplate: e.urlTemplate.trim(),
+              position: i,
+            },
+          }),
+        ),
+      ]);
+
+      const urls = await prisma.dictionaryUrl.findMany({
+        where: { userId: req.user.id },
+        orderBy: [{ languageId: "asc" }, { position: "asc" }],
+      });
+      res.json({ data: urls });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
 export default router;

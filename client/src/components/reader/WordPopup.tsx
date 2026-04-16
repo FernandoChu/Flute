@@ -4,12 +4,18 @@ import { WordStatus } from "shared";
 import type { Word } from "shared";
 import { apiFetch } from "../../lib/api";
 
+interface DictionaryLink {
+  label: string;
+  urlTemplate: string;
+}
+
 interface WordPopupProps {
   term: string;
   word: Word | undefined;
   anchorEl: HTMLElement;
   sourceLang?: string;
   targetLang?: string;
+  dictionaryLinks?: DictionaryLink[];
   onUpdateWord: (data: {
     translation?: string;
     status?: number;
@@ -33,6 +39,7 @@ export default function WordPopup({
   anchorEl,
   sourceLang,
   targetLang,
+  dictionaryLinks,
   onUpdateWord,
   onClose,
 }: WordPopupProps) {
@@ -205,6 +212,22 @@ export default function WordPopup({
           </button>
         ))}
       </div>
+
+      {dictionaryLinks && dictionaryLinks.length > 0 && (
+        <div className="mt-3 pt-3 border-t border-gray-200 flex flex-wrap gap-1.5">
+          {dictionaryLinks.map((dict, i) => (
+            <a
+              key={i}
+              href={dict.urlTemplate.replace("[FLUTE]", encodeURIComponent(term))}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded transition-colors"
+            >
+              {dict.label} ↗
+            </a>
+          ))}
+        </div>
+      )}
     </div>,
     document.body,
   );
