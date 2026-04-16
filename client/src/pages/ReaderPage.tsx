@@ -502,7 +502,7 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
           getWord={getWord}
           wordVersion={wordVersion}
           onWordClick={handleWordClick}
-          persistedTranslations={showTranslations ? persistedTranslations : undefined}
+          persistedTranslations={persistedTranslations}
           onRemoveTranslation={(idx) => {
             setPersistedTranslations((prev) => {
               const next = new Map(prev);
@@ -510,7 +510,8 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
               return next;
             });
           }}
-          phraseGroups={showTranslations ? phraseGroups : undefined}
+          phraseGroups={phraseGroups}
+          hideTranslations={!showTranslations}
           tokenOffset={page.tokenOffset}
         />
       </div>
