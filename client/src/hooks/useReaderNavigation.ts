@@ -118,7 +118,7 @@ export function useReaderNavigation(
       const tag = (e.target as HTMLElement).tagName;
       if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
 
-      const action = matchKeybinding(e.key, bindings);
+      const action = matchKeybinding(e, bindings);
       if (!action) return;
       e.preventDefault();
 

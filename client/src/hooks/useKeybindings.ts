@@ -18,8 +18,8 @@ const DEFAULT_BINDINGS: KeyBinding[] = [
   { action: "prevSentence", label: "Move to previous sentence", group: "navigation", key: "", enabled: false },
   { action: "nextSentence", label: "Move to next sentence", group: "navigation", key: "", enabled: false },
   { action: "expandPopup", label: "Open word details", group: "navigation", key: "Enter", enabled: true },
-  { action: "prevPage", label: "Previous page", group: "navigation", key: "PageUp", enabled: true },
-  { action: "nextPage", label: "Next page", group: "navigation", key: "PageDown", enabled: true },
+  { action: "prevPage", label: "Previous page", group: "navigation", key: "Shift+PageUp", enabled: true },
+  { action: "nextPage", label: "Next page", group: "navigation", key: "Shift+PageDown", enabled: true },
   // Status
   { action: "setStatus1", label: "Set status to 1", group: "status", key: "1", enabled: true },
   { action: "setStatus2", label: "Set status to 2", group: "status", key: "2", enabled: true },
@@ -29,10 +29,10 @@ const DEFAULT_BINDINGS: KeyBinding[] = [
   { action: "setStatusIgnored", label: "Set status to Ignored", group: "status", key: "6", enabled: true },
   // Display
   { action: "toggleTranslations", label: "Toggle translation pills", group: "navigation", key: "t", enabled: true },
-  { action: "clearTranslations", label: "Remove all translations", group: "navigation", key: "T", enabled: true },
+  { action: "clearTranslations", label: "Remove all translations", group: "navigation", key: "Shift+T", enabled: true },
   // Copy
   { action: "copySentence", label: "Copy hovered sentence", group: "copy", key: "c", enabled: true },
-  { action: "copyParagraph", label: "Copy hovered paragraph", group: "copy", key: "C", enabled: true },
+  { action: "copyParagraph", label: "Copy hovered paragraph", group: "copy", key: "Shift+C", enabled: true },
   // Audio
   { action: "playTts", label: "Play TTS for current phrase", group: "audio", key: "p", enabled: true },
 ];
@@ -94,8 +94,23 @@ export function useKeybindings() {
   return { bindings: current, updateBinding, resetDefaults };
 }
 
+/** Build a combo string from a KeyboardEvent, e.g. "Shift+PageDown" or "t" */
+function eventToCombo(e: KeyboardEvent): string {
+  const parts: string[] = [];
+  if (e.ctrlKey) parts.push("Ctrl");
+  if (e.altKey) parts.push("Alt");
+  if (e.shiftKey) parts.push("Shift");
+  if (e.metaKey) parts.push("Meta");
+  // Don't duplicate modifier keys themselves in the combo
+  if (!["Control", "Alt", "Shift", "Meta"].includes(e.key)) {
+    parts.push(e.key);
+  }
+  return parts.join("+");
+}
+
 /** Get the action for a key event, or null if no enabled binding matches */
-export function matchKeybinding(key: string, currentBindings: KeyBinding[]): string | null {
-  const match = currentBindings.find((b) => b.enabled && b.key && b.key === key);
+export function matchKeybinding(e: KeyboardEvent, currentBindings: KeyBinding[]): string | null {
+  const combo = eventToCombo(e);
+  const match = currentBindings.find((b) => b.enabled && b.key && b.key === combo);
   return match?.action ?? null;
 }

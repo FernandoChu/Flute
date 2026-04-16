@@ -16,7 +16,13 @@ export default function KeybindingsSettings() {
     e.preventDefault();
     // Ignore modifier-only presses
     if (["Shift", "Control", "Alt", "Meta"].includes(e.key)) return;
-    updateBinding(action, { key: e.key });
+    const parts: string[] = [];
+    if (e.ctrlKey) parts.push("Ctrl");
+    if (e.altKey) parts.push("Alt");
+    if (e.shiftKey) parts.push("Shift");
+    if (e.metaKey) parts.push("Meta");
+    parts.push(e.key);
+    updateBinding(action, { key: parts.join("+") });
     setCapturing(null);
   };
 
