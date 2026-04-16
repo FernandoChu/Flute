@@ -509,6 +509,12 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
               next.delete(idx);
               return next;
             });
+            setPhraseGroups((prev) => {
+              if (!prev.has(idx)) return prev;
+              const next = new Map(prev);
+              next.delete(idx);
+              return next;
+            });
           }}
           phraseGroups={phraseGroups}
           hideTranslations={!showTranslations}
