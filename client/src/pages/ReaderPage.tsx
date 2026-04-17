@@ -511,12 +511,6 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
         onGenerateAudio={() => generateTts.mutate()}
       />
       <div className="mb-6">
-        <Link
-          href="/"
-          className="text-sm text-blue-600 hover:underline"
-        >
-          &larr; {lessonData.collection.title}
-        </Link>
         <div className="flex items-start justify-between gap-2">
           <LessonSelector
             lessons={lessonData.collection.lessons}
@@ -537,6 +531,32 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
             </svg>
           </button>
         </div>
+        {lessonData.collection.lessons.length > 1 && (() => {
+          const lessons = lessonData.collection.lessons;
+          const idx = lessons.findIndex((l) => l.id === lessonId);
+          const prev = idx > 0 ? lessons[idx - 1] : null;
+          const next = idx < lessons.length - 1 ? lessons[idx + 1] : null;
+          return (
+            <div className="flex items-center justify-between mt-2">
+              {prev ? (
+                <Link
+                  href={`/reader/${prev.id}`}
+                  className="text-sm text-gray-500 hover:text-blue-600 hover:underline"
+                >
+                  &larr; {prev.title}
+                </Link>
+              ) : <span />}
+              {next ? (
+                <Link
+                  href={`/reader/${next.id}`}
+                  className="text-sm text-gray-500 hover:text-blue-600 hover:underline"
+                >
+                  {next.title} &rarr;
+                </Link>
+              ) : <span />}
+            </div>
+          );
+        })()}
       </div>
 
       {lessonData.audioUrl && <AudioPlayer src={lessonData.audioUrl} />}
@@ -594,14 +614,27 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
             <span className="text-sm text-gray-500">
               {currentPage + 1} / {totalPages}
             </span>
-            {currentPage === totalPages - 1 ? (
-            <button
-              onClick={handleDone}
-              className="px-4 py-2 text-sm rounded border border-green-500 bg-green-500 text-white hover:bg-green-600"
-            >
-              Done &#10003;
-            </button>
-            ) : (
+            {currentPage === totalPages - 1 ? (() => {
+              const lessons = lessonData.collection.lessons;
+              const idx = lessons.findIndex((l) => l.id === lessonId);
+              const next = idx < lessons.length - 1 ? lessons[idx + 1] : null;
+              return next ? (
+                <Link
+                  href={`/reader/${next.id}`}
+                  onClick={handleDone}
+                  className="px-4 py-2 text-sm rounded border border-blue-500 bg-blue-500 text-white hover:bg-blue-600"
+                >
+                  Next lesson &rarr;
+                </Link>
+              ) : (
+                <button
+                  onClick={handleDone}
+                  className="px-4 py-2 text-sm rounded border border-green-500 bg-green-500 text-white hover:bg-green-600"
+                >
+                  Done &#10003;
+                </button>
+              );
+            })() : (
             <button
               onClick={handleNextPage}
               className="px-4 py-2 text-sm rounded border border-gray-300 bg-white hover:bg-gray-50"
