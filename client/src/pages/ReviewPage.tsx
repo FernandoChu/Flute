@@ -33,6 +33,7 @@ interface ReviewItem {
 export default function ReviewPage() {
   const queryClient = useQueryClient();
   const [languageId, setLanguageId] = useState("");
+  const [wordStatus, setWordStatus] = useState("");
   const [mode, setMode] = useState<ReviewMode>("flashcard");
   const [started, setStarted] = useState(false);
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -45,20 +46,22 @@ export default function ReviewPage() {
   });
 
   const langParam = languageId ? `&languageId=${languageId}` : "";
+  const statusParam = wordStatus !== "" ? `&wordStatus=${wordStatus}` : "";
+  const filterParams = `${langParam}${statusParam}`;
 
   const { data: countData } = useQuery({
-    queryKey: ["review-count", languageId],
+    queryKey: ["review-count", languageId, wordStatus],
     queryFn: () =>
       apiFetch<{ data: { count: number } }>(
-        `/reviews/due/count?${langParam}`,
+        `/reviews/due/count?${filterParams}`,
       ),
   });
 
   const { data: reviewData, refetch } = useQuery({
-    queryKey: ["review-items", languageId],
+    queryKey: ["review-items", languageId, wordStatus],
     queryFn: () =>
       apiFetch<{ data: ReviewItem[] }>(
-        `/reviews/due?limit=20${langParam}`,
+        `/reviews/due?limit=20${filterParams}`,
       ),
     enabled: started,
   });
@@ -142,6 +145,24 @@ export default function ReviewPage() {
                   {lang.name}
                 </option>
               ))}
+            </select>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Word Status
+            </label>
+            <select
+              value={wordStatus}
+              onChange={(e) => setWordStatus(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All statuses</option>
+              <option value="1">Learning 1</option>
+              <option value="2">Learning 2</option>
+              <option value="3">Learning 3</option>
+              <option value="4">Learning 4</option>
+              <option value="5">Known</option>
             </select>
           </div>
 

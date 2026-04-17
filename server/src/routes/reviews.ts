@@ -14,10 +14,11 @@ import {
 const router = Router();
 router.use(requireAuth);
 
-// GET /api/reviews/due?languageId&limit=20
+// GET /api/reviews/due?languageId&wordStatus&limit=20
 router.get("/due", async (req: Request, res: Response, next: NextFunction) => {
   try {
     const languageId = req.query.languageId ? Number(req.query.languageId) : undefined;
+    const wordStatus = req.query.wordStatus !== undefined && req.query.wordStatus !== "" ? Number(req.query.wordStatus) : undefined;
     const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 20));
 
     const where: any = {
@@ -25,6 +26,7 @@ router.get("/due", async (req: Request, res: Response, next: NextFunction) => {
       due: { lte: new Date() },
     };
     if (languageId) where.word.languageId = languageId;
+    if (wordStatus !== undefined) where.word.status = wordStatus;
 
     const reviews = await prisma.wordReview.findMany({
       where,
@@ -56,12 +58,14 @@ router.get("/due", async (req: Request, res: Response, next: NextFunction) => {
 router.get("/due/count", async (req: Request, res: Response, next: NextFunction) => {
   try {
     const languageId = req.query.languageId ? Number(req.query.languageId) : undefined;
+    const wordStatus = req.query.wordStatus !== undefined && req.query.wordStatus !== "" ? Number(req.query.wordStatus) : undefined;
 
     const where: any = {
       word: { userId: req.user.id },
       due: { lte: new Date() },
     };
     if (languageId) where.word.languageId = languageId;
+    if (wordStatus !== undefined) where.word.status = wordStatus;
 
     const count = await prisma.wordReview.count({ where });
     res.json({ data: { count } });
