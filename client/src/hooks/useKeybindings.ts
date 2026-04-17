@@ -31,8 +31,9 @@ const DEFAULT_BINDINGS: KeyBinding[] = [
   { action: "toggleTranslations", label: "Toggle translation pills", group: "navigation", key: "t", enabled: true },
   { action: "clearTranslations", label: "Remove all translations", group: "navigation", key: "Shift+T", enabled: true },
   // Copy
-  { action: "copySentence", label: "Copy hovered sentence", group: "copy", key: "c", enabled: true },
-  { action: "copyParagraph", label: "Copy hovered paragraph", group: "copy", key: "Shift+C", enabled: true },
+  { action: "copyWord", label: "Copy hovered word", group: "copy", key: "c", enabled: true },
+  { action: "copySentence", label: "Copy hovered sentence", group: "copy", key: "Shift+C", enabled: true },
+  { action: "copyParagraph", label: "Copy hovered paragraph", group: "copy", key: "", enabled: false },
   // Audio
   { action: "playTts", label: "Play TTS for current phrase", group: "audio", key: "p", enabled: true },
 ];

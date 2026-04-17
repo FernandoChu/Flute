@@ -30,6 +30,13 @@ function getWordElements(container: HTMLElement): HTMLElement[] {
   );
 }
 
+function extractWord(container: HTMLElement, anchorIdx: number): string {
+  const allEls = getTokenElements(container);
+  const el = allEls.find((el) => Number(el.dataset.tokenIdx) === anchorIdx);
+  if (!el) return "";
+  return (el.textContent ?? "").trim();
+}
+
 function isSentenceBoundary(el: HTMLElement): boolean {
   return /[.!?]/.test(el.textContent ?? "");
 }
@@ -257,6 +264,11 @@ export function useReaderNavigation(
           break;
         }
 
+        case "copyWord": {
+          const text = extractWord(container!, hoveredTokenIdxRef.current);
+          if (text) navigator.clipboard.writeText(text);
+          break;
+        }
         case "copySentence": {
           const text = extractSentence(container!, hoveredTokenIdxRef.current);
           if (text) navigator.clipboard.writeText(text);
