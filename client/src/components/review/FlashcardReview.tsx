@@ -39,7 +39,10 @@ function HighlightedSentence({ sentence, term }: { sentence: string; term: strin
     <span>
       {parts.map((part, i) =>
         part.toLowerCase() === term.toLowerCase() ? (
-          <span key={i} className="text-blue-600 font-bold underline underline-offset-4">
+          <span
+            key={i}
+            className="text-blue-600 font-bold underline underline-offset-4 [text-decoration-skip-ink:none]"
+          >
             {part}
           </span>
         ) : (
