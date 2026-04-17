@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { apiFetch } from "../lib/api";
@@ -30,10 +30,34 @@ interface ReviewItem {
   };
 }
 
+const FILTERS_STORAGE_KEY = "reviewFilters";
+
+function loadFilters(): { languageId: string; wordStatus: string } {
+  try {
+    const v = localStorage.getItem(FILTERS_STORAGE_KEY);
+    if (!v) return { languageId: "", wordStatus: "" };
+    const parsed = JSON.parse(v);
+    return {
+      languageId: typeof parsed.languageId === "string" ? parsed.languageId : "",
+      wordStatus: typeof parsed.wordStatus === "string" ? parsed.wordStatus : "",
+    };
+  } catch {
+    return { languageId: "", wordStatus: "" };
+  }
+}
+
 export default function ReviewPage() {
   const queryClient = useQueryClient();
-  const [languageId, setLanguageId] = useState("");
-  const [wordStatus, setWordStatus] = useState("");
+  const initialFilters = loadFilters();
+  const [languageId, setLanguageId] = useState(initialFilters.languageId);
+  const [wordStatus, setWordStatus] = useState(initialFilters.wordStatus);
+
+  useEffect(() => {
+    localStorage.setItem(
+      FILTERS_STORAGE_KEY,
+      JSON.stringify({ languageId, wordStatus }),
+    );
+  }, [languageId, wordStatus]);
   const [mode, setMode] = useState<ReviewMode>("flashcard");
   const [started, setStarted] = useState(false);
   const [currentIdx, setCurrentIdx] = useState(0);
