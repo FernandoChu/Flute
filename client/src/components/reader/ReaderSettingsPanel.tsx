@@ -1,5 +1,5 @@
 import { useReaderSettings } from "../../hooks/useReaderSettings";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const FONT_OPTIONS = [
   { label: "Sans-serif", value: "sans-serif" },
@@ -20,9 +20,19 @@ export default function ReaderSettingsPanel({ perPage, onPerPageChange, hasAudio
   const [open, setOpen] = useState(false);
   const [showAudioConfirm, setShowAudioConfirm] = useState(false);
   const { settings, update, reset } = useReaderSettings();
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
 
   return (
-    <div className="fixed bottom-4 right-4 z-50">
+    <div ref={ref} className="fixed bottom-4 right-4 z-50">
       <button
         onClick={() => setOpen((v) => !v)}
         className="bg-white border border-gray-300 rounded-lg p-2 shadow-sm hover:bg-gray-50 transition-colors"
