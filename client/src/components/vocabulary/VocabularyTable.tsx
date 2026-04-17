@@ -171,18 +171,23 @@ export default function VocabularyTable({
               <td className="py-2.5 px-3 text-gray-500">{word.language.name}</td>
               <td className="py-2.5 px-3">
                 {editingId === word.id ? (
-                  <input
-                    type="text"
+                  <textarea
                     value={editNotes}
                     onChange={(e) => setEditNotes(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") saveEdit(word.id);
+                      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                        e.preventDefault();
+                        saveEdit(word.id);
+                      }
                       if (e.key === "Escape") setEditingId(null);
                     }}
-                    className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    rows={2}
+                    className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
                   />
                 ) : (
-                  <span className="text-gray-500 text-xs">{word.notes || ""}</span>
+                  <span className="text-gray-500 text-xs whitespace-pre-wrap">
+                    {word.notes || ""}
+                  </span>
                 )}
               </td>
               <td className="py-2.5 px-3 text-gray-400 text-xs">

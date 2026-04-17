@@ -70,6 +70,42 @@ export default function ReviewPage() {
   const currentItem = items[currentIdx] ?? null;
   const dueCount = countData?.data.count ?? 0;
 
+  const handleUpdate = useCallback(
+    async (edits: {
+      translation?: string | null;
+      notes?: string | null;
+      contextSentence?: string | null;
+    }) => {
+      if (!currentItem) return;
+      const wordId = currentItem.word.id;
+
+      const res = await apiFetch<{ data: ReviewItem["word"] }>(
+        `/words/${wordId}`,
+        {
+          method: "PUT",
+          body: JSON.stringify(edits),
+        },
+      );
+
+      queryClient.setQueryData<{ data: ReviewItem[] }>(
+        ["review-items", languageId, wordStatus],
+        (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            data: old.data.map((it) =>
+              it.word.id === wordId
+                ? { ...it, word: { ...it.word, ...res.data } }
+                : it,
+            ),
+          };
+        },
+      );
+      queryClient.invalidateQueries({ queryKey: ["vocabulary"] });
+    },
+    [currentItem, languageId, wordStatus, queryClient],
+  );
+
   const handleRate = useCallback(
     async (rating: number) => {
       if (!currentItem) return;
@@ -252,7 +288,11 @@ export default function ReviewPage() {
       <ReviewProgress current={reviewed} total={total} />
 
       {mode === "flashcard" ? (
-        <FlashcardReview item={currentItem} onRate={handleRate} />
+        <FlashcardReview
+          item={currentItem}
+          onRate={handleRate}
+          onUpdate={handleUpdate}
+        />
       ) : (
         <MultipleChoiceReview item={currentItem} onRate={handleRate} />
       )}

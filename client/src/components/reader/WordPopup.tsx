@@ -187,12 +187,12 @@ export default function WordPopup({
       </div>
 
       <div className="mb-3">
-        <input
-          type="text"
+        <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Notes"
-          className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          rows={2}
+          className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
         />
       </div>
 
