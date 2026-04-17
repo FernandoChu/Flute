@@ -293,6 +293,23 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [goNext, closePhrasePopup, page.text, getWord, updateWord]);
 
+  const handleDone = useCallback(() => {
+    // Mark all New words on the last page as Known
+    const tokens = tokenize(page.text);
+    const seen = new Set<string>();
+    for (const token of tokens) {
+      if (!token.isWord) continue;
+      const term = normalizeWord(token.text);
+      if (seen.has(term)) continue;
+      seen.add(term);
+      const word = getWord(term);
+      if (!word || word.status === WordStatus.New) {
+        const contextSentence = extractSentence(page.text, term) ?? undefined;
+        updateWord(token.text, { status: WordStatus.Known, contextSentence });
+      }
+    }
+  }, [page.text, getWord, updateWord]);
+
   const { syncSelectedIdx } = useReaderNavigation(textContainerRef, {
     popup,
     setPopup: handleSetPopup,
@@ -577,13 +594,21 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
             <span className="text-sm text-gray-500">
               {currentPage + 1} / {totalPages}
             </span>
+            {currentPage === totalPages - 1 ? (
+            <button
+              onClick={handleDone}
+              className="px-4 py-2 text-sm rounded border border-green-500 bg-green-500 text-white hover:bg-green-600"
+            >
+              Done &#10003;
+            </button>
+            ) : (
             <button
               onClick={handleNextPage}
-              disabled={currentPage === totalPages - 1}
-              className="px-4 py-2 text-sm rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
+              className="px-4 py-2 text-sm rounded border border-gray-300 bg-white hover:bg-gray-50"
             >
               Next &rarr;
             </button>
+            )}
           </div>
         </>
       )}
