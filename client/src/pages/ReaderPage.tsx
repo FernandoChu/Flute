@@ -10,6 +10,7 @@ import TokenizedText from "../components/reader/TokenizedText";
 import WordPopup from "../components/reader/WordPopup";
 import AudioPlayer from "../components/reader/AudioPlayer";
 import ReaderSettingsPanel from "../components/reader/ReaderSettingsPanel";
+import EditLessonModal from "../components/EditLessonModal";
 import { useReaderSettings } from "../hooks/useReaderSettings";
 import { useReaderPagination } from "../hooks/useReaderPagination";
 
@@ -144,6 +145,7 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
     term: string;
     element: HTMLElement;
   } | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [wordPopupTarget, setWordPopupTarget] = useState<{
     term: string;
     element: HTMLElement;
@@ -498,10 +500,26 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
         >
           &larr; {lessonData.collection.title}
         </Link>
-        <LessonSelector
-          lessons={lessonData.collection.lessons}
-          currentLessonId={lessonId}
-        />
+        <div className="flex items-start justify-between gap-2">
+          <LessonSelector
+            lessons={lessonData.collection.lessons}
+            currentLessonId={lessonId}
+          />
+          <button
+            onClick={() => setShowEditModal(true)}
+            className="mt-3 shrink-0 p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
+            title="Edit lesson"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="w-5 h-5"
+            >
+              <path d="M2.695 14.763l-1.262 3.154a.5.5 0 0 0 .65.65l3.155-1.262a4 4 0 0 0 1.343-.885L17.5 5.5a2.121 2.121 0 0 0-3-3L3.58 13.42a4 4 0 0 0-.885 1.343z" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {lessonData.audioUrl && <AudioPlayer src={lessonData.audioUrl} />}
@@ -568,6 +586,15 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
             </button>
           </div>
         </>
+      )}
+
+      {showEditModal && (
+        <EditLessonModal
+          lessonId={lessonId}
+          initialTitle={lessonData.title}
+          initialTextContent={lessonData.textContent}
+          onClose={() => setShowEditModal(false)}
+        />
       )}
 
       {wordPopupTarget && (
