@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { WordStatus } from "shared";
 import type { Word } from "shared";
-import { apiFetch } from "../../lib/api";
 
 interface DictionaryLink {
   label: string;
@@ -13,8 +12,6 @@ interface WordPopupProps {
   term: string;
   word: Word | undefined;
   anchorEl: HTMLElement;
-  sourceLang?: string;
-  targetLang?: string;
   dictionaryLinks?: DictionaryLink[];
   onUpdateWord: (data: {
     translation?: string;
@@ -37,8 +34,6 @@ export default function WordPopup({
   term,
   word,
   anchorEl,
-  sourceLang,
-  targetLang,
   dictionaryLinks,
   onUpdateWord,
   onClose,
@@ -46,13 +41,25 @@ export default function WordPopup({
   const [translation, setTranslation] = useState(word?.translation ?? "");
   const [notes, setNotes] = useState(word?.notes ?? "");
   const [saving, setSaving] = useState(false);
-  const [translating, setTranslating] = useState(false);
-  const [translateError, setTranslateError] = useState<string | null>(null);
   const popupRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState<{
     top: number;
     left: number;
   } | null>(null);
+
+  const closeRef = useRef<() => void>(() => {});
+  closeRef.current = () => {
+    const originalTranslation = word?.translation ?? "";
+    const originalNotes = word?.notes ?? "";
+    if (translation !== originalTranslation || notes !== originalNotes) {
+      onUpdateWord({
+        translation: translation || undefined,
+        notes: notes || undefined,
+        status: word?.status ?? WordStatus.Learning1,
+      }).catch(() => {});
+    }
+    onClose();
+  };
 
   useEffect(() => {
     const rect = anchorEl.getBoundingClientRect();
@@ -74,11 +81,11 @@ export default function WordPopup({
         !popupRef.current.contains(e.target as Node) &&
         !anchorEl.contains(e.target as Node)
       ) {
-        onClose();
+        closeRef.current();
       }
     }
     function handleEscape(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") closeRef.current();
     }
     document.addEventListener("mousedown", handleClickOutside);
     document.addEventListener("keydown", handleEscape);
@@ -86,7 +93,7 @@ export default function WordPopup({
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleEscape);
     };
-  }, [anchorEl, onClose]);
+  }, [anchorEl]);
 
   const handleStatusChange = async (status: number) => {
     setSaving(true);
@@ -98,30 +105,6 @@ export default function WordPopup({
       });
     } finally {
       setSaving(false);
-    }
-  };
-
-  const handleTranslate = async () => {
-    if (!sourceLang || !targetLang) return;
-    setTranslating(true);
-    setTranslateError(null);
-    try {
-      const res = await apiFetch<{ data: { translation: string } }>(
-        "/translate/word",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            term,
-            sourceLang,
-            targetLang,
-          }),
-        },
-      );
-      setTranslation(res.data.translation);
-    } catch (err: any) {
-      setTranslateError(err.message || "Translation failed");
-    } finally {
-      setTranslating(false);
     }
   };
 
@@ -151,7 +134,7 @@ export default function WordPopup({
       <div className="flex items-center justify-between mb-3">
         <h3 className="font-bold text-lg">{term}</h3>
         <button
-          onClick={onClose}
+          onClick={() => closeRef.current()}
           className="text-gray-400 hover:text-gray-600 text-xl leading-none"
         >
           &times;
@@ -159,31 +142,16 @@ export default function WordPopup({
       </div>
 
       <div className="mb-3">
-        <div className="flex gap-1.5">
-          <input
-            type="text"
-            value={translation}
-            onChange={(e) => setTranslation(e.target.value)}
-            placeholder="Translation"
-            className="flex-1 px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleSaveTranslation();
-            }}
-          />
-          {sourceLang && targetLang && (
-            <button
-              onClick={handleTranslate}
-              disabled={translating}
-              className="px-2.5 py-1.5 bg-blue-50 text-blue-600 border border-blue-200 rounded text-sm hover:bg-blue-100 transition-colors disabled:opacity-50"
-              title="Auto-translate"
-            >
-              {translating ? "..." : "T"}
-            </button>
-          )}
-        </div>
-        {translateError && (
-          <p className="text-xs text-red-500 mt-1">{translateError}</p>
-        )}
+        <input
+          type="text"
+          value={translation}
+          onChange={(e) => setTranslation(e.target.value)}
+          placeholder="Translation"
+          className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleSaveTranslation();
+          }}
+        />
       </div>
 
       <div className="mb-3">

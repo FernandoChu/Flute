@@ -660,8 +660,6 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
           term={wordPopupTarget.term}
           word={currentWordForPopup}
           anchorEl={wordPopupTarget.element}
-          sourceLang={lessonData.collection.sourceLanguage?.code}
-          targetLang={lessonData.collection.targetLanguage?.code}
           dictionaryLinks={dictionaryLinks}
           onUpdateWord={handleUpdateWord}
           onClose={() => setWordPopupTarget(null)}
