@@ -40,7 +40,7 @@ export default function App() {
         <Route path="/reader/:lessonId">
           {(params) => (
             <ProtectedRoute>
-              <ReaderPage lessonId={params.lessonId} />
+              <ReaderPage key={params.lessonId} lessonId={params.lessonId} />
             </ProtectedRoute>
           )}
         </Route>
