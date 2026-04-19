@@ -12,7 +12,7 @@ The recommended installation method is to run it using [docker](https://docs.doc
 - Install and run with `docker compose build --no-cache && docker compose up`. Open the app at http://localhost:3001.
 - Create an account in DeepL and get an [api key](https://www.deepl.com/en/your-account/keys). Put it in the settings in Flute.
 - Create an account in Google Console, and then make a project. Get an [api key](https://console.cloud.google.com/apis/credentials) for `Cloud Text-to-Speech API`. Put it in the settings in Flute, and choose your preferred model and voice. I suggest the Chirp HD model for accuracy/price (roughly 15-20 hours of audio in the free tier).
-  - WARNING: Unlike DeepL, Google Console can consume more tokens beyond the ones in the free tier and will charge you for this. Also, not all models have a free tier.
+  - WARNING: Unlike DeepL, Google Cloud can consume more tokens beyond the ones in the free tier and will charge you for this. Also, not all models have a free tier.
 
 To update just run:
 ```
