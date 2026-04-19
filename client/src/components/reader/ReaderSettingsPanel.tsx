@@ -79,7 +79,7 @@ export default function ReaderSettingsPanel({
 }: Props) {
   const [open, setOpen] = useState(false);
   const [showAudioConfirm, setShowAudioConfirm] = useState(false);
-  const { settings, update, reset } = useReaderSettings();
+  const { settings, update } = useReaderSettings();
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -110,20 +110,12 @@ export default function ReaderSettingsPanel({
             <div className="display text-[16px] font-medium text-ink">
               Tweaks
             </div>
-            <div className="flex gap-1">
-              <button
-                onClick={reset}
-                className="btn btn-ghost px-2 py-0.5 text-[11px]"
-              >
-                Reset
-              </button>
-              <button
-                onClick={() => setOpen(false)}
-                className="btn btn-ghost px-1.5 py-0.5 text-sm leading-none"
-              >
-                ×
-              </button>
-            </div>
+            <button
+              onClick={() => setOpen(false)}
+              className="btn btn-ghost px-1.5 py-0.5 text-sm leading-none"
+            >
+              ×
+            </button>
           </div>
 
           <div

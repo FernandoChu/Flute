@@ -1,4 +1,6 @@
-# Flute
+<p align="center">
+  <img src=".github/banner.svg" alt="Flute — A reading-first language app" width="100%" />
+</p>
 
 A reading-based language learning app inspired by Lute3, LingQ, and Readlang. Import text content, select words for instant translations and audio playback, track vocabulary progress, and review with spaced repetition (FSRS).
 

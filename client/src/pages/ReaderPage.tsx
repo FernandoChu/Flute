@@ -43,15 +43,11 @@ interface LessonDetail {
 function PageProgressBar({
   currentPage,
   totalPages,
-  readingMinutes,
-  wordCount,
   pageFraction,
   onGoToPage,
 }: {
   currentPage: number;
   totalPages: number;
-  readingMinutes: number;
-  wordCount: number;
   pageFraction: number;
   onGoToPage: (n: number) => void;
 }) {
@@ -82,12 +78,6 @@ function PageProgressBar({
     );
   }
 
-  const totalMinutes = Math.max(1, Math.round(wordCount / 180));
-  const pagesRemaining = totalPages - currentPage - 1;
-  const minRemaining = Math.max(
-    1,
-    Math.round(readingMinutes + (pagesRemaining * totalMinutes) / totalPages),
-  );
   const overallFraction =
     totalPages === 0
       ? 0
@@ -113,7 +103,7 @@ function PageProgressBar({
             textTransform: "uppercase",
           }}
         >
-          Page {currentPage + 1} of {totalPages} · ~{minRemaining} min remaining
+          Page {currentPage + 1} of {totalPages}
         </div>
         <div
           className="mono"
@@ -869,8 +859,6 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
           <PageProgressBar
             currentPage={currentPage}
             totalPages={totalPages}
-            readingMinutes={readingMinutes}
-            wordCount={wordCount}
             pageFraction={0.5}
             onGoToPage={goToPage}
           />
