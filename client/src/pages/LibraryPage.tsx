@@ -535,22 +535,10 @@ function ContinueBanner({
   const total = compTotal(composition);
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "140px 1fr auto",
-        gap: 28,
-        alignItems: "center",
-        background: "var(--paper-deep)",
-        border: "1px solid var(--rule)",
-        borderRadius: 10,
-        padding: "20px 24px",
-        marginBottom: 48,
-      }}
-    >
+    <div className="mb-12 grid grid-cols-[140px_1fr_auto] items-center gap-7 rounded-[10px] border border-rule bg-paper-deep px-6 py-5">
       <Link
         href={`/collection/${collection.id}`}
-        style={{ cursor: "pointer", textDecoration: "none" }}
+        className="cursor-pointer no-underline"
       >
         <CoverArt
           id={collection.id}
@@ -558,56 +546,19 @@ function ContinueBanner({
           langCode={collection.sourceLanguage.code}
         />
       </Link>
-      <div style={{ minWidth: 0 }}>
-        <div
-          className="mono"
-          style={{
-            fontSize: 10,
-            letterSpacing: "0.14em",
-            color: "var(--ink-faint)",
-            textTransform: "uppercase",
-            marginBottom: 8,
-          }}
-        >
+      <div className="min-w-0">
+        <div className="mono mb-2 text-[10px] uppercase tracking-[0.14em] text-ink-faint">
           Continue reading · {collection.title}
         </div>
-        <div
-          className="display"
-          style={{
-            fontSize: 28,
-            fontWeight: 500,
-            letterSpacing: "-0.01em",
-            color: "var(--ink)",
-            marginBottom: 4,
-            lineHeight: 1.15,
-          }}
-        >
+        <div className="display mb-1 text-[28px] font-medium leading-[1.15] tracking-[-0.01em] text-ink">
           {lesson.title}
         </div>
         {lesson.preview && (
-          <div
-            style={{
-              color: "var(--ink-soft)",
-              fontSize: 14,
-              marginBottom: 14,
-              fontStyle: "italic",
-              lineHeight: 1.4,
-            }}
-          >
+          <div className="mb-3.5 text-sm italic leading-[1.4] text-ink-soft">
             “{lesson.preview}”
           </div>
         )}
-        <div
-          className="mono"
-          style={{
-            display: "flex",
-            gap: 12,
-            alignItems: "center",
-            fontSize: 12,
-            color: "var(--ink-faint)",
-            letterSpacing: "0.04em",
-          }}
-        >
+        <div className="mono flex items-center gap-3 text-xs tracking-[0.04em] text-ink-faint">
           <span>Paused on page {currentPage + 1}</span>
           {total > 0 && (
             <>
@@ -625,36 +576,16 @@ function ContinueBanner({
           )}
         </div>
       </div>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: 8,
-          alignItems: "stretch",
-        }}
-      >
+      <div className="flex flex-col items-stretch gap-2">
         <Link
           href={`/reader/${lesson.id}`}
-          className="btn btn-primary sans"
-          style={{
-            padding: "10px 20px",
-            textDecoration: "none",
-            textAlign: "center",
-          }}
+          className="btn btn-primary sans px-5 py-2.5 text-center no-underline"
         >
           Resume reading →
         </Link>
         <button
           onClick={onOpenCollection}
-          className="sans"
-          style={{
-            background: "transparent",
-            border: 0,
-            cursor: "pointer",
-            color: "var(--ink-faint)",
-            fontSize: 12,
-            padding: "4px 0",
-          }}
+          className="sans cursor-pointer border-0 bg-transparent px-0 py-1 text-xs text-ink-faint"
         >
           Open collection
         </button>
