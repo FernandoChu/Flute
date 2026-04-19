@@ -69,8 +69,7 @@ function TokenizedTextInner({
           elements.push(
             <span key={globalIdx} className={`word-slot border-b-2 ${hideTranslations ? "border-transparent" : "border-accent"}`}>
               <span
-                className="word-slot-annotation hover:opacity-70"
-                style={hideTranslations ? { opacity: 0, pointerEvents: "none" } : undefined}
+                className={`word-slot-annotation hover:opacity-70 ${hideTranslations ? "pointer-events-none opacity-0" : ""}`}
                 onMouseDown={(e) => e.stopPropagation()}
                 onClick={() => onRemoveTranslation?.(globalIdx)}
               >
@@ -145,8 +144,7 @@ function TokenizedTextInner({
       >
         {translation && (
           <span
-            className="word-slot-annotation hover:opacity-70"
-            style={hideTranslations ? { opacity: 0, pointerEvents: "none" } : undefined}
+            className={`word-slot-annotation hover:opacity-70 ${hideTranslations ? "pointer-events-none opacity-0" : ""}`}
             onMouseDown={(e) => e.stopPropagation()}
             onClick={() => onRemoveTranslation?.(anchorIdx)}
           >

@@ -23,27 +23,14 @@ export default function StatusBadge({ status }: { status: number }) {
     short: "?",
     color: "var(--ink-faint)",
   };
+  const isKnown = status === WordStatus.Known;
   return (
-    <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 6,
-        fontFamily: "var(--font-mono)",
-        fontSize: 11,
-        color: "var(--ink-soft)",
-        letterSpacing: "0.04em",
-      }}
-    >
+    <span className="inline-flex items-center gap-1.5 font-mono text-[11px] tracking-[0.04em] text-ink-soft">
       <span
-        style={{
-          width: 8,
-          height: 8,
-          borderRadius: "50%",
-          background: status === WordStatus.Known ? "transparent" : config.color,
-          border:
-            status === WordStatus.Known ? "1px solid var(--rule)" : "none",
-        }}
+        className={`h-2 w-2 rounded-full ${
+          isKnown ? "border border-rule" : "border-0"
+        }`}
+        style={{ background: isKnown ? "transparent" : config.color }}
       />
       {config.label}
     </span>

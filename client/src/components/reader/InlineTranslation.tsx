@@ -95,30 +95,17 @@ export default function InlineTranslation({
 
   return createPortal(
     <div
-      className={`absolute z-50 ${onClick ? "cursor-pointer hover:opacity-80" : ""}`}
+      className={`absolute z-50 -translate-x-1/2 -translate-y-full ${onClick ? "cursor-pointer hover:opacity-80" : ""}`}
       style={{
         top: position.top,
         left: position.left,
-        transform: "translate(-50%, -100%)",
       }}
       onClick={onClick}
     >
-      <span
-        className="text-base italic whitespace-nowrap"
-        style={{ color: "var(--accent)", fontFamily: "var(--font-body)" }}
-      >
+      <span className="whitespace-nowrap font-body text-base italic text-accent">
         {content}
       </span>
-      <div
-        className="absolute left-1/2 top-full -translate-x-1/2"
-        style={{
-          width: 0,
-          height: 0,
-          borderLeft: "7px solid transparent",
-          borderRight: "7px solid transparent",
-          borderBottom: "7px solid var(--accent)",
-        }}
-      />
+      <div className="absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 border-x-[7px] border-b-[7px] border-x-transparent border-b-accent" />
     </div>,
     document.body,
   );

@@ -4,22 +4,15 @@ interface PaginationProps {
   onPageChange: (page: number) => void;
 }
 
-const pillStyle = (active: boolean, disabled = false): React.CSSProperties => ({
-  minWidth: 32,
-  padding: "4px 10px",
-  fontSize: 12,
-  background: active ? "var(--ink)" : "transparent",
-  color: active
-    ? "var(--paper)"
-    : disabled
-      ? "var(--ink-ghost)"
-      : "var(--ink-soft)",
-  border: "1px solid " + (active ? "var(--ink)" : "var(--rule)"),
-  borderRadius: 5,
-  cursor: disabled ? "not-allowed" : "pointer",
-  fontFamily: "var(--font-sans)",
-  opacity: disabled ? 0.5 : 1,
-});
+const pillClass = (active: boolean, disabled = false): string => {
+  const base =
+    "sans min-w-8 rounded-[5px] border px-2.5 py-1 text-[12px]";
+  const state = active
+    ? "border-ink bg-ink text-paper"
+    : `border-rule bg-transparent ${disabled ? "text-ink-ghost" : "text-ink-soft"}`;
+  const behavior = disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer";
+  return `${base} ${state} ${behavior}`;
+};
 
 export default function Pagination({
   page,
@@ -34,27 +27,22 @@ export default function Pagination({
   for (let i = start; i <= end; i++) range.push(i);
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+    <div className="flex items-center gap-1">
       <button
         onClick={() => onPageChange(page - 1)}
         disabled={page <= 1}
-        style={pillStyle(false, page <= 1)}
+        className={pillClass(false, page <= 1)}
       >
         ‹
       </button>
 
       {start > 1 && (
         <>
-          <button onClick={() => onPageChange(1)} style={pillStyle(false)}>
+          <button onClick={() => onPageChange(1)} className={pillClass(false)}>
             1
           </button>
           {start > 2 && (
-            <span
-              style={{ padding: "0 4px", color: "var(--ink-faint)" }}
-              className="mono"
-            >
-              …
-            </span>
+            <span className="mono px-1 text-ink-faint">…</span>
           )}
         </>
       )}
@@ -63,7 +51,7 @@ export default function Pagination({
         <button
           key={p}
           onClick={() => onPageChange(p)}
-          style={pillStyle(p === page)}
+          className={pillClass(p === page)}
         >
           {p}
         </button>
@@ -72,14 +60,12 @@ export default function Pagination({
       {end < pages && (
         <>
           {end < pages - 1 && (
-            <span
-              style={{ padding: "0 4px", color: "var(--ink-faint)" }}
-              className="mono"
-            >
-              …
-            </span>
+            <span className="mono px-1 text-ink-faint">…</span>
           )}
-          <button onClick={() => onPageChange(pages)} style={pillStyle(false)}>
+          <button
+            onClick={() => onPageChange(pages)}
+            className={pillClass(false)}
+          >
             {pages}
           </button>
         </>
@@ -88,7 +74,7 @@ export default function Pagination({
       <button
         onClick={() => onPageChange(page + 1)}
         disabled={page >= pages}
-        style={pillStyle(false, page >= pages)}
+        className={pillClass(false, page >= pages)}
       >
         ›
       </button>

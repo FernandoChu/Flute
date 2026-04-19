@@ -19,94 +19,35 @@ export default function ReviewSummary({
   const total = stats.again + stats.hard + stats.good + stats.easy;
 
   return (
-    <div style={{ textAlign: "center", padding: "40px 0" }}>
-      <div
-        className="mono"
-        style={{
-          fontSize: 10,
-          letterSpacing: "0.14em",
-          color: "var(--ink-faint)",
-          textTransform: "uppercase",
-          marginBottom: 12,
-        }}
-      >
+    <div className="py-10 text-center">
+      <div className="mono mb-3 text-[10px] uppercase tracking-[0.14em] text-ink-faint">
         Session complete
       </div>
-      <h2
-        className="display"
-        style={{
-          margin: 0,
-          fontSize: 44,
-          fontWeight: 500,
-          letterSpacing: "-0.02em",
-          color: "var(--ink)",
-        }}
-      >
+      <h2 className="display m-0 text-[44px] font-medium tracking-[-0.02em] text-ink">
         {total} card{total !== 1 ? "s" : ""} reviewed.
       </h2>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: 10,
-          marginTop: 36,
-          marginBottom: 36,
-        }}
-      >
+      <div className="my-9 grid grid-cols-4 gap-2.5">
         {BUCKETS.map((b) => (
           <div
             key={b.key}
-            style={{
-              padding: "20px 14px",
-              background: "var(--paper-deep)",
-              border: "1px solid var(--rule)",
-              borderRadius: 8,
-              position: "relative",
-              overflow: "hidden",
-              textAlign: "left",
-            }}
+            className="relative overflow-hidden rounded-lg border border-rule bg-paper-deep px-3.5 py-5 text-left"
           >
             <div
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                bottom: 0,
-                width: 3,
-                background: b.color,
-              }}
+              className="absolute bottom-0 left-0 top-0 w-[3px]"
+              style={{ background: b.color }}
             />
-            <div
-              className="display"
-              style={{
-                fontSize: 28,
-                fontWeight: 500,
-                color: "var(--ink)",
-                letterSpacing: "-0.01em",
-              }}
-            >
+            <div className="display text-[28px] font-medium tracking-[-0.01em] text-ink">
               {stats[b.key]}
             </div>
-            <div
-              className="mono"
-              style={{
-                fontSize: 10,
-                letterSpacing: "0.1em",
-                color: "var(--ink-faint)",
-                textTransform: "uppercase",
-                marginTop: 4,
-              }}
-            >
+            <div className="mono mt-1 text-[10px] uppercase tracking-[0.1em] text-ink-faint">
               {b.label}
             </div>
           </div>
         ))}
       </div>
 
-      <div
-        style={{ display: "flex", gap: 10, justifyContent: "center" }}
-      >
+      <div className="flex justify-center gap-2.5">
         <button onClick={onRestart} className="btn btn-primary sans">
           Review more
         </button>

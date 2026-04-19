@@ -75,136 +75,49 @@ export default function NavBar() {
   const [location, navigate] = useLocation();
 
   return (
-    <header
-      style={{
-        position: "sticky",
-        top: 0,
-        zIndex: 40,
-        background: "oklch(from var(--paper) l c h / 0.85)",
-        backdropFilter: "blur(10px)",
-        WebkitBackdropFilter: "blur(10px)",
-        borderBottom: "1px solid var(--rule)",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: 1400,
-          margin: "0 auto",
-          padding: "0 32px",
-          height: 58,
-          display: "flex",
-          alignItems: "center",
-          gap: 28,
-        }}
-      >
+    <header className="sticky top-0 z-40 border-b border-rule bg-paper/85 backdrop-blur-[10px]">
+      <div className="mx-auto flex h-[58px] max-w-[1400px] items-center gap-7 px-8">
         <button
           onClick={() => navigate("/")}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            background: "transparent",
-            border: 0,
-            cursor: "pointer",
-            padding: 0,
-            color: "var(--ink)",
-          }}
+          className="flex cursor-pointer items-center gap-2.5 border-0 bg-transparent p-0 text-ink"
         >
           <FluteMark />
-          <span
-            className="display"
-            style={{
-              fontSize: 22,
-              fontWeight: 500,
-              letterSpacing: "-0.02em",
-            }}
-          >
+          <span className="display text-[22px] font-medium tracking-[-0.02em]">
             Flute
           </span>
         </button>
 
-        <nav style={{ display: "flex", gap: 4, marginLeft: 12 }}>
+        <nav className="ml-3 flex gap-1">
           {NAV.map((n) => {
             const active = isActivePath(location, n.href, n.key);
             return (
               <button
                 key={n.key}
                 onClick={() => navigate(n.href)}
-                className="sans"
+                className="sans relative cursor-pointer rounded-md border-0 bg-transparent px-3.5 py-2 text-[13px] tracking-[0.005em]"
                 style={{
-                  position: "relative",
-                  padding: "8px 14px",
-                  background: "transparent",
-                  border: 0,
-                  cursor: "pointer",
-                  fontSize: 13,
                   fontWeight: active ? 600 : 450,
                   color: active ? "var(--ink)" : "var(--ink-soft)",
-                  borderRadius: 6,
-                  letterSpacing: "0.005em",
                 }}
               >
                 {n.label}
                 {active && (
-                  <span
-                    style={{
-                      position: "absolute",
-                      left: 14,
-                      right: 14,
-                      bottom: -2,
-                      height: 2,
-                      background: "var(--ink)",
-                      borderRadius: 2,
-                    }}
-                  />
+                  <span className="absolute -bottom-0.5 left-[14px] right-[14px] h-0.5 rounded-[2px] bg-ink" />
                 )}
               </button>
             );
           })}
         </nav>
 
-        <div style={{ flex: 1 }} />
+        <div className="flex-1" />
 
         <button
           onClick={logout}
           title="Sign out · switch user"
-          className="sans"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            background: "transparent",
-            border: 0,
-            cursor: "pointer",
-            padding: 0,
-            color: "var(--ink-soft)",
-          }}
+          className="sans flex cursor-pointer items-center gap-2.5 border-0 bg-transparent p-0 text-ink-soft"
         >
-          <span
-            className="mono"
-            style={{
-              fontSize: 11,
-              letterSpacing: "0.05em",
-            }}
-          >
-            {username}
-          </span>
-          <span
-            style={{
-              width: 30,
-              height: 30,
-              borderRadius: "50%",
-              background: "var(--accent-wash)",
-              color: "var(--accent)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontFamily: "var(--font-display)",
-              fontWeight: 600,
-              fontSize: 13,
-              border: "1px solid var(--rule)",
-            }}
-          >
+          <span className="mono text-[11px] tracking-[0.05em]">{username}</span>
+          <span className="flex h-[30px] w-[30px] items-center justify-center rounded-full border border-rule bg-accent-wash font-display text-[13px] font-semibold text-accent">
             {(username ?? "?").charAt(0).toUpperCase()}
           </span>
         </button>

@@ -44,17 +44,16 @@ function SortIndicator({
   sortDir: string;
 }) {
   if (field !== sortBy)
-    return (
-      <span style={{ color: "var(--ink-ghost)", marginLeft: 4 }}>{"↕"}</span>
-    );
+    return <span className="ml-1 text-ink-ghost">{"↕"}</span>;
   return (
-    <span style={{ marginLeft: 4, color: "var(--ink)" }}>
-      {sortDir === "asc" ? "▲" : "▼"}
-    </span>
+    <span className="ml-1 text-ink">{sortDir === "asc" ? "▲" : "▼"}</span>
   );
 }
 
-const GRID = "36px 200px 1fr 120px 140px 1fr 120px 80px";
+const GRID_COLS =
+  "grid-cols-[36px_200px_1fr_120px_140px_1fr_120px_80px]";
+const SORT_BTN =
+  "mono cursor-pointer border-0 bg-transparent p-0 text-left text-inherit";
 
 export default function VocabularyTable({
   words,
@@ -100,90 +99,29 @@ export default function VocabularyTable({
     words.length > 0 && words.every((w) => selectedIds.has(w.id));
 
   return (
-    <div
-      style={{
-        border: "1px solid var(--rule)",
-        borderRadius: 10,
-        overflow: "hidden",
-        background: "var(--paper-deep)",
-      }}
-    >
+    <div className="overflow-hidden rounded-[10px] border border-rule bg-paper-deep">
       <div
-        className="mono"
-        style={{
-          display: "grid",
-          gridTemplateColumns: GRID,
-          padding: "12px 18px",
-          borderBottom: "1px solid var(--rule)",
-          fontSize: 10,
-          letterSpacing: "0.12em",
-          color: "var(--ink-faint)",
-          textTransform: "uppercase",
-          alignItems: "center",
-          gap: 14,
-        }}
+        className={`mono grid ${GRID_COLS} items-center gap-3.5 border-b border-rule px-[18px] py-3 text-[10px] uppercase tracking-[0.12em] text-ink-faint`}
       >
         <div>
           <input
             type="checkbox"
             checked={allSelected}
             onChange={onToggleSelectAll}
-            style={{ accentColor: "var(--accent)" }}
+            className="accent-accent"
           />
         </div>
-        <button
-          onClick={() => onSort("term")}
-          className="mono"
-          style={{
-            background: "transparent",
-            border: 0,
-            cursor: "pointer",
-            color: "inherit",
-            fontSize: "inherit",
-            letterSpacing: "inherit",
-            textTransform: "inherit",
-            textAlign: "left",
-            padding: 0,
-          }}
-        >
+        <button onClick={() => onSort("term")} className={SORT_BTN}>
           Term <SortIndicator field="term" sortBy={sortBy} sortDir={sortDir} />
         </button>
         <span>Translation</span>
-        <button
-          onClick={() => onSort("status")}
-          className="mono"
-          style={{
-            background: "transparent",
-            border: 0,
-            cursor: "pointer",
-            color: "inherit",
-            fontSize: "inherit",
-            letterSpacing: "inherit",
-            textTransform: "inherit",
-            textAlign: "left",
-            padding: 0,
-          }}
-        >
+        <button onClick={() => onSort("status")} className={SORT_BTN}>
           Status{" "}
           <SortIndicator field="status" sortBy={sortBy} sortDir={sortDir} />
         </button>
         <span>Language</span>
         <span>Notes</span>
-        <button
-          onClick={() => onSort("createdAt")}
-          className="mono"
-          style={{
-            background: "transparent",
-            border: 0,
-            cursor: "pointer",
-            color: "inherit",
-            fontSize: "inherit",
-            letterSpacing: "inherit",
-            textTransform: "inherit",
-            textAlign: "left",
-            padding: 0,
-          }}
-        >
+        <button onClick={() => onSort("createdAt")} className={SORT_BTN}>
           Added{" "}
           <SortIndicator field="createdAt" sortBy={sortBy} sortDir={sortDir} />
         </button>
@@ -191,67 +129,32 @@ export default function VocabularyTable({
       </div>
 
       {words.length === 0 ? (
-        <div
-          className="mono"
-          style={{
-            padding: "60px 18px",
-            textAlign: "center",
-            color: "var(--ink-faint)",
-            fontSize: 12,
-            letterSpacing: "0.12em",
-            textTransform: "uppercase",
-          }}
-        >
+        <div className="mono px-[18px] py-[60px] text-center text-[12px] uppercase tracking-[0.12em] text-ink-faint">
           No words found.
         </div>
       ) : (
         words.map((word, i) => (
           <div
             key={word.id}
-            style={{
-              display: "grid",
-              gridTemplateColumns: GRID,
-              padding: "14px 18px",
-              borderBottom:
-                i < words.length - 1 ? "1px solid var(--rule-soft)" : 0,
-              fontSize: 14,
-              alignItems: "center",
-              gap: 14,
-              background: selectedIds.has(word.id)
-                ? "var(--accent-wash)"
-                : "transparent",
-            }}
+            className={`grid ${GRID_COLS} items-center gap-3.5 px-[18px] py-3.5 text-sm ${
+              i < words.length - 1 ? "border-b border-rule-soft" : ""
+            } ${selectedIds.has(word.id) ? "bg-accent-wash" : "bg-transparent"}`}
           >
             <div>
               <input
                 type="checkbox"
                 checked={selectedIds.has(word.id)}
                 onChange={() => onToggleSelect(word.id)}
-                style={{ accentColor: "var(--accent)" }}
+                className="accent-accent"
               />
             </div>
-            <div
-              className="display"
-              style={{
-                fontSize: 17,
-                fontWeight: 500,
-                letterSpacing: "-0.005em",
-                color: "var(--ink)",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
+            <div className="display overflow-hidden text-ellipsis whitespace-nowrap text-[17px] font-medium tracking-[-0.005em] text-ink">
               {word.term}
             </div>
             <div
-              style={{
-                color: "var(--ink-soft)",
-                fontStyle: "italic",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: editingId === word.id ? "normal" : "nowrap",
-              }}
+              className={`overflow-hidden text-ellipsis italic text-ink-soft ${
+                editingId === word.id ? "whitespace-normal" : "whitespace-nowrap"
+              }`}
             >
               {editingId === word.id ? (
                 <input
@@ -263,27 +166,18 @@ export default function VocabularyTable({
                     if (e.key === "Escape") setEditingId(null);
                   }}
                   autoFocus
-                  className="input"
-                  style={{ fontSize: 13, padding: "6px 10px" }}
+                  className="input px-2.5 py-1.5 text-[13px]"
                 />
               ) : (
                 word.translation || "—"
               )}
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div className="flex items-center gap-2">
               <StatusBadge status={word.status} />
               <select
                 value={word.status}
                 onChange={(e) => updateStatus(word.id, Number(e.target.value))}
-                className="mono"
-                style={{
-                  fontSize: 10,
-                  padding: "3px 4px",
-                  background: "transparent",
-                  border: "1px solid var(--rule)",
-                  borderRadius: 4,
-                  color: "var(--ink-soft)",
-                }}
+                className="mono rounded border border-rule bg-transparent px-1 py-[3px] text-[10px] text-ink-soft"
               >
                 {STATUS_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -292,20 +186,13 @@ export default function VocabularyTable({
                 ))}
               </select>
             </div>
-            <div
-              className="mono"
-              style={{ fontSize: 11, color: "var(--ink-faint)" }}
-            >
+            <div className="mono text-[11px] text-ink-faint">
               {word.language.name}
             </div>
             <div
-              style={{
-                color: "var(--ink-faint)",
-                fontSize: 12,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: editingId === word.id ? "normal" : "nowrap",
-              }}
+              className={`overflow-hidden text-ellipsis text-[12px] text-ink-faint ${
+                editingId === word.id ? "whitespace-normal" : "whitespace-nowrap"
+              }`}
             >
               {editingId === word.id ? (
                 <textarea
@@ -319,47 +206,27 @@ export default function VocabularyTable({
                     if (e.key === "Escape") setEditingId(null);
                   }}
                   rows={2}
-                  className="input"
-                  style={{ fontSize: 12, padding: "6px 10px", resize: "none" }}
+                  className="input resize-none px-2.5 py-1.5 text-[12px]"
                 />
               ) : (
                 word.notes || ""
               )}
             </div>
-            <div
-              className="mono"
-              style={{ fontSize: 11, color: "var(--ink-faint)" }}
-            >
+            <div className="mono text-[11px] text-ink-faint">
               {new Date(word.createdAt).toLocaleDateString()}
             </div>
-            <div
-              style={{
-                display: "flex",
-                gap: 6,
-                justifyContent: "flex-end",
-              }}
-            >
+            <div className="flex justify-end gap-1.5">
               {editingId === word.id ? (
                 <>
                   <button
                     onClick={() => saveEdit(word.id)}
-                    className="btn btn-ghost"
-                    style={{
-                      fontSize: 11,
-                      padding: "4px 8px",
-                      color: "var(--accent)",
-                    }}
+                    className="btn btn-ghost px-2 py-1 text-[11px] text-accent"
                   >
                     Save
                   </button>
                   <button
                     onClick={() => setEditingId(null)}
-                    className="btn btn-ghost"
-                    style={{
-                      fontSize: 11,
-                      padding: "4px 8px",
-                      color: "var(--ink-faint)",
-                    }}
+                    className="btn btn-ghost px-2 py-1 text-[11px] text-ink-faint"
                   >
                     ×
                   </button>
@@ -367,12 +234,7 @@ export default function VocabularyTable({
               ) : (
                 <button
                   onClick={() => startEdit(word)}
-                  className="btn btn-ghost"
-                  style={{
-                    fontSize: 11,
-                    padding: "4px 8px",
-                    color: "var(--ink-faint)",
-                  }}
+                  className="btn btn-ghost px-2 py-1 text-[11px] text-ink-faint"
                 >
                   Edit
                 </button>

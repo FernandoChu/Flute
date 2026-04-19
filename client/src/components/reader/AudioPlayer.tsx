@@ -95,52 +95,18 @@ export default function AudioPlayer({ src }: AudioPlayerProps) {
 
   const audioSrc = src;
 
-  const iconBtnStyle: React.CSSProperties = {
-    width: 32,
-    height: 32,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: "50%",
-    background: "var(--ink)",
-    color: "var(--paper)",
-    border: "1px solid var(--ink)",
-    cursor: "pointer",
-    flexShrink: 0,
-  };
-  const iconBtn = "";
-  const smallBtnStyle: React.CSSProperties = {
-    ...iconBtnStyle,
-    width: 28,
-    height: 28,
-    fontSize: 14,
-    fontWeight: 600,
-  };
-  const smallBtn = "";
+  const iconBtn =
+    "flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full border border-ink bg-ink text-paper";
+  const smallBtn =
+    "flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-full border border-ink bg-ink text-[14px] font-semibold text-paper";
 
   const player = (
     <div
       ref={playerRef}
-      style={
+      className={
         pinned
-          ? {
-              position: "fixed",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              zIndex: 50,
-              background: "var(--paper-deep)",
-              borderTop: "1px solid var(--rule)",
-              padding: "12px 16px",
-              boxShadow: "var(--shadow-lg)",
-            }
-          : {
-              background: "var(--paper-deep)",
-              border: "1px solid var(--rule)",
-              borderRadius: 10,
-              padding: "12px 16px",
-              marginBottom: 16,
-            }
+          ? "fixed bottom-0 left-0 right-0 z-50 border-t border-rule bg-paper-deep px-4 py-3 shadow-[var(--shadow-lg)]"
+          : "mb-4 rounded-[10px] border border-rule bg-paper-deep px-4 py-3"
       }
     >
       <audio
@@ -154,19 +120,7 @@ export default function AudioPlayer({ src }: AudioPlayerProps) {
       <div className="flex items-center gap-3">
         <button
           onClick={togglePlay}
-          style={{
-            width: 36,
-            height: 36,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            borderRadius: "50%",
-            background: "var(--ink)",
-            color: "var(--paper)",
-            border: "1px solid var(--ink)",
-            cursor: "pointer",
-            flexShrink: 0,
-          }}
+          className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-ink bg-ink text-paper"
           title={playing ? "Pause (Space)" : "Play (Space)"}
         >
           {playing ? (
@@ -181,16 +135,7 @@ export default function AudioPlayer({ src }: AudioPlayerProps) {
           )}
         </button>
 
-        <span
-          className="mono"
-          style={{
-            fontSize: 11,
-            color: "var(--ink-faint)",
-            width: 40,
-            textAlign: "right",
-            flexShrink: 0,
-          }}
-        >
+        <span className="mono w-10 shrink-0 text-right text-[11px] text-ink-faint">
           {formatTime(currentTime)}
         </span>
 
@@ -200,24 +145,11 @@ export default function AudioPlayer({ src }: AudioPlayerProps) {
           max={duration || 0}
           value={currentTime}
           onChange={handleSeekBar}
-          style={{
-            flex: 1,
-            height: 6,
-            accentColor: "var(--accent)",
-            cursor: "pointer",
-          }}
+          className="h-1.5 flex-1 cursor-pointer accent-accent"
           title="Seek (Left/Right arrows)"
         />
 
-        <span
-          className="mono"
-          style={{
-            fontSize: 11,
-            color: "var(--ink-faint)",
-            width: 40,
-            flexShrink: 0,
-          }}
-        >
+        <span className="mono w-10 shrink-0 text-[11px] text-ink-faint">
           {formatTime(duration)}
         </span>
 
@@ -228,31 +160,17 @@ export default function AudioPlayer({ src }: AudioPlayerProps) {
           step={0.05}
           value={volume}
           onChange={handleVolume}
-          style={{
-            width: 64,
-            height: 6,
-            accentColor: "var(--accent)",
-            cursor: "pointer",
-            flexShrink: 0,
-          }}
+          className="h-1.5 w-16 shrink-0 cursor-pointer accent-accent"
           title="Volume"
         />
 
         <button
           onClick={() => setPinned((p) => !p)}
-          style={{
-            width: 32,
-            height: 32,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            borderRadius: 5,
-            background: pinned ? "var(--ink)" : "var(--paper-sunk)",
-            color: pinned ? "var(--paper)" : "var(--ink-soft)",
-            border: "1px solid " + (pinned ? "var(--ink)" : "var(--rule)"),
-            cursor: "pointer",
-            flexShrink: 0,
-          }}
+          className={`flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-[5px] border ${
+            pinned
+              ? "border-ink bg-ink text-paper"
+              : "border-rule bg-paper-sunk text-ink-soft"
+          }`}
           title={pinned ? "Unpin from bottom" : "Pin to bottom"}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -271,7 +189,7 @@ export default function AudioPlayer({ src }: AudioPlayerProps) {
       <div className="flex items-center gap-3 mt-2">
         <div className="flex items-center gap-1">
           {/* Restart */}
-          <button onClick={restart} style={iconBtnStyle} title="Restart">
+          <button onClick={restart} className={iconBtn} title="Restart">
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
               <rect x="4" y="4" width="3" height="16" />
               <polygon points="20,4 9,12 20,20" />
@@ -279,7 +197,7 @@ export default function AudioPlayer({ src }: AudioPlayerProps) {
           </button>
 
           {/* Rewind */}
-          <button onClick={() => seek(-skipAmount)} style={iconBtnStyle} title={`Rewind ${skipAmount}s (←)`}>
+          <button onClick={() => seek(-skipAmount)} className={iconBtn} title={`Rewind ${skipAmount}s (←)`}>
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
               <polygon points="12,4 2,12 12,20" />
               <polygon points="22,4 12,12 22,20" />
@@ -287,7 +205,7 @@ export default function AudioPlayer({ src }: AudioPlayerProps) {
           </button>
 
           {/* Forward */}
-          <button onClick={() => seek(skipAmount)} style={iconBtnStyle} title={`Forward ${skipAmount}s (→)`}>
+          <button onClick={() => seek(skipAmount)} className={iconBtn} title={`Forward ${skipAmount}s (→)`}>
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
               <polygon points="2,4 12,12 2,20" />
               <polygon points="12,4 22,12 12,20" />
@@ -299,17 +217,7 @@ export default function AudioPlayer({ src }: AudioPlayerProps) {
         <select
           value={skipAmount}
           onChange={(e) => setSkipAmount(Number(e.target.value))}
-          className="mono"
-          style={{
-            fontSize: 11,
-            fontWeight: 500,
-            color: "var(--ink-soft)",
-            background: "var(--paper-sunk)",
-            border: "1px solid var(--rule)",
-            borderRadius: 5,
-            padding: "4px 8px",
-            cursor: "pointer",
-          }}
+          className="mono cursor-pointer rounded-[5px] border border-rule bg-paper-sunk px-2 py-1 text-[11px] font-medium text-ink-soft"
           title="Skip amount"
         >
           {SKIP_OPTIONS.map((s) => (
@@ -323,26 +231,17 @@ export default function AudioPlayer({ src }: AudioPlayerProps) {
         <div className="flex items-center gap-0.5">
           <button
             onClick={() => adjustSpeed(-0.1)}
-            style={smallBtnStyle}
+            className={smallBtn}
             title="Decrease speed"
           >
             −
           </button>
-          <span
-            className="mono"
-            style={{
-              fontSize: 11,
-              fontWeight: 500,
-              color: "var(--ink-soft)",
-              width: 32,
-              textAlign: "center",
-            }}
-          >
+          <span className="mono w-8 text-center text-[11px] font-medium text-ink-soft">
             {speed.toFixed(1)}×
           </span>
           <button
             onClick={() => adjustSpeed(0.1)}
-            style={smallBtnStyle}
+            className={smallBtn}
             title="Increase speed"
           >
             +

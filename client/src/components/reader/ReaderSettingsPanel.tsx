@@ -31,37 +31,23 @@ function Segmented<T extends string>({
   onChange: (v: T) => void;
 }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        background: "var(--paper-sunk)",
-        border: "1px solid var(--rule)",
-        borderRadius: 6,
-        padding: 2,
-        gap: 2,
-      }}
-    >
-      {options.map((o) => (
-        <button
-          key={o.value}
-          onClick={() => onChange(o.value)}
-          className="sans"
-          style={{
-            flex: 1,
-            padding: "5px 8px",
-            fontSize: 11,
-            background: value === o.value ? "var(--paper)" : "transparent",
-            border: 0,
-            borderRadius: 4,
-            color: value === o.value ? "var(--ink)" : "var(--ink-soft)",
-            fontWeight: value === o.value ? 600 : 400,
-            cursor: "pointer",
-            boxShadow: value === o.value ? "var(--shadow-sm)" : "none",
-          }}
-        >
-          {o.label}
-        </button>
-      ))}
+    <div className="flex gap-0.5 rounded-md border border-rule bg-paper-sunk p-0.5">
+      {options.map((o) => {
+        const active = value === o.value;
+        return (
+          <button
+            key={o.value}
+            onClick={() => onChange(o.value)}
+            className={`sans flex-1 cursor-pointer rounded border-0 px-2 py-[5px] text-[11px] ${
+              active
+                ? "bg-paper font-semibold text-ink shadow-[var(--shadow-sm)]"
+                : "bg-transparent font-normal text-ink-soft shadow-none"
+            }`}
+          >
+            {o.label}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -74,17 +60,8 @@ function Group({
   children: React.ReactNode;
 }) {
   return (
-    <div style={{ marginBottom: 16 }}>
-      <div
-        className="mono"
-        style={{
-          fontSize: 9,
-          letterSpacing: "0.14em",
-          color: "var(--ink-faint)",
-          textTransform: "uppercase",
-          marginBottom: 6,
-        }}
-      >
+    <div className="mb-4">
+      <div className="mono mb-1.5 text-[9px] uppercase tracking-[0.14em] text-ink-faint">
         {label}
       </div>
       {children}
@@ -115,84 +92,34 @@ export default function ReaderSettingsPanel({
   }, [open]);
 
   return (
-    <div
-      ref={ref}
-      style={{ position: "fixed", bottom: 20, right: 20, zIndex: 60 }}
-    >
+    <div ref={ref} className="fixed bottom-5 right-5 z-[60]">
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="sans"
-          style={{
-            padding: "10px 14px",
-            background: "var(--paper-deep)",
-            border: "1px solid var(--rule)",
-            borderRadius: 999,
-            boxShadow: "var(--shadow-md)",
-            fontSize: 12,
-            fontWeight: 500,
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            cursor: "pointer",
-            color: "var(--ink)",
-          }}
+          className="sans flex cursor-pointer items-center gap-2 rounded-full border border-rule bg-paper-deep px-3.5 py-2.5 text-[12px] font-medium text-ink shadow-[var(--shadow-md)]"
           title="Reader settings"
         >
-          <span
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: "50%",
-              background: "var(--accent)",
-            }}
-          />
+          <span className="h-2 w-2 rounded-full bg-accent" />
           Tweaks
         </button>
       )}
 
       {open && (
-        <div
-          style={{
-            width: 300,
-            background: "var(--paper-deep)",
-            border: "1px solid var(--rule)",
-            borderRadius: 12,
-            boxShadow: "var(--shadow-lg)",
-            overflow: "hidden",
-          }}
-        >
-          <div
-            style={{
-              padding: "12px 16px",
-              borderBottom: "1px solid var(--rule)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <div
-              className="display"
-              style={{
-                fontSize: 16,
-                fontWeight: 500,
-                color: "var(--ink)",
-              }}
-            >
+        <div className="w-[300px] overflow-hidden rounded-xl border border-rule bg-paper-deep shadow-[var(--shadow-lg)]">
+          <div className="flex items-center justify-between border-b border-rule px-4 py-3">
+            <div className="display text-[16px] font-medium text-ink">
               Tweaks
             </div>
-            <div style={{ display: "flex", gap: 4 }}>
+            <div className="flex gap-1">
               <button
                 onClick={reset}
-                className="btn btn-ghost"
-                style={{ padding: "2px 8px", fontSize: 11 }}
+                className="btn btn-ghost px-2 py-0.5 text-[11px]"
               >
                 Reset
               </button>
               <button
                 onClick={() => setOpen(false)}
-                className="btn btn-ghost"
-                style={{ padding: "2px 6px", fontSize: 14, lineHeight: 1 }}
+                className="btn btn-ghost px-1.5 py-0.5 text-sm leading-none"
               >
                 ×
               </button>
@@ -200,12 +127,7 @@ export default function ReaderSettingsPanel({
           </div>
 
           <div
-            className="nice-scroll"
-            style={{
-              padding: "14px 16px",
-              maxHeight: "70vh",
-              overflowY: "auto",
-            }}
+            className="nice-scroll max-h-[70vh] overflow-y-auto px-4 py-3.5"
           >
             <Group label="Theme">
               <Segmented<Theme>
@@ -251,7 +173,7 @@ export default function ReaderSettingsPanel({
                 step={1}
                 value={settings.fontSize}
                 onChange={(e) => update("fontSize", Number(e.target.value))}
-                style={{ width: "100%", accentColor: "var(--accent)" }}
+                className="w-full accent-accent"
               />
             </Group>
 
@@ -265,7 +187,7 @@ export default function ReaderSettingsPanel({
                 step={0.05}
                 value={settings.lineHeight}
                 onChange={(e) => update("lineHeight", Number(e.target.value))}
-                style={{ width: "100%", accentColor: "var(--accent)" }}
+                className="w-full accent-accent"
               />
             </Group>
 
@@ -300,27 +222,16 @@ export default function ReaderSettingsPanel({
                 step={1}
                 value={perPage}
                 onChange={(e) => onPerPageChange(Number(e.target.value))}
-                style={{ width: "100%", accentColor: "var(--accent)" }}
+                className="w-full accent-accent"
               />
             </Group>
 
-            <div
-              style={{
-                borderTop: "1px solid var(--rule-soft)",
-                paddingTop: 14,
-                marginTop: 4,
-              }}
-            >
+            <div className="mt-1 border-t border-rule-soft pt-3.5">
               <Group label="Audio">
                 <button
                   onClick={() => setShowAudioConfirm(true)}
                   disabled={isGenerating}
-                  className="btn sans"
-                  style={{
-                    width: "100%",
-                    fontSize: 12,
-                    padding: "8px 10px",
-                  }}
+                  className="btn sans w-full px-2.5 py-2 text-[12px]"
                 >
                   {isGenerating
                     ? "Generating…"
@@ -329,14 +240,7 @@ export default function ReaderSettingsPanel({
                       : "Generate audio (TTS)"}
                 </button>
                 {generateError && (
-                  <p
-                    className="mono"
-                    style={{
-                      fontSize: 10,
-                      color: "var(--accent)",
-                      marginTop: 6,
-                    }}
-                  >
+                  <p className="mono mt-1.5 text-[10px] text-accent">
                     {generateError.message}
                   </p>
                 )}
@@ -347,54 +251,17 @@ export default function ReaderSettingsPanel({
       )}
 
       {showAudioConfirm && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 100,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "oklch(0 0 0 / 0.4)",
-          }}
-        >
-          <div
-            style={{
-              background: "var(--paper)",
-              border: "1px solid var(--rule)",
-              borderRadius: 10,
-              boxShadow: "var(--shadow-lg)",
-              padding: 24,
-              maxWidth: 380,
-              margin: "0 16px",
-            }}
-          >
-            <div
-              className="display"
-              style={{
-                fontSize: 20,
-                fontWeight: 500,
-                color: "var(--ink)",
-                marginBottom: 8,
-              }}
-            >
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[oklch(0_0_0_/_0.4)]">
+          <div className="mx-4 max-w-[380px] rounded-[10px] border border-rule bg-paper p-6 shadow-[var(--shadow-lg)]">
+            <div className="display mb-2 text-[20px] font-medium text-ink">
               Generate audio?
             </div>
-            <p
-              style={{
-                fontSize: 13,
-                color: "var(--ink-soft)",
-                lineHeight: 1.5,
-                marginBottom: 18,
-              }}
-            >
+            <p className="mb-4 text-[13px] leading-[1.5] text-ink-soft">
               This will use your TTS API to generate audio for the entire
               lesson text. Depending on the length of the lesson and your
               provider, this can be expensive.
             </p>
-            <div
-              style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}
-            >
+            <div className="flex justify-end gap-2">
               <button
                 onClick={() => setShowAudioConfirm(false)}
                 className="btn sans"

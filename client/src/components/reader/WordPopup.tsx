@@ -126,57 +126,18 @@ export default function WordPopup({
   return createPortal(
     <div
       ref={popupRef}
+      className="absolute z-50 w-[360px] overflow-hidden rounded-lg border border-rule bg-paper-deep shadow-[var(--shadow-lg)]"
       style={{
-        position: "absolute",
         top: position?.top ?? 0,
         left: position?.left ?? 0,
-        width: 360,
-        zIndex: 50,
         visibility: position ? "visible" : "hidden",
-        background: "var(--paper-deep)",
-        border: "1px solid var(--rule)",
-        borderRadius: 8,
-        boxShadow: "var(--shadow-lg)",
-        overflow: "hidden",
       }}
     >
       {/* Header: term + close */}
-      <div
-        style={{
-          padding: "14px 16px 10px",
-          borderBottom: "1px solid var(--rule-soft)",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 10,
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              minWidth: 0,
-              flex: 1,
-            }}
-          >
-            <div
-              className="display"
-              style={{
-                fontSize: 26,
-                fontWeight: 500,
-                letterSpacing: "-0.01em",
-                color: "var(--ink)",
-                minWidth: 0,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
+      <div className="border-b border-rule-soft px-4 pb-2.5 pt-3.5">
+        <div className="flex items-center justify-between gap-2.5">
+          <div className="flex min-w-0 flex-1 items-center gap-2.5">
+            <div className="display min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-[26px] font-medium tracking-[-0.01em] text-ink">
               {term}
             </div>
             {onPlay && (
@@ -184,20 +145,7 @@ export default function WordPopup({
                 onClick={() => onPlay()}
                 title="Play pronunciation"
                 aria-label="Play pronunciation"
-                style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: "50%",
-                  border: "1px solid var(--rule)",
-                  background: "var(--paper)",
-                  color: "var(--ink)",
-                  cursor: "pointer",
-                  padding: 0,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}
+                className="inline-flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-full border border-rule bg-paper p-0 text-ink"
               >
                 <svg
                   width="13"
@@ -230,13 +178,7 @@ export default function WordPopup({
           </div>
           <button
             onClick={() => closeRef.current()}
-            className="btn btn-ghost"
-            style={{
-              padding: "4px 8px",
-              fontSize: 18,
-              lineHeight: 1,
-              color: "var(--ink-faint)",
-            }}
+            className="btn btn-ghost px-2 py-1 text-[18px] leading-none text-ink-faint"
             aria-label="Close"
           >
             ×
@@ -245,22 +187,8 @@ export default function WordPopup({
       </div>
 
       {/* Translation */}
-      <div
-        style={{
-          padding: "12px 16px",
-          borderBottom: "1px solid var(--rule-soft)",
-        }}
-      >
-        <div
-          className="mono"
-          style={{
-            fontSize: 10,
-            letterSpacing: "0.1em",
-            color: "var(--ink-faint)",
-            textTransform: "uppercase",
-            marginBottom: 6,
-          }}
-        >
+      <div className="border-b border-rule-soft px-4 py-3">
+        <div className="mono mb-1.5 text-[10px] uppercase tracking-[0.1em] text-ink-faint">
           Translation
         </div>
         <input
@@ -268,8 +196,7 @@ export default function WordPopup({
           value={translation}
           onChange={(e) => setTranslation(e.target.value)}
           placeholder="Add a translation…"
-          className="input"
-          style={{ fontSize: 14 }}
+          className="input text-sm"
           onKeyDown={(e) => {
             if (e.key === "Enter") handleSaveTranslation();
           }}
@@ -277,23 +204,12 @@ export default function WordPopup({
       </div>
 
       {/* Status row */}
-      <div style={{ padding: "12px 16px" }}>
-        <div
-          className="mono"
-          style={{
-            fontSize: 10,
-            letterSpacing: "0.1em",
-            color: "var(--ink-faint)",
-            textTransform: "uppercase",
-            marginBottom: 8,
-            display: "flex",
-            justifyContent: "space-between",
-          }}
-        >
+      <div className="px-4 py-3">
+        <div className="mono mb-2 flex justify-between text-[10px] uppercase tracking-[0.1em] text-ink-faint">
           <span>Status</span>
-          <span style={{ color: "var(--ink-faint)" }}>1–4 · k · x</span>
+          <span className="text-ink-faint">1–4 · k · x</span>
         </div>
-        <div style={{ display: "flex", gap: 4 }}>
+        <div className="flex gap-1">
           {STATUS_BUTTONS.map((st) => {
             const active = st.key === currentStatus;
             return (
@@ -301,34 +217,16 @@ export default function WordPopup({
                 key={st.key}
                 onClick={() => handleStatusChange(st.key)}
                 disabled={saving}
-                className="sans"
-                style={{
-                  flex: 1,
-                  padding: "8px 0",
-                  border: active
-                    ? "1px solid var(--ink)"
-                    : "1px solid var(--rule)",
-                  borderRadius: 5,
-                  background: active ? "var(--ink)" : "var(--paper)",
-                  color: active ? "var(--paper)" : "var(--ink-soft)",
-                  fontSize: 12,
-                  fontWeight: 500,
-                  cursor: saving ? "default" : "pointer",
-                  opacity: saving ? 0.6 : 1,
-                  transition: "all 100ms ease",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 4,
-                }}
+                className={`sans inline-flex flex-1 items-center justify-center gap-1 rounded-[5px] border py-2 text-[12px] font-medium transition-all duration-100 ${
+                  active
+                    ? "border-ink bg-ink text-paper"
+                    : "border-rule bg-paper text-ink-soft"
+                } ${saving ? "cursor-default opacity-60" : "cursor-pointer"}`}
                 title={`Status ${st.short}`}
               >
                 <span
+                  className="inline-block h-1.5 w-1.5 rounded-full"
                   style={{
-                    display: "inline-block",
-                    width: 6,
-                    height: 6,
-                    borderRadius: "50%",
                     background: st.hue,
                     opacity: st.key === WordStatus.Known ? 0 : 1,
                   }}
@@ -341,37 +239,18 @@ export default function WordPopup({
       </div>
 
       {/* Notes */}
-      <div style={{ padding: "0 16px 14px" }}>
+      <div className="px-4 pb-3.5">
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Add a note…"
           rows={2}
-          className="sans"
-          style={{
-            width: "100%",
-            resize: "none",
-            background: "var(--paper)",
-            border: "1px solid var(--rule)",
-            borderRadius: 5,
-            padding: "8px 10px",
-            fontSize: 13,
-            color: "var(--ink)",
-            lineHeight: 1.4,
-          }}
+          className="sans w-full resize-none rounded-[5px] border border-rule bg-paper px-2.5 py-2 text-[13px] leading-[1.4] text-ink"
         />
       </div>
 
       {dictionaryLinks && dictionaryLinks.length > 0 && (
-        <div
-          style={{
-            padding: "10px 16px 14px",
-            borderTop: "1px solid var(--rule-soft)",
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 6,
-          }}
-        >
+        <div className="flex flex-wrap gap-1.5 border-t border-rule-soft px-4 pb-3.5 pt-2.5">
           {dictionaryLinks.map((dict, i) => (
             <a
               key={i}
@@ -381,8 +260,7 @@ export default function WordPopup({
               )}
               target="_blank"
               rel="noopener noreferrer"
-              className="chip"
-              style={{ textDecoration: "none" }}
+              className="chip no-underline"
             >
               {dict.label} ↗
             </a>

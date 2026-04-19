@@ -62,20 +62,9 @@ function ToastNotification({
 
   return (
     <div
-      className="sans"
+      className="sans pointer-events-auto max-w-[380px] cursor-pointer rounded-lg px-3.5 py-2.5 text-[13px] text-paper shadow-[var(--shadow-lg)] [animation:fadeIn_0.2s_ease-out]"
       onClick={() => onDismiss(item.id)}
-      style={{
-        background: bg,
-        color: "var(--paper)",
-        padding: "10px 14px",
-        borderRadius: 8,
-        boxShadow: "var(--shadow-lg)",
-        fontSize: 13,
-        maxWidth: 380,
-        pointerEvents: "auto",
-        cursor: "pointer",
-        animation: "fadeIn 0.2s ease-out",
-      }}
+      style={{ background: bg }}
     >
       {item.message}
     </div>
