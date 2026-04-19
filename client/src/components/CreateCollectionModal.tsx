@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "../lib/api";
+import { extractEpubTitle } from "../lib/epub-metadata";
 
 interface Language {
   id: number;
@@ -216,7 +217,20 @@ export default function CreateCollectionModal({
             <input
               type="file"
               accept=".txt,.epub,.srt"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              onChange={async (e) => {
+                const f = e.target.files?.[0] ?? null;
+                setFile(f);
+                if (f && /\.epub$/i.test(f.name) && !title.trim()) {
+                  try {
+                    const extracted = await extractEpubTitle(f);
+                    if (extracted) {
+                      setTitle((prev) => (prev.trim() ? prev : extracted));
+                    }
+                  } catch {
+                    // fall through — user can type a title manually
+                  }
+                }
+              }}
               className="sans"
               style={{
                 width: "100%",

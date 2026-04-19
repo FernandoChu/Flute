@@ -10,17 +10,18 @@
   },
   "dependencies": {
     "@tanstack/react-query": "^5.67.2",
+    "jszip": "^3.10.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "wouter": "^3.7.1",
-    "shared": "*"
+    "shared": "*",
+    "wouter": "^3.7.1"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.0.17",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
     "tailwindcss": "^4.0.17",
-    "@tailwindcss/vite": "^4.0.17",
     "vite": "^6.2.2"
   }
 }
