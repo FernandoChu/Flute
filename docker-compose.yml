@@ -19,10 +19,10 @@ services:
     build: .
     ports:
       - "3001:3001"
-      - "5173:5173"
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/flute?schema=public
       PORT: "3001"
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?set ENCRYPTION_KEY in .env (e.g. openssl rand -hex 32)}
     depends_on:
       db:
         condition: service_healthy
