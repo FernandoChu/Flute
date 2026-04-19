@@ -29,9 +29,45 @@ interface Preview {
   [key: string]: string;
 }
 
-function HighlightedSentence({ sentence, term }: { sentence: string; term: string }) {
+const RATINGS = [
+  {
+    rating: 1,
+    label: "Again",
+    key: "1",
+    color: "oklch(0.58 0.14 28)",
+  },
+  {
+    rating: 2,
+    label: "Hard",
+    key: "2",
+    color: "oklch(0.65 0.12 55)",
+  },
+  {
+    rating: 3,
+    label: "Good",
+    key: "3",
+    color: "oklch(0.55 0.08 150)",
+  },
+  {
+    rating: 4,
+    label: "Easy",
+    key: "4",
+    color: "oklch(0.5 0.1 230)",
+  },
+] as const;
+
+function HighlightedSentence({
+  sentence,
+  term,
+}: {
+  sentence: string;
+  term: string;
+}) {
   const parts = useMemo(() => {
-    const regex = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
+    const regex = new RegExp(
+      `(${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
+      "gi",
+    );
     return sentence.split(regex);
   }, [sentence, term]);
 
@@ -41,7 +77,10 @@ function HighlightedSentence({ sentence, term }: { sentence: string; term: strin
         part.toLowerCase() === term.toLowerCase() ? (
           <span
             key={i}
-            className="text-blue-600 font-bold underline underline-offset-4 [text-decoration-skip-ink:none]"
+            style={{
+              borderBottom: "2px solid var(--accent)",
+              color: "var(--ink)",
+            }}
           >
             {part}
           </span>
@@ -53,7 +92,11 @@ function HighlightedSentence({ sentence, term }: { sentence: string; term: strin
   );
 }
 
-export default function FlashcardReview({ item, onRate, onUpdate }: FlashcardReviewProps) {
+export default function FlashcardReview({
+  item,
+  onRate,
+  onUpdate,
+}: FlashcardReviewProps) {
   const [flipped, setFlipped] = useState(false);
   const [preview, setPreview] = useState<Preview | null>(null);
   const [editing, setEditing] = useState(false);
@@ -75,7 +118,12 @@ export default function FlashcardReview({ item, onRate, onUpdate }: FlashcardRev
       (res) => setPreview(res.data),
       () => {},
     );
-  }, [item.word.id, item.word.translation, item.word.notes, item.word.contextSentence]);
+  }, [
+    item.word.id,
+    item.word.translation,
+    item.word.notes,
+    item.word.contextSentence,
+  ]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -98,13 +146,6 @@ export default function FlashcardReview({ item, onRate, onUpdate }: FlashcardRev
     setEditing(false);
   };
 
-  const ratingButtons = [
-    { rating: 1, label: "Again", key: "1", color: "bg-red-100 hover:bg-red-200 text-red-700" },
-    { rating: 2, label: "Hard", key: "2", color: "bg-orange-100 hover:bg-orange-200 text-orange-700" },
-    { rating: 3, label: "Good", key: "3", color: "bg-green-100 hover:bg-green-200 text-green-700" },
-    { rating: 4, label: "Easy", key: "4", color: "bg-blue-100 hover:bg-blue-200 text-blue-700" },
-  ];
-
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
       if (editing) return;
@@ -123,141 +164,350 @@ export default function FlashcardReview({ item, onRate, onUpdate }: FlashcardRev
   const hasSentence = !!item.word.contextSentence;
 
   return (
-    <div className="max-w-lg mx-auto">
+    <div>
+      {/* Flashcard */}
       <div
         onClick={() => !flipped && !editing && setFlipped(true)}
-        className={`relative bg-white rounded-xl border-2 border-gray-200 p-8 text-center min-h-[200px] flex flex-col items-center justify-center ${
-          !flipped && !editing ? "cursor-pointer hover:border-blue-300" : ""
-        }`}
+        style={{
+          background: "var(--paper-deep)",
+          border: "1px solid var(--rule)",
+          borderRadius: 14,
+          padding: "56px 48px",
+          display: "flex",
+          flexDirection: "column",
+          boxShadow: "var(--shadow-md)",
+          position: "relative",
+          minHeight: 420,
+          cursor: !flipped && !editing ? "pointer" : "default",
+        }}
       >
+        {/* Corner meta */}
+        <div
+          className="mono"
+          style={{
+            position: "absolute",
+            top: 20,
+            left: 24,
+            fontSize: 10,
+            color: "var(--ink-faint)",
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+          }}
+        >
+          {item.word.language.name}
+        </div>
         {flipped && !editing && (
           <button
             onClick={(e) => {
               e.stopPropagation();
               setEditing(true);
             }}
-            className="absolute top-3 right-3 text-xs text-gray-400 hover:text-gray-700 px-2 py-1 rounded border border-gray-200 hover:border-gray-300"
+            className="btn btn-ghost sans"
+            style={{
+              position: "absolute",
+              top: 16,
+              right: 16,
+              fontSize: 11,
+              color: "var(--ink-faint)",
+              padding: "4px 10px",
+            }}
             title="Edit card"
           >
             Edit
           </button>
         )}
 
-        <p className="text-xs text-gray-400 mb-3">{item.word.language.name}</p>
-
         {editing ? (
-          <div className="w-full text-left space-y-3">
+          <div
+            style={{
+              margin: "auto",
+              width: "100%",
+              maxWidth: 520,
+              textAlign: "left",
+              display: "flex",
+              flexDirection: "column",
+              gap: 12,
+            }}
+          >
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">
+              <div
+                className="mono"
+                style={{
+                  fontSize: 10,
+                  letterSpacing: "0.1em",
+                  color: "var(--ink-faint)",
+                  textTransform: "uppercase",
+                  marginBottom: 6,
+                }}
+              >
                 Term
-              </label>
-              <p className="text-lg font-semibold">{item.word.term}</p>
+              </div>
+              <div
+                className="display"
+                style={{
+                  fontSize: 24,
+                  fontWeight: 500,
+                  color: "var(--ink)",
+                }}
+              >
+                {item.word.term}
+              </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">
+              <div
+                className="mono"
+                style={{
+                  fontSize: 10,
+                  letterSpacing: "0.1em",
+                  color: "var(--ink-faint)",
+                  textTransform: "uppercase",
+                  marginBottom: 6,
+                }}
+              >
                 Translation
-              </label>
+              </div>
               <input
                 type="text"
                 value={translation}
                 onChange={(e) => setTranslation(e.target.value)}
                 placeholder="Translation"
                 autoFocus
-                className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="input"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">
+              <div
+                className="mono"
+                style={{
+                  fontSize: 10,
+                  letterSpacing: "0.1em",
+                  color: "var(--ink-faint)",
+                  textTransform: "uppercase",
+                  marginBottom: 6,
+                }}
+              >
                 Notes
-              </label>
+              </div>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Notes"
                 rows={3}
-                className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+                className="input"
+                style={{ resize: "vertical" }}
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">
+              <div
+                className="mono"
+                style={{
+                  fontSize: 10,
+                  letterSpacing: "0.1em",
+                  color: "var(--ink-faint)",
+                  textTransform: "uppercase",
+                  marginBottom: 6,
+                }}
+              >
                 Context sentence
-              </label>
+              </div>
               <textarea
                 value={contextSentence}
                 onChange={(e) => setContextSentence(e.target.value)}
                 placeholder="Context sentence"
                 rows={2}
-                className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                className="input"
+                style={{ resize: "vertical" }}
               />
             </div>
-            <div className="flex gap-2 pt-1">
+            <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="flex-1 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50"
+                className="btn btn-primary sans"
+                style={{ flex: 1 }}
               >
-                {saving ? "Saving..." : "Save"}
+                {saving ? "Saving…" : "Save"}
               </button>
               <button
                 onClick={handleCancel}
                 disabled={saving}
-                className="flex-1 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors disabled:opacity-50"
+                className="btn sans"
+                style={{ flex: 1 }}
               >
                 Cancel
               </button>
             </div>
           </div>
         ) : (
-          <>
+          <div
+            style={{
+              margin: "auto",
+              textAlign: "center",
+              width: "100%",
+            }}
+          >
             {hasSentence ? (
-              <p className="text-xl leading-relaxed mb-4">
+              <p
+                style={{
+                  fontFamily: "var(--font-body)",
+                  fontSize: 22,
+                  lineHeight: 1.5,
+                  color: "var(--ink)",
+                  margin: "0 0 24px",
+                  maxWidth: 600,
+                  marginLeft: "auto",
+                  marginRight: "auto",
+                }}
+              >
                 <HighlightedSentence
                   sentence={item.word.contextSentence!}
                   term={item.word.term}
                 />
               </p>
             ) : (
-              <p className="text-3xl font-bold mb-4">{item.word.term}</p>
+              <div
+                className="display"
+                style={{
+                  fontSize: 64,
+                  fontWeight: 500,
+                  letterSpacing: "-0.025em",
+                  color: "var(--ink)",
+                  lineHeight: 1,
+                  marginBottom: 24,
+                }}
+              >
+                {item.word.term}
+              </div>
             )}
 
             {flipped ? (
-              <div>
-                <p className="text-xl text-gray-700">
-                  {item.word.translation || "No translation"}
-                </p>
+              <div style={{ marginTop: 16 }}>
+                <div
+                  style={{
+                    height: 1,
+                    background: "var(--rule)",
+                    width: 60,
+                    margin: "0 auto 24px",
+                  }}
+                />
+                <div
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    fontSize: 26,
+                    fontWeight: 400,
+                    color: "var(--ink)",
+                    fontStyle: "italic",
+                    marginBottom: 12,
+                  }}
+                >
+                  {item.word.translation || "—"}
+                </div>
                 {item.word.notes && (
-                  <p className="text-sm text-gray-400 mt-2 whitespace-pre-wrap">
+                  <div
+                    style={{
+                      fontSize: 13,
+                      color: "var(--ink-faint)",
+                      whiteSpace: "pre-wrap",
+                      marginTop: 6,
+                    }}
+                  >
                     {item.word.notes}
-                  </p>
+                  </div>
                 )}
               </div>
             ) : (
-              <p className="text-sm text-gray-400">
-                Click or press Space to reveal
-              </p>
+              <div
+                className="mono"
+                style={{
+                  marginTop: 48,
+                  fontSize: 11,
+                  color: "var(--ink-faint)",
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                }}
+              >
+                Click or press <span className="kbd">␣</span> to reveal
+              </div>
             )}
-          </>
+          </div>
         )}
       </div>
 
-      {flipped && !editing && (
-        <div className="mt-6 grid grid-cols-4 gap-2">
-          {ratingButtons.map((btn) => (
+      {/* Rating buttons */}
+      <div style={{ marginTop: 24 }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(4, 1fr)",
+            gap: 10,
+          }}
+        >
+          {RATINGS.map((r) => (
             <button
-              key={btn.rating}
-              onClick={() => onRate(btn.rating)}
-              className={`py-3 rounded-lg text-sm font-medium ${btn.color} transition-colors`}
+              key={r.rating}
+              onClick={() => onRate(r.rating)}
+              disabled={!flipped || editing}
+              className="sans"
+              style={{
+                padding: "16px 14px 14px",
+                background: "var(--paper-deep)",
+                border: "1px solid var(--rule)",
+                borderRadius: 8,
+                cursor: flipped && !editing ? "pointer" : "default",
+                opacity: flipped && !editing ? 1 : 0.4,
+                textAlign: "left",
+                transition: "all 120ms ease",
+                position: "relative",
+                overflow: "hidden",
+                color: "var(--ink)",
+              }}
             >
-              <div>{btn.label}</div>
-              {preview && (
-                <div className="text-xs opacity-70 mt-0.5">
-                  {preview[String(btn.rating)] ?? ""}
+              <div
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  bottom: 0,
+                  width: 3,
+                  background: r.color,
+                }}
+              />
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "baseline",
+                }}
+              >
+                <div
+                  className="display"
+                  style={{
+                    fontSize: 20,
+                    fontWeight: 500,
+                    color: "var(--ink)",
+                    letterSpacing: "-0.01em",
+                  }}
+                >
+                  {r.label}
                 </div>
-              )}
+                <span className="kbd">{r.key}</span>
+              </div>
+              <div
+                className="mono"
+                style={{
+                  marginTop: 6,
+                  fontSize: 11,
+                  color: "var(--ink-faint)",
+                  letterSpacing: "0.06em",
+                }}
+              >
+                next ·{" "}
+                {preview ? preview[String(r.rating)] ?? "—" : "…"}
+              </div>
             </button>
           ))}
         </div>
-      )}
+      </div>
     </div>
   );
 }

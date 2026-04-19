@@ -13,6 +13,27 @@ interface LanguagePrefs {
   studyLanguageId: number | null;
 }
 
+const labelStyle: React.CSSProperties = {
+  display: "block",
+  fontFamily: "var(--font-mono)",
+  fontSize: 10,
+  letterSpacing: "0.1em",
+  color: "var(--ink-faint)",
+  textTransform: "uppercase",
+  marginBottom: 6,
+};
+
+const selectStyle: React.CSSProperties = {
+  width: "100%",
+  padding: "9px 12px",
+  fontSize: 13,
+  background: "var(--paper-sunk)",
+  border: "1px solid var(--rule)",
+  borderRadius: 6,
+  color: "var(--ink)",
+  fontFamily: "var(--font-sans)",
+};
+
 export default function CreateCollectionModal({
   onClose,
 }: {
@@ -44,6 +65,7 @@ export default function CreateCollectionModal({
         setTargetLanguageId(langPrefs.data.nativeLanguageId.toString());
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [langPrefs]);
 
   const create = useMutation({
@@ -94,36 +116,74 @@ export default function CreateCollectionModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "oklch(0 0 0 / 0.4)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 100,
+      }}
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-lg p-6 w-full max-w-md"
         onClick={(e) => e.stopPropagation()}
+        style={{
+          background: "var(--paper)",
+          border: "1px solid var(--rule)",
+          borderRadius: 10,
+          boxShadow: "var(--shadow-lg)",
+          padding: 28,
+          width: "100%",
+          maxWidth: 460,
+          margin: "0 16px",
+        }}
       >
-        <h2 className="text-xl font-bold mb-4">New Collection</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Title
-            </label>
+        <div
+          className="mono"
+          style={{
+            fontSize: 10,
+            letterSpacing: "0.14em",
+            color: "var(--ink-faint)",
+            textTransform: "uppercase",
+            marginBottom: 6,
+          }}
+        >
+          New collection
+        </div>
+        <h2
+          className="display"
+          style={{
+            margin: 0,
+            marginBottom: 20,
+            fontSize: 28,
+            fontWeight: 500,
+            letterSpacing: "-0.02em",
+            color: "var(--ink)",
+          }}
+        >
+          Start a library shelf.
+        </h2>
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: 14 }}>
+            <label style={labelStyle}>Title</label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="input"
               required
               autoFocus
+              placeholder="e.g. Borges — Ficciones"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              I'm learning (source language)
-            </label>
+          <div style={{ marginBottom: 14 }}>
+            <label style={labelStyle}>I'm learning</label>
             <select
               value={sourceLanguageId}
               onChange={(e) => setSourceLanguageId(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              style={selectStyle}
               required
             >
               <option value="">Select language</option>
@@ -134,14 +194,12 @@ export default function CreateCollectionModal({
               ))}
             </select>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Translate to (target language)
-            </label>
+          <div style={{ marginBottom: 14 }}>
+            <label style={labelStyle}>Translate to</label>
             <select
               value={targetLanguageId}
               onChange={(e) => setTargetLanguageId(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              style={selectStyle}
               required
             >
               <option value="">Select language</option>
@@ -153,42 +211,77 @@ export default function CreateCollectionModal({
             </select>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Import file (optional)
-            </label>
+          <div style={{ marginBottom: 18 }}>
+            <label style={labelStyle}>Import file (optional)</label>
             <input
               type="file"
               accept=".txt,.epub,.srt"
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-              className="w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              className="sans"
+              style={{
+                width: "100%",
+                fontSize: 12,
+                color: "var(--ink-soft)",
+              }}
             />
-            <p className="text-xs text-gray-400 mt-1">
-              .txt, .epub, or .srt — lessons will be created automatically
+            <p
+              className="mono"
+              style={{
+                fontSize: 10,
+                color: "var(--ink-faint)",
+                letterSpacing: "0.04em",
+                marginTop: 6,
+              }}
+            >
+              .txt, .epub, or .srt — lessons created automatically
             </p>
             {file && (
-              <p className="text-sm text-gray-500 mt-1">
+              <p
+                style={{
+                  fontSize: 12,
+                  color: "var(--ink-soft)",
+                  marginTop: 4,
+                }}
+              >
                 {file.name} ({(file.size / 1024).toFixed(1)} KB)
               </p>
             )}
           </div>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && (
+            <p
+              className="mono"
+              style={{
+                fontSize: 11,
+                color: "var(--accent)",
+                letterSpacing: "0.04em",
+                marginBottom: 12,
+              }}
+            >
+              {error}
+            </p>
+          )}
 
-          <div className="flex justify-end gap-3">
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              gap: 8,
+            }}
+          >
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+              className="btn sans"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={create.isPending}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              className="btn btn-primary sans"
             >
-              {create.isPending ? "Creating..." : "Create"}
+              {create.isPending ? "Creating…" : "Create"}
             </button>
           </div>
         </form>

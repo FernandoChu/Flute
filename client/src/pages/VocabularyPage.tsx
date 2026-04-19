@@ -150,117 +150,243 @@ export default function VocabularyPage() {
     invalidateAndClearSelection();
   };
 
+  const statCards = stats
+    ? [
+        { label: "Total", value: stats.total.toLocaleString() },
+        { label: "New", value: stats.new.toLocaleString() },
+        { label: "Learning", value: stats.learning.toLocaleString() },
+        { label: "Known", value: stats.known.toLocaleString() },
+        {
+          label: "Due reviews",
+          value: stats.dueReviews.toLocaleString(),
+          accent: true,
+        },
+      ]
+    : [];
+
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Vocabulary</h1>
+    <div
+      style={{
+        maxWidth: 1280,
+        margin: "0 auto",
+        padding: "36px 48px 120px",
+        position: "relative",
+        zIndex: 1,
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "baseline",
+          justifyContent: "space-between",
+          marginBottom: 28,
+          gap: 16,
+          flexWrap: "wrap",
+        }}
+      >
+        <div>
+          <div
+            className="mono"
+            style={{
+              fontSize: 10,
+              letterSpacing: "0.14em",
+              color: "var(--ink-faint)",
+              textTransform: "uppercase",
+              marginBottom: 8,
+            }}
+          >
+            Vocabulary
+          </div>
+          <h1
+            className="display"
+            style={{
+              margin: 0,
+              fontSize: 44,
+              fontWeight: 500,
+              letterSpacing: "-0.02em",
+              color: "var(--ink)",
+            }}
+          >
+            Everything you've marked.
+          </h1>
+        </div>
         <button
           onClick={handleDeleteAll}
           disabled={!stats || stats.total === 0}
-          className="px-3 py-1.5 text-sm text-red-600 border border-red-300 rounded hover:bg-red-50 disabled:opacity-30 disabled:cursor-not-allowed"
+          className="btn btn-danger sans"
         >
-          Delete All
+          Delete all
         </button>
       </div>
 
-      {stats && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 mb-6">
-          <StatCard label="Total" value={stats.total} />
-          <StatCard label="New" value={stats.new} color="text-blue-600" />
-          <StatCard label="Learning" value={stats.learning} color="text-yellow-600" />
-          <StatCard label="Known" value={stats.known} color="text-green-600" />
-          <StatCard label="Ignored" value={stats.ignored} color="text-gray-400" />
-          <StatCard label="Due reviews" value={stats.dueReviews} color="text-red-600" />
+      {stats && stats.total > 0 && (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(5, 1fr)",
+            border: "1px solid var(--rule)",
+            borderRadius: 10,
+            overflow: "hidden",
+            marginBottom: 28,
+            background: "var(--paper-deep)",
+          }}
+        >
+          {statCards.map((s, i) => (
+            <div
+              key={s.label}
+              style={{
+                padding: "18px 22px",
+                borderRight: i < 4 ? "1px solid var(--rule)" : 0,
+              }}
+            >
+              <div
+                className="mono"
+                style={{
+                  fontSize: 10,
+                  letterSpacing: "0.12em",
+                  color: "var(--ink-faint)",
+                  textTransform: "uppercase",
+                }}
+              >
+                {s.label}
+              </div>
+              <div
+                className="display"
+                style={{
+                  fontSize: 32,
+                  fontWeight: 500,
+                  letterSpacing: "-0.01em",
+                  color: s.accent ? "var(--accent)" : "var(--ink)",
+                  marginTop: 4,
+                }}
+              >
+                {s.value}
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
-      <div className="bg-white rounded-lg border border-gray-200">
-        <div className="p-4 border-b border-gray-200 flex flex-wrap items-center justify-between gap-3">
-          <VocabularyFilters
-            languageId={languageId}
-            status={status}
-            search={search}
-            onLanguageChange={handleLanguageChange}
-            onStatusChange={handleStatusChange}
-            onSearchChange={handleSearchChange}
-          />
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          gap: 10,
+          marginBottom: 16,
+        }}
+      >
+        <VocabularyFilters
+          languageId={languageId}
+          status={status}
+          search={search}
+          onLanguageChange={handleLanguageChange}
+          onStatusChange={handleStatusChange}
+          onSearchChange={handleSearchChange}
+        />
 
-          {selectedIds.size > 0 && (
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500">{selectedIds.size} selected</span>
-              <select
-                onChange={(e) => {
-                  if (e.target.value) handleBulkStatusChange(Number(e.target.value));
-                  e.target.value = "";
-                }}
-                defaultValue=""
-                className="px-2 py-1.5 text-sm border border-gray-300 rounded"
-              >
-                <option value="" disabled>
-                  Set status...
-                </option>
-                <option value="1">Learning 1</option>
-                <option value="2">Learning 2</option>
-                <option value="3">Learning 3</option>
-                <option value="4">Learning 4</option>
-                <option value="5">Known</option>
-                <option value="6">Ignored</option>
-              </select>
-              <button
-                onClick={handleBulkDelete}
-                className="px-3 py-1.5 text-sm text-red-600 border border-red-300 rounded hover:bg-red-50"
-              >
-                Delete
-              </button>
-            </div>
-          )}
-        </div>
+        <div style={{ flex: 1, minWidth: 0 }} />
 
-        {isLoading ? (
-          <div className="py-12 text-center text-gray-500">Loading...</div>
-        ) : (
-          <>
-            <VocabularyTable
-              words={vocabData?.data.words ?? []}
-              sortBy={sortBy}
-              sortDir={sortDir}
-              selectedIds={selectedIds}
-              onSort={handleSort}
-              onToggleSelect={handleToggleSelect}
-              onToggleSelectAll={handleToggleSelectAll}
-              onWordUpdated={invalidate}
-            />
-
-            <div className="p-4 border-t border-gray-200 flex items-center justify-between">
-              <p className="text-sm text-gray-500">
-                {vocabData?.data.total ?? 0} word(s) total
-              </p>
-              <Pagination
-                page={vocabData?.data.page ?? 1}
-                pages={vocabData?.data.pages ?? 1}
-                onPageChange={setPage}
-              />
-            </div>
-          </>
+        {selectedIds.size > 0 && (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            <span
+              className="mono"
+              style={{ fontSize: 11, color: "var(--accent)" }}
+            >
+              {selectedIds.size} selected
+            </span>
+            <select
+              onChange={(e) => {
+                if (e.target.value)
+                  handleBulkStatusChange(Number(e.target.value));
+                e.target.value = "";
+              }}
+              defaultValue=""
+              className="sans"
+              style={{
+                padding: "7px 10px",
+                fontSize: 12,
+                background: "var(--paper-sunk)",
+                border: "1px solid var(--rule)",
+                borderRadius: 6,
+                color: "var(--ink)",
+              }}
+            >
+              <option value="" disabled>
+                Set status…
+              </option>
+              <option value="1">Learning 1</option>
+              <option value="2">Learning 2</option>
+              <option value="3">Learning 3</option>
+              <option value="4">Learning 4</option>
+              <option value="5">Known</option>
+              <option value="6">Ignored</option>
+            </select>
+            <button
+              onClick={handleBulkDelete}
+              className="btn btn-danger sans"
+              style={{ fontSize: 12 }}
+            >
+              Delete
+            </button>
+          </div>
         )}
       </div>
-    </div>
-  );
-}
 
-function StatCard({
-  label,
-  value,
-  color,
-}: {
-  label: string;
-  value: number;
-  color?: string;
-}) {
-  return (
-    <div className="bg-white rounded-lg border border-gray-200 p-3 text-center">
-      <p className={`text-2xl font-bold ${color ?? "text-gray-800"}`}>{value}</p>
-      <p className="text-xs text-gray-500 mt-1">{label}</p>
+      {isLoading ? (
+        <div
+          className="mono"
+          style={{
+            padding: "60px 18px",
+            textAlign: "center",
+            color: "var(--ink-faint)",
+            fontSize: 12,
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
+          }}
+        >
+          Loading…
+        </div>
+      ) : (
+        <>
+          <VocabularyTable
+            words={vocabData?.data.words ?? []}
+            sortBy={sortBy}
+            sortDir={sortDir}
+            selectedIds={selectedIds}
+            onSort={handleSort}
+            onToggleSelect={handleToggleSelect}
+            onToggleSelectAll={handleToggleSelectAll}
+            onWordUpdated={invalidate}
+          />
+
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginTop: 18,
+              fontSize: 12,
+            }}
+          >
+            <span className="mono" style={{ color: "var(--ink-faint)" }}>
+              {vocabData?.data.total ?? 0} word
+              {(vocabData?.data.total ?? 0) !== 1 ? "s" : ""} total
+            </span>
+            <Pagination
+              page={vocabData?.data.page ?? 1}
+              pages={vocabData?.data.pages ?? 1}
+              onPageChange={setPage}
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 }

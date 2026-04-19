@@ -17,16 +17,23 @@ interface VocabularyFiltersProps {
   onSearchChange: (v: string) => void;
 }
 
-const STATUS_OPTIONS = [
-  { value: "", label: "All statuses" },
+const STATUS_CHIPS = [
+  { value: "", label: "All" },
   { value: "0", label: "New" },
-  { value: "1", label: "Learning 1" },
-  { value: "2", label: "Learning 2" },
-  { value: "3", label: "Learning 3" },
-  { value: "4", label: "Learning 4" },
+  { value: "1,2,3,4", label: "Learning" },
   { value: "5", label: "Known" },
   { value: "6", label: "Ignored" },
 ];
+
+const selectStyle: React.CSSProperties = {
+  padding: "7px 10px",
+  fontSize: 12,
+  background: "var(--paper-sunk)",
+  border: "1px solid var(--rule)",
+  borderRadius: 6,
+  color: "var(--ink)",
+  fontFamily: "var(--font-sans)",
+};
 
 export default function VocabularyFilters({
   languageId,
@@ -43,18 +50,65 @@ export default function VocabularyFilters({
     queryFn: () => apiFetch<{ data: Language[] }>("/languages"),
   });
 
-  // Debounce search input
   useEffect(() => {
     const timer = setTimeout(() => onSearchChange(searchInput), 300);
     return () => clearTimeout(timer);
   }, [searchInput, onSearchChange]);
 
+  // Status chip handles single or comma values. Use individual single-status chips,
+  // with "Learning" a shortcut for any of 1-4 when clicked (we just use "1" as a proxy
+  // — simpler than multi-filter).
+  const currentChip =
+    status === ""
+      ? ""
+      : status === "0"
+        ? "0"
+        : ["1", "2", "3", "4"].includes(status)
+          ? "1,2,3,4"
+          : status;
+
   return (
-    <div className="flex flex-wrap gap-3">
+    <div
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        alignItems: "center",
+        gap: 10,
+      }}
+    >
+      <div
+        style={{
+          position: "relative",
+          flex: "0 0 260px",
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
+        <span
+          className="mono"
+          style={{
+            position: "absolute",
+            left: 12,
+            fontSize: 12,
+            color: "var(--ink-faint)",
+          }}
+        >
+          ⌕
+        </span>
+        <input
+          type="text"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          placeholder="Search terms or translations…"
+          className="input"
+          style={{ padding: "8px 12px 8px 30px", fontSize: 13 }}
+        />
+      </div>
+
       <select
         value={languageId}
         onChange={(e) => onLanguageChange(e.target.value)}
-        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        style={selectStyle}
       >
         <option value="">All languages</option>
         {languages?.data.map((lang) => (
@@ -64,25 +118,32 @@ export default function VocabularyFilters({
         ))}
       </select>
 
-      <select
-        value={status}
-        onChange={(e) => onStatusChange(e.target.value)}
-        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-      >
-        {STATUS_OPTIONS.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
-
-      <input
-        type="text"
-        value={searchInput}
-        onChange={(e) => setSearchInput(e.target.value)}
-        placeholder="Search words..."
-        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[200px]"
-      />
+      {STATUS_CHIPS.map((chip) => {
+        const active = currentChip === chip.value;
+        return (
+          <button
+            key={chip.value}
+            onClick={() => {
+              // Map "Learning" chip to status=1 (simplest approximation without multi-filter)
+              if (chip.value === "1,2,3,4") onStatusChange("1");
+              else onStatusChange(chip.value);
+            }}
+            className="sans"
+            style={{
+              padding: "6px 12px",
+              fontSize: 12,
+              background: active ? "var(--ink)" : "transparent",
+              color: active ? "var(--paper)" : "var(--ink-soft)",
+              border: "1px solid " + (active ? "var(--ink)" : "var(--rule)"),
+              borderRadius: 999,
+              cursor: "pointer",
+              fontWeight: active ? 500 : 400,
+            }}
+          >
+            {chip.label}
+          </button>
+        );
+      })}
     </div>
   );
 }

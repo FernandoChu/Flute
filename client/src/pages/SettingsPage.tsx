@@ -4,6 +4,7 @@ import { TRANSLATION_PROVIDERS, TTS_PROVIDERS } from "shared";
 import { apiFetch } from "../lib/api";
 import KeybindingsSettings from "../components/settings/KeybindingsSettings";
 import DictionarySettings from "../components/settings/DictionarySettings";
+import { useReaderSettings } from "../hooks/useReaderSettings";
 
 interface ApiKeyInfo {
   id: string;
@@ -39,11 +40,395 @@ interface TtsSettingsData {
   ttsVoice: string | null;
 }
 
-function TtsSettings({
+const sectionStyle: React.CSSProperties = {
+  background: "var(--paper-deep)",
+  border: "1px solid var(--rule)",
+  borderRadius: 10,
+  padding: 28,
+  marginBottom: 24,
+};
+
+const selectStyle: React.CSSProperties = {
+  padding: "9px 12px",
+  fontSize: 13,
+  background: "var(--paper-sunk)",
+  border: "1px solid var(--rule)",
+  borderRadius: 6,
+  color: "var(--ink)",
+  width: "100%",
+  fontFamily: "var(--font-sans)",
+};
+
+function Row({
+  label,
+  sub,
+  children,
+}: {
+  label: string;
+  sub?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "260px 1fr",
+        gap: 40,
+        padding: "22px 0",
+        borderTop: "1px solid var(--rule-soft)",
+        alignItems: "flex-start",
+      }}
+    >
+      <div>
+        <div
+          style={{
+            fontSize: 14,
+            fontWeight: 500,
+            color: "var(--ink)",
+            fontFamily: "var(--font-sans)",
+          }}
+        >
+          {label}
+        </div>
+        {sub && (
+          <div
+            style={{
+              fontSize: 12,
+              color: "var(--ink-faint)",
+              marginTop: 4,
+              lineHeight: 1.4,
+            }}
+          >
+            {sub}
+          </div>
+        )}
+      </div>
+      <div style={{ minWidth: 0 }}>{children}</div>
+    </div>
+  );
+}
+
+function LangSection({
+  languages,
+  nativeLangId,
+  studyLangId,
+  setNativeLangId,
+  setStudyLangId,
+  saveLanguages,
+  savePending,
+  saveSuccess,
+  saveError,
+}: any) {
+  return (
+    <Row
+      label="Study languages"
+      sub="Native language and the language you're studying."
+    >
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr auto 1fr",
+          alignItems: "center",
+          gap: 14,
+          marginBottom: 14,
+        }}
+      >
+        <div>
+          <div
+            className="mono"
+            style={{
+              fontSize: 10,
+              color: "var(--ink-faint)",
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              marginBottom: 6,
+            }}
+          >
+            Studying
+          </div>
+          <select
+            value={studyLangId}
+            onChange={(e: any) => setStudyLangId(e.target.value)}
+            style={selectStyle}
+          >
+            <option value="">Select language</option>
+            {languages?.data.map((lang: Language) => (
+              <option key={lang.id} value={lang.id}>
+                {lang.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div style={{ color: "var(--ink-faint)", fontSize: 18 }}>→</div>
+        <div>
+          <div
+            className="mono"
+            style={{
+              fontSize: 10,
+              color: "var(--ink-faint)",
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              marginBottom: 6,
+            }}
+          >
+            Translating to
+          </div>
+          <select
+            value={nativeLangId}
+            onChange={(e: any) => setNativeLangId(e.target.value)}
+            style={selectStyle}
+          >
+            <option value="">Select language</option>
+            {languages?.data.map((lang: Language) => (
+              <option key={lang.id} value={lang.id}>
+                {lang.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <button
+          onClick={saveLanguages}
+          disabled={savePending}
+          className="btn btn-primary sans"
+        >
+          {savePending ? "Saving…" : "Save"}
+        </button>
+        {saveSuccess && (
+          <span
+            className="mono"
+            style={{
+              fontSize: 11,
+              color: "oklch(0.4 0.12 150)",
+              letterSpacing: "0.04em",
+            }}
+          >
+            Saved.
+          </span>
+        )}
+        {saveError && (
+          <span
+            className="mono"
+            style={{
+              fontSize: 11,
+              color: "var(--accent)",
+              letterSpacing: "0.04em",
+            }}
+          >
+            {(saveError as Error).message}
+          </span>
+        )}
+      </div>
+    </Row>
+  );
+}
+
+function TranslationProviderSection({
+  keys,
   isLoading,
-  ttsKeys,
+  selectedProvider,
+  setSelectedProvider,
+  apiKey,
+  setApiKey,
+  testResult,
+  setTestResult,
+  testing,
+  handleTest,
+  handleSave,
+  saveMutation,
   deleteMutation,
   existingProviders,
+}: any) {
+  const translationKeys = keys?.data?.filter((k: ApiKeyInfo) =>
+    (TRANSLATION_PROVIDERS as readonly string[]).includes(k.provider),
+  );
+  return (
+    <Row
+      label="Translation provider"
+      sub="Bring your own key. Keys are encrypted at rest (AES-256-GCM)."
+    >
+      {translationKeys && translationKeys.length > 0 && (
+        <div style={{ marginBottom: 14 }}>
+          {translationKeys.map((k: ApiKeyInfo) => (
+            <div
+              key={k.id}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                background: "var(--paper-sunk)",
+                border: "1px solid var(--rule)",
+                borderRadius: 6,
+                padding: "10px 14px",
+                marginBottom: 6,
+              }}
+            >
+              <div>
+                <span
+                  style={{
+                    textTransform: "capitalize",
+                    fontWeight: 500,
+                    color: "var(--ink)",
+                    fontSize: 13,
+                    fontFamily: "var(--font-sans)",
+                  }}
+                >
+                  {k.provider}
+                </span>
+                <span
+                  className="mono"
+                  style={{
+                    marginLeft: 10,
+                    fontSize: 10,
+                    color: "oklch(0.4 0.12 150)",
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Configured
+                </span>
+              </div>
+              <button
+                onClick={() => deleteMutation.mutate(k.provider)}
+                disabled={deleteMutation.isPending}
+                className="btn btn-ghost sans"
+                style={{
+                  fontSize: 12,
+                  color: "var(--accent)",
+                  padding: "4px 10px",
+                }}
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+        {TRANSLATION_PROVIDERS.map((p) => (
+          <button
+            key={p}
+            onClick={() => {
+              setSelectedProvider(p);
+              setTestResult(null);
+            }}
+            className="sans"
+            style={{
+              padding: "10px 16px",
+              fontSize: 13,
+              background:
+                selectedProvider === p ? "var(--paper)" : "transparent",
+              border:
+                "1px solid " +
+                (selectedProvider === p ? "var(--ink)" : "var(--rule)"),
+              borderRadius: 8,
+              cursor: "pointer",
+              color:
+                selectedProvider === p
+                  ? "var(--ink)"
+                  : "var(--ink-soft)",
+              fontWeight: selectedProvider === p ? 600 : 400,
+              textTransform: "capitalize",
+            }}
+          >
+            {p}
+            {existingProviders.has(p) && (
+              <span
+                className="mono"
+                style={{
+                  marginLeft: 8,
+                  fontSize: 9,
+                  color: "var(--ink-faint)",
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                }}
+              >
+                ACTIVE
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      <div
+        style={{
+          padding: 14,
+          background: "var(--paper-sunk)",
+          border: "1px solid var(--rule)",
+          borderRadius: 6,
+        }}
+      >
+        <div
+          className="mono"
+          style={{
+            fontSize: 10,
+            letterSpacing: "0.1em",
+            color: "var(--ink-faint)",
+            textTransform: "uppercase",
+            marginBottom: 8,
+          }}
+        >
+          {selectedProvider === "google" ? "Google Translate" : "DeepL"} API Key
+        </div>
+        <input
+          type="password"
+          value={apiKey}
+          onChange={(e) => {
+            setApiKey(e.target.value);
+            setTestResult(null);
+          }}
+          placeholder="Enter your API key"
+          className="input"
+        />
+
+        {testResult && (
+          <div
+            className="mono"
+            style={{
+              fontSize: 11,
+              padding: "8px 12px",
+              borderRadius: 5,
+              marginTop: 10,
+              background: testResult.valid
+                ? "oklch(0.94 0.06 150)"
+                : "var(--accent-wash)",
+              color: testResult.valid
+                ? "oklch(0.3 0.1 150)"
+                : "var(--accent)",
+            }}
+          >
+            {testResult.valid
+              ? "✓ Key is valid."
+              : `Invalid key: ${testResult.error}`}
+          </div>
+        )}
+
+        <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+          <button
+            onClick={handleTest}
+            disabled={!apiKey.trim() || testing}
+            className="btn sans"
+          >
+            {testing ? "Testing…" : "Test"}
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={!apiKey.trim() || saveMutation.isPending}
+            className="btn btn-primary sans"
+          >
+            {saveMutation.isPending ? "Saving…" : "Save key"}
+          </button>
+        </div>
+      </div>
+    </Row>
+  );
+}
+
+function TtsSection({
+  keys,
+  studyLangCode,
   selectedTtsProvider,
   setSelectedTtsProvider,
   ttsApiKey,
@@ -54,27 +439,12 @@ function TtsSettings({
   handleTtsTest,
   handleTtsSave,
   saveMutation,
-  hasTtsKey,
-  studyLangCode,
-}: {
-  isLoading: boolean;
-  ttsKeys: ApiKeyInfo[] | undefined;
-  deleteMutation: any;
-  existingProviders: Set<string>;
-  selectedTtsProvider: string;
-  setSelectedTtsProvider: (v: string) => void;
-  ttsApiKey: string;
-  setTtsApiKey: (v: string) => void;
-  ttsTestResult: { valid: boolean; error?: string } | null;
-  setTtsTestResult: (v: { valid: boolean; error?: string } | null) => void;
-  ttsTesting: boolean;
-  handleTtsTest: () => void;
-  handleTtsSave: () => void;
-  saveMutation: any;
-  hasTtsKey: boolean;
-  studyLangCode?: string;
-}) {
+  deleteMutation,
+  existingProviders,
+}: any) {
   const queryClient = useQueryClient();
+
+  const hasTtsKey = existingProviders.has("google-tts");
 
   const { data: ttsSettings } = useQuery({
     queryKey: ["tts-settings"],
@@ -88,7 +458,8 @@ function TtsSettings({
 
   const { data: voices } = useQuery({
     queryKey: ["tts-voices", studyLangCode],
-    queryFn: () => apiFetch<{ data: TtsVoice[] }>(`/tts/voices?lang=${studyLangCode}`),
+    queryFn: () =>
+      apiFetch<{ data: TtsVoice[] }>(`/tts/voices?lang=${studyLangCode}`),
     enabled: hasTtsKey && !!studyLangCode,
   });
 
@@ -102,10 +473,8 @@ function TtsSettings({
     }
   }, [ttsSettings]);
 
-  // Filter voices by selected model prefix
   const filteredVoices = voices?.data?.filter((v) => {
     if (!selectedModel) return true;
-    // Google voice names follow the pattern: langCode-ModelType-Letter (e.g. en-US-Wavenet-A)
     return v.name.toLowerCase().includes(selectedModel.toLowerCase());
   });
 
@@ -127,202 +496,444 @@ function TtsSettings({
     });
   };
 
-  return (
-    <section className="bg-white rounded-lg border border-gray-200 p-6 mt-6">
-      <h2 className="text-lg font-semibold mb-4">Text-to-Speech</h2>
-      <p className="text-sm text-gray-600 mb-4">
-        Add your Google Cloud Text-to-Speech API key and choose a voice to
-        generate audio for lessons.
-      </p>
+  const ttsKeys = keys?.data?.filter((k: ApiKeyInfo) =>
+    (TTS_PROVIDERS as readonly string[]).includes(k.provider),
+  );
 
-      {isLoading ? (
-        <p className="text-gray-500 text-sm">Loading...</p>
-      ) : (
-        <>
-          {ttsKeys && ttsKeys.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">
-                Configured providers
-              </h3>
-              <div className="space-y-2">
-                {ttsKeys.map((k) => (
-                  <div
-                    key={k.id}
-                    className="flex items-center justify-between bg-gray-50 rounded px-4 py-2"
-                  >
-                    <div>
-                      <span className="font-medium">Google Cloud TTS</span>
-                      <span className="text-xs text-green-600 ml-2">
-                        Configured
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => deleteMutation.mutate(k.provider)}
-                      disabled={deleteMutation.isPending}
-                      className="text-sm text-red-500 hover:text-red-700 transition-colors"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))}
+  return (
+    <Row
+      label="Text-to-Speech"
+      sub="Google Cloud TTS key. Generates lesson audio."
+    >
+      {ttsKeys && ttsKeys.length > 0 && (
+        <div style={{ marginBottom: 12 }}>
+          {ttsKeys.map((k: ApiKeyInfo) => (
+            <div
+              key={k.id}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                background: "var(--paper-sunk)",
+                border: "1px solid var(--rule)",
+                borderRadius: 6,
+                padding: "10px 14px",
+              }}
+            >
+              <div>
+                <span
+                  style={{
+                    fontWeight: 500,
+                    color: "var(--ink)",
+                    fontSize: 13,
+                    fontFamily: "var(--font-sans)",
+                  }}
+                >
+                  Google Cloud TTS
+                </span>
+                <span
+                  className="mono"
+                  style={{
+                    marginLeft: 10,
+                    fontSize: 10,
+                    color: "oklch(0.4 0.12 150)",
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Configured
+                </span>
               </div>
+              <button
+                onClick={() => deleteMutation.mutate(k.provider)}
+                disabled={deleteMutation.isPending}
+                className="btn btn-ghost sans"
+                style={{
+                  fontSize: 12,
+                  color: "var(--accent)",
+                  padding: "4px 10px",
+                }}
+              >
+                Remove
+              </button>
             </div>
+          ))}
+        </div>
+      )}
+
+      <div
+        style={{
+          padding: 14,
+          background: "var(--paper-sunk)",
+          border: "1px solid var(--rule)",
+          borderRadius: 6,
+          marginBottom: 18,
+        }}
+      >
+        <div
+          className="mono"
+          style={{
+            fontSize: 10,
+            letterSpacing: "0.1em",
+            color: "var(--ink-faint)",
+            textTransform: "uppercase",
+            marginBottom: 8,
+          }}
+        >
+          API Key
+        </div>
+        <input
+          type="password"
+          value={ttsApiKey}
+          onChange={(e: any) => {
+            setTtsApiKey(e.target.value);
+            setTtsTestResult(null);
+          }}
+          placeholder="Enter your Google Cloud TTS API key"
+          className="input"
+        />
+        {ttsTestResult && (
+          <div
+            className="mono"
+            style={{
+              fontSize: 11,
+              padding: "8px 12px",
+              borderRadius: 5,
+              marginTop: 10,
+              background: ttsTestResult.valid
+                ? "oklch(0.94 0.06 150)"
+                : "var(--accent-wash)",
+              color: ttsTestResult.valid
+                ? "oklch(0.3 0.1 150)"
+                : "var(--accent)",
+            }}
+          >
+            {ttsTestResult.valid
+              ? "✓ Key is valid."
+              : `Invalid key: ${ttsTestResult.error}`}
+          </div>
+        )}
+
+        <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+          <button
+            onClick={handleTtsTest}
+            disabled={!ttsApiKey.trim() || ttsTesting}
+            className="btn sans"
+          >
+            {ttsTesting ? "Testing…" : "Test"}
+          </button>
+          <button
+            onClick={handleTtsSave}
+            disabled={!ttsApiKey.trim() || saveMutation.isPending}
+            className="btn btn-primary sans"
+          >
+            {saveMutation.isPending ? "Saving…" : "Save key"}
+          </button>
+        </div>
+      </div>
+
+      {hasTtsKey && (
+        <div
+          style={{
+            borderTop: "1px solid var(--rule-soft)",
+            paddingTop: 18,
+          }}
+        >
+          <div
+            className="mono"
+            style={{
+              fontSize: 10,
+              letterSpacing: "0.12em",
+              color: "var(--ink-faint)",
+              textTransform: "uppercase",
+              marginBottom: 12,
+            }}
+          >
+            Voice settings
+          </div>
+          {!studyLangCode && (
+            <p
+              style={{
+                fontSize: 12,
+                color: "var(--accent)",
+                marginBottom: 10,
+              }}
+            >
+              Set your study language above to see available voices.
+            </p>
           )}
 
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Provider
-              </label>
-              <select
-                value={selectedTtsProvider}
-                onChange={(e) => {
-                  setSelectedTtsProvider(e.target.value);
-                  setTtsTestResult(null);
+          <div style={{ marginBottom: 10 }}>
+            <div
+              className="mono"
+              style={{
+                fontSize: 10,
+                color: "var(--ink-faint)",
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                marginBottom: 6,
+              }}
+            >
+              Model
+            </div>
+            <select
+              value={selectedModel}
+              onChange={(e) => {
+                setSelectedModel(e.target.value);
+                setSelectedVoice("");
+              }}
+              style={selectStyle}
+            >
+              <option value="">Default</option>
+              {models?.data.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {studyLangCode && (
+            <div style={{ marginBottom: 12 }}>
+              <div
+                className="mono"
+                style={{
+                  fontSize: 10,
+                  color: "var(--ink-faint)",
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  marginBottom: 6,
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                {TTS_PROVIDERS.map((p) => (
-                  <option key={p} value={p}>
-                    Google Cloud TTS
-                    {existingProviders.has(p) ? " (update)" : ""}
+                Voice
+              </div>
+              <select
+                value={selectedVoice}
+                onChange={(e) => setSelectedVoice(e.target.value)}
+                style={selectStyle}
+              >
+                <option value="">Default</option>
+                {filteredVoices?.map((v) => (
+                  <option key={v.name} value={v.name}>
+                    {v.name} ({v.ssmlGender})
                   </option>
                 ))}
               </select>
             </div>
+          )}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                API Key
-              </label>
-              <input
-                type="password"
-                value={ttsApiKey}
-                onChange={(e) => {
-                  setTtsApiKey(e.target.value);
-                  setTtsTestResult(null);
+          <div
+            style={{ display: "flex", alignItems: "center", gap: 10 }}
+          >
+            <button
+              onClick={handleSaveVoice}
+              disabled={saveVoiceMutation.isPending}
+              className="btn btn-primary sans"
+            >
+              {saveVoiceMutation.isPending ? "Saving…" : "Save voice"}
+            </button>
+            {saveVoiceMutation.isSuccess && (
+              <span
+                className="mono"
+                style={{
+                  fontSize: 11,
+                  color: "oklch(0.4 0.12 150)",
+                  letterSpacing: "0.04em",
                 }}
-                placeholder="Enter your Google Cloud TTS API key"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            {ttsTestResult && (
-              <div
-                className={`text-sm px-3 py-2 rounded ${
-                  ttsTestResult.valid
-                    ? "bg-green-50 text-green-700"
-                    : "bg-red-50 text-red-700"
-                }`}
               >
-                {ttsTestResult.valid
-                  ? "Key is valid!"
-                  : `Invalid key: ${ttsTestResult.error}`}
-              </div>
+                Saved.
+              </span>
             )}
-
-            <div className="flex gap-3">
-              <button
-                onClick={handleTtsTest}
-                disabled={!ttsApiKey.trim() || ttsTesting}
-                className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+            {saveVoiceMutation.isError && (
+              <span
+                className="mono"
+                style={{
+                  fontSize: 11,
+                  color: "var(--accent)",
+                  letterSpacing: "0.04em",
+                }}
               >
-                {ttsTesting ? "Testing..." : "Test key"}
-              </button>
-              <button
-                onClick={handleTtsSave}
-                disabled={!ttsApiKey.trim() || saveMutation.isPending}
-                className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-              >
-                {saveMutation.isPending ? "Saving..." : "Save key"}
-              </button>
-            </div>
+                {(saveVoiceMutation.error as Error).message}
+              </span>
+            )}
           </div>
+        </div>
+      )}
+    </Row>
+  );
+}
 
-          {hasTtsKey && (
-            <div className="mt-6 pt-6 border-t border-gray-200 space-y-4">
-              <h3 className="text-sm font-semibold text-gray-700">
-                Voice Settings
-              </h3>
-              {!studyLangCode && (
-                <p className="text-sm text-amber-600">
-                  Set your study language above to see available voices.
-                </p>
-              )}
+type TabKey =
+  | "dictionaries"
+  | "languages"
+  | "appearance"
+  | "keybindings";
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Model
-                </label>
-                <select
-                  value={selectedModel}
-                  onChange={(e) => {
-                    setSelectedModel(e.target.value);
-                    setSelectedVoice("");
+const TABS: { key: TabKey; label: string }[] = [
+  { key: "dictionaries", label: "Dictionaries" },
+  { key: "languages", label: "Languages" },
+  { key: "appearance", label: "Appearance" },
+  { key: "keybindings", label: "Keybindings" },
+];
+
+const THEME_SWATCHES: {
+  key: "paper" | "sepia" | "dark";
+  label: string;
+  swatchBg: string;
+  swatchInk: string;
+}[] = [
+  {
+    key: "paper",
+    label: "Paper",
+    swatchBg: "oklch(0.982 0.008 85)",
+    swatchInk: "oklch(0.22 0.01 60)",
+  },
+  {
+    key: "sepia",
+    label: "Sepia",
+    swatchBg: "oklch(0.955 0.025 75)",
+    swatchInk: "oklch(0.28 0.03 45)",
+  },
+  {
+    key: "dark",
+    label: "Dark",
+    swatchBg: "oklch(0.19 0.008 60)",
+    swatchInk: "oklch(0.92 0.008 75)",
+  },
+];
+
+function AppearanceSection() {
+  const { settings, update } = useReaderSettings();
+  return (
+    <>
+      <Row
+        label="Theme"
+        sub="Applies across the whole app. Sepia warms the page; Dark is low-contrast study mode."
+      >
+        <div style={{ display: "flex", gap: 10 }}>
+          {THEME_SWATCHES.map((t) => {
+            const active = settings.theme === t.key;
+            return (
+              <button
+                key={t.key}
+                onClick={() => update("theme", t.key)}
+                className="sans"
+                style={{
+                  padding: 0,
+                  background: "transparent",
+                  border:
+                    "1px solid " + (active ? "var(--ink)" : "var(--rule)"),
+                  borderRadius: 10,
+                  cursor: "pointer",
+                  overflow: "hidden",
+                  textAlign: "left",
+                  width: 150,
+                  boxShadow: active
+                    ? "0 0 0 2px var(--paper), 0 0 0 3px var(--ink)"
+                    : "none",
+                }}
+              >
+                <div
+                  style={{
+                    height: 64,
+                    background: t.swatchBg,
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    padding: "0 14px",
+                    gap: 4,
+                    borderBottom: "1px solid var(--rule)",
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="">Default</option>
-                  {models?.data.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {studyLangCode && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Voice
-                  </label>
-                  <select
-                    value={selectedVoice}
-                    onChange={(e) => setSelectedVoice(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Default</option>
-                    {filteredVoices?.map((v) => (
-                      <option key={v.name} value={v.name}>
-                        {v.name} ({v.ssmlGender})
-                      </option>
-                    ))}
-                  </select>
-                  {voices?.data && filteredVoices?.length === 0 && selectedModel && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      No {selectedModel} voices available for this language. Try a different model.
-                    </p>
+                  <div
+                    style={{
+                      height: 3,
+                      width: "70%",
+                      background: t.swatchInk,
+                      borderRadius: 1,
+                      opacity: 0.85,
+                    }}
+                  />
+                  <div
+                    style={{
+                      height: 3,
+                      width: "90%",
+                      background: t.swatchInk,
+                      borderRadius: 1,
+                      opacity: 0.5,
+                    }}
+                  />
+                  <div
+                    style={{
+                      height: 3,
+                      width: "55%",
+                      background: t.swatchInk,
+                      borderRadius: 1,
+                      opacity: 0.5,
+                    }}
+                  />
+                </div>
+                <div
+                  style={{
+                    padding: "10px 14px",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    fontSize: 13,
+                    fontWeight: active ? 600 : 500,
+                    color: "var(--ink)",
+                  }}
+                >
+                  {t.label}
+                  {active && (
+                    <span
+                      className="mono"
+                      style={{
+                        fontSize: 10,
+                        color: "var(--accent)",
+                        letterSpacing: "0.1em",
+                      }}
+                    >
+                      ACTIVE
+                    </span>
                   )}
                 </div>
-              )}
+              </button>
+            );
+          })}
+        </div>
+      </Row>
 
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleSaveVoice}
-                  disabled={saveVoiceMutation.isPending}
-                  className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-                >
-                  {saveVoiceMutation.isPending ? "Saving..." : "Save voice"}
-                </button>
-                {saveVoiceMutation.isSuccess && (
-                  <p className="text-sm text-green-600">Saved.</p>
-                )}
-                {saveVoiceMutation.isError && (
-                  <p className="text-sm text-red-600">
-                    {(saveVoiceMutation.error as Error).message}
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
-        </>
-      )}
-    </section>
+      <Row
+        label="Accent color"
+        sub="Reading underlines, selection highlights, and due-review markers."
+      >
+        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <div
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: 6,
+              background: "var(--accent)",
+              border: "2px solid var(--ink)",
+            }}
+          />
+          <div
+            className="mono"
+            style={{ fontSize: 12, color: "var(--ink-soft)" }}
+          >
+            Ink-red · oklch(0.52 0.14 28)
+          </div>
+        </div>
+      </Row>
+    </>
   );
 }
 
 export default function SettingsPage() {
   const queryClient = useQueryClient();
+  const [tab, setTab] = useState<TabKey>("dictionaries");
+
   const [selectedProvider, setSelectedProvider] = useState<string>(
     TRANSLATION_PROVIDERS[0],
   );
@@ -364,7 +975,10 @@ export default function SettingsPage() {
   }, [langPrefs]);
 
   const saveLangMutation = useMutation({
-    mutationFn: (data: { nativeLanguageId: number | null; studyLanguageId: number | null }) =>
+    mutationFn: (data: {
+      nativeLanguageId: number | null;
+      studyLanguageId: number | null;
+    }) =>
       apiFetch("/settings/languages", {
         method: "PUT",
         body: JSON.stringify(data),
@@ -374,14 +988,14 @@ export default function SettingsPage() {
     },
   });
 
-  const handleSaveLanguages = () => {
+  const saveLanguages = () => {
     saveLangMutation.mutate({
       nativeLanguageId: nativeLangId ? Number(nativeLangId) : null,
       studyLanguageId: studyLangId ? Number(studyLangId) : null,
     });
   };
 
-  const { data: keys, isLoading } = useQuery({
+  const { data: keys } = useQuery({
     queryKey: ["api-keys"],
     queryFn: () => apiFetch<{ data: ApiKeyInfo[] }>("/settings/api-keys"),
   });
@@ -440,7 +1054,10 @@ export default function SettingsPage() {
         data: { valid: boolean; error?: string };
       }>("/settings/api-keys/test", {
         method: "POST",
-        body: JSON.stringify({ provider: selectedTtsProvider, apiKey: ttsApiKey }),
+        body: JSON.stringify({
+          provider: selectedTtsProvider,
+          apiKey: ttsApiKey,
+        }),
       });
       setTtsTestResult(res.data);
     } catch {
@@ -454,233 +1071,173 @@ export default function SettingsPage() {
     if (!ttsApiKey.trim()) return;
     saveMutation.mutate(
       { provider: selectedTtsProvider, apiKey: ttsApiKey },
-      { onSuccess: () => { setTtsApiKey(""); setTtsTestResult(null); } },
+      {
+        onSuccess: () => {
+          setTtsApiKey("");
+          setTtsTestResult(null);
+        },
+      },
     );
   };
 
   const existingProviders = new Set(keys?.data?.map((k) => k.provider) ?? []);
-  const translationKeys = keys?.data?.filter((k) =>
-    (TRANSLATION_PROVIDERS as readonly string[]).includes(k.provider),
-  );
-  const ttsKeys = keys?.data?.filter((k) =>
-    (TTS_PROVIDERS as readonly string[]).includes(k.provider),
-  );
+  const studyLangCode = languages?.data.find(
+    (l) => l.id === Number(studyLangId),
+  )?.code;
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">Settings</h1>
-
-      <section className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-        <h2 className="text-lg font-semibold mb-4">Language Preferences</h2>
-        <p className="text-sm text-gray-600 mb-4">
-          Set your native and study languages. These will be used as defaults
-          when creating new collections.
-        </p>
-
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Native language
-            </label>
-            <select
-              value={nativeLangId}
-              onChange={(e) => setNativeLangId(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Select language</option>
-              {languages?.data.map((lang) => (
-                <option key={lang.id} value={lang.id}>
-                  {lang.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Currently learning
-            </label>
-            <select
-              value={studyLangId}
-              onChange={(e) => setStudyLangId(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Select language</option>
-              {languages?.data.map((lang) => (
-                <option key={lang.id} value={lang.id}>
-                  {lang.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleSaveLanguages}
-              disabled={saveLangMutation.isPending}
-              className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-            >
-              {saveLangMutation.isPending ? "Saving..." : "Save"}
-            </button>
-            {saveLangMutation.isSuccess && (
-              <p className="text-sm text-green-600">Saved.</p>
-            )}
-            {saveLangMutation.isError && (
-              <p className="text-sm text-red-600">
-                {(saveLangMutation.error as Error).message}
-              </p>
-            )}
-          </div>
+    <div
+      style={{
+        maxWidth: 1100,
+        margin: "0 auto",
+        padding: "36px 48px 120px",
+        position: "relative",
+        zIndex: 1,
+      }}
+    >
+      {/* Header */}
+      <div style={{ marginBottom: 28 }}>
+        <div
+          className="mono"
+          style={{
+            fontSize: 10,
+            letterSpacing: "0.14em",
+            color: "var(--ink-faint)",
+            textTransform: "uppercase",
+            marginBottom: 8,
+          }}
+        >
+          Settings
         </div>
-      </section>
+        <h1
+          className="display"
+          style={{
+            margin: 0,
+            fontSize: 44,
+            fontWeight: 500,
+            letterSpacing: "-0.02em",
+            color: "var(--ink)",
+          }}
+        >
+          The instrument.
+        </h1>
+      </div>
 
-      <section className="bg-white rounded-lg border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold mb-4">Translation API Keys</h2>
-        <p className="text-sm text-gray-600 mb-4">
-          Add your own API keys to enable word and sentence translation in the
-          reader. Keys are encrypted before storage.
-        </p>
-
-        {isLoading ? (
-          <p className="text-gray-500 text-sm">Loading...</p>
-        ) : (
-          <>
-            {translationKeys && translationKeys.length > 0 && (
-              <div className="mb-6">
-                <h3 className="text-sm font-medium text-gray-700 mb-2">
-                  Configured providers
-                </h3>
-                <div className="space-y-2">
-                  {translationKeys.map((k) => (
-                    <div
-                      key={k.id}
-                      className="flex items-center justify-between bg-gray-50 rounded px-4 py-2"
-                    >
-                      <div>
-                        <span className="font-medium capitalize">
-                          {k.provider}
-                        </span>
-                        <span className="text-xs text-green-600 ml-2">
-                          Configured
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => deleteMutation.mutate(k.provider)}
-                        disabled={deleteMutation.isPending}
-                        className="text-sm text-red-500 hover:text-red-700 transition-colors"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
+      {/* Tabs */}
+      <div
+        style={{
+          display: "flex",
+          gap: 4,
+          borderBottom: "1px solid var(--rule)",
+          marginBottom: 8,
+        }}
+      >
+        {TABS.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className="sans"
+            style={{
+              position: "relative",
+              padding: "10px 16px",
+              background: "transparent",
+              border: 0,
+              fontSize: 13,
+              fontWeight: tab === t.key ? 600 : 450,
+              color: tab === t.key ? "var(--ink)" : "var(--ink-soft)",
+              cursor: "pointer",
+            }}
+          >
+            {t.label}
+            {tab === t.key && (
+              <span
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  bottom: -1,
+                  height: 2,
+                  background: "var(--ink)",
+                  borderRadius: 1,
+                }}
+              />
             )}
+          </button>
+        ))}
+      </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Provider
-                </label>
-                <select
-                  value={selectedProvider}
-                  onChange={(e) => {
-                    setSelectedProvider(e.target.value);
-                    setTestResult(null);
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  {TRANSLATION_PROVIDERS.map((p) => (
-                    <option key={p} value={p}>
-                      {p === "google" ? "Google Translate" : "DeepL"}
-                      {existingProviders.has(p) ? " (update)" : ""}
-                    </option>
-                  ))}
-                </select>
-              </div>
+      <div style={sectionStyle}>
+        {tab === "appearance" && <AppearanceSection />}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  API Key
-                </label>
-                <input
-                  type="password"
-                  value={apiKey}
-                  onChange={(e) => {
-                    setApiKey(e.target.value);
-                    setTestResult(null);
-                  }}
-                  placeholder={`Enter your ${selectedProvider === "google" ? "Google Translate" : "DeepL"} API key`}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              {testResult && (
-                <div
-                  className={`text-sm px-3 py-2 rounded ${
-                    testResult.valid
-                      ? "bg-green-50 text-green-700"
-                      : "bg-red-50 text-red-700"
-                  }`}
-                >
-                  {testResult.valid
-                    ? "Key is valid!"
-                    : `Invalid key: ${testResult.error}`}
-                </div>
-              )}
-
-              <div className="flex gap-3">
-                <button
-                  onClick={handleTest}
-                  disabled={!apiKey.trim() || testing}
-                  className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
-                >
-                  {testing ? "Testing..." : "Test key"}
-                </button>
-                <button
-                  onClick={handleSave}
-                  disabled={!apiKey.trim() || saveMutation.isPending}
-                  className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-                >
-                  {saveMutation.isPending ? "Saving..." : "Save key"}
-                </button>
-              </div>
-
-              {saveMutation.isError && (
-                <p className="text-sm text-red-600">
-                  {(saveMutation.error as Error).message}
-                </p>
-              )}
-              {saveMutation.isSuccess && (
-                <p className="text-sm text-green-600">Key saved successfully.</p>
-              )}
-            </div>
+        {tab === "dictionaries" && (
+          <>
+            <TranslationProviderSection
+              keys={keys}
+              isLoading={false}
+              selectedProvider={selectedProvider}
+              setSelectedProvider={setSelectedProvider}
+              apiKey={apiKey}
+              setApiKey={setApiKey}
+              testResult={testResult}
+              setTestResult={setTestResult}
+              testing={testing}
+              handleTest={handleTest}
+              handleSave={handleSave}
+              saveMutation={saveMutation}
+              deleteMutation={deleteMutation}
+              existingProviders={existingProviders}
+            />
+            <TtsSection
+              keys={keys}
+              studyLangCode={studyLangCode}
+              selectedTtsProvider={selectedTtsProvider}
+              setSelectedTtsProvider={setSelectedTtsProvider}
+              ttsApiKey={ttsApiKey}
+              setTtsApiKey={setTtsApiKey}
+              ttsTestResult={ttsTestResult}
+              setTtsTestResult={setTtsTestResult}
+              ttsTesting={ttsTesting}
+              handleTtsTest={handleTtsTest}
+              handleTtsSave={handleTtsSave}
+              saveMutation={saveMutation}
+              deleteMutation={deleteMutation}
+              existingProviders={existingProviders}
+            />
+            <Row
+              label="Dictionary links"
+              sub="Open any word in your favorite external dictionary. Use [FLUTE] as the word placeholder."
+            >
+              <DictionarySettings />
+            </Row>
           </>
         )}
-      </section>
 
-      <TtsSettings
-        isLoading={isLoading}
-        ttsKeys={ttsKeys}
-        deleteMutation={deleteMutation}
-        existingProviders={existingProviders}
-        selectedTtsProvider={selectedTtsProvider}
-        setSelectedTtsProvider={setSelectedTtsProvider}
-        ttsApiKey={ttsApiKey}
-        setTtsApiKey={setTtsApiKey}
-        ttsTestResult={ttsTestResult}
-        setTtsTestResult={setTtsTestResult}
-        ttsTesting={ttsTesting}
-        handleTtsTest={handleTtsTest}
-        handleTtsSave={handleTtsSave}
-        saveMutation={saveMutation}
-        hasTtsKey={existingProviders.has("google-tts")}
-        studyLangCode={languages?.data.find((l) => l.id === Number(studyLangId))?.code}
-      />
+        {tab === "languages" && (
+          <LangSection
+            languages={languages}
+            nativeLangId={nativeLangId}
+            studyLangId={studyLangId}
+            setNativeLangId={setNativeLangId}
+            setStudyLangId={setStudyLangId}
+            saveLanguages={saveLanguages}
+            savePending={saveLangMutation.isPending}
+            saveSuccess={saveLangMutation.isSuccess}
+            saveError={
+              saveLangMutation.isError ? saveLangMutation.error : null
+            }
+          />
+        )}
 
-      <DictionarySettings />
+        {tab === "keybindings" && (
+          <Row
+            label="Reader keybindings"
+            sub="Click a shortcut field and press a key to rebind."
+          >
+            <KeybindingsSettings />
+          </Row>
+        )}
 
-      <KeybindingsSettings />
+      </div>
     </div>
   );
 }

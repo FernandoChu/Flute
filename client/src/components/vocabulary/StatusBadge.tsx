@@ -1,19 +1,50 @@
 import { WordStatus } from "shared";
 
-const STATUS_CONFIG: Record<number, { label: string; className: string }> = {
-  [WordStatus.New]: { label: "New", className: "bg-status-new-light text-status-new-text" },
-  [WordStatus.Learning1]: { label: "Learning 1", className: "bg-status-learning1-light text-status-learning1-text" },
-  [WordStatus.Learning2]: { label: "Learning 2", className: "bg-status-learning2-light text-status-learning2-text" },
-  [WordStatus.Learning3]: { label: "Learning 3", className: "bg-status-learning3-light text-status-learning3-text" },
-  [WordStatus.Learning4]: { label: "Learning 4", className: "bg-status-learning4-light text-status-learning4-text" },
-  [WordStatus.Known]: { label: "Known", className: "bg-status-known-light text-status-known-text" },
-  [WordStatus.Ignored]: { label: "Ignored", className: "bg-status-ignored-light text-status-ignored-text" },
+const STATUS_CONFIG: Record<
+  number,
+  { label: string; short: string; color: string }
+> = {
+  [WordStatus.New]: { label: "New", short: "N", color: "var(--st-new)" },
+  [WordStatus.Learning1]: { label: "Lv 1", short: "1", color: "var(--st-l1)" },
+  [WordStatus.Learning2]: { label: "Lv 2", short: "2", color: "var(--st-l2)" },
+  [WordStatus.Learning3]: { label: "Lv 3", short: "3", color: "var(--st-l3)" },
+  [WordStatus.Learning4]: { label: "Lv 4", short: "4", color: "var(--st-l4)" },
+  [WordStatus.Known]: { label: "Known", short: "K", color: "var(--ink-soft)" },
+  [WordStatus.Ignored]: {
+    label: "Ignored",
+    short: "×",
+    color: "var(--st-ignored)",
+  },
 };
 
 export default function StatusBadge({ status }: { status: number }) {
-  const config = STATUS_CONFIG[status] ?? { label: "?", className: "bg-status-ignored-light text-status-ignored-text" };
+  const config = STATUS_CONFIG[status] ?? {
+    label: "?",
+    short: "?",
+    color: "var(--ink-faint)",
+  };
   return (
-    <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full ${config.className}`}>
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 6,
+        fontFamily: "var(--font-mono)",
+        fontSize: 11,
+        color: "var(--ink-soft)",
+        letterSpacing: "0.04em",
+      }}
+    >
+      <span
+        style={{
+          width: 8,
+          height: 8,
+          borderRadius: "50%",
+          background: status === WordStatus.Known ? "transparent" : config.color,
+          border:
+            status === WordStatus.Known ? "1px solid var(--rule)" : "none",
+        }}
+      />
       {config.label}
     </span>
   );

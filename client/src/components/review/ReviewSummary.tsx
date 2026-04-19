@@ -4,46 +4,113 @@ interface ReviewSummaryProps {
   onRestart: () => void;
 }
 
-export default function ReviewSummary({ stats, onClose, onRestart }: ReviewSummaryProps) {
+const BUCKETS = [
+  { key: "again", label: "Again", color: "oklch(0.58 0.14 28)" },
+  { key: "hard", label: "Hard", color: "oklch(0.65 0.12 55)" },
+  { key: "good", label: "Good", color: "oklch(0.55 0.08 150)" },
+  { key: "easy", label: "Easy", color: "oklch(0.5 0.1 230)" },
+] as const;
+
+export default function ReviewSummary({
+  stats,
+  onClose,
+  onRestart,
+}: ReviewSummaryProps) {
   const total = stats.again + stats.hard + stats.good + stats.easy;
 
   return (
-    <div className="max-w-md mx-auto text-center">
-      <h2 className="text-2xl font-bold mb-2">Session Complete</h2>
-      <p className="text-gray-500 mb-6">
-        You reviewed {total} card{total !== 1 ? "s" : ""}.
-      </p>
+    <div style={{ textAlign: "center", padding: "40px 0" }}>
+      <div
+        className="mono"
+        style={{
+          fontSize: 10,
+          letterSpacing: "0.14em",
+          color: "var(--ink-faint)",
+          textTransform: "uppercase",
+          marginBottom: 12,
+        }}
+      >
+        Session complete
+      </div>
+      <h2
+        className="display"
+        style={{
+          margin: 0,
+          fontSize: 44,
+          fontWeight: 500,
+          letterSpacing: "-0.02em",
+          color: "var(--ink)",
+        }}
+      >
+        {total} card{total !== 1 ? "s" : ""} reviewed.
+      </h2>
 
-      <div className="grid grid-cols-4 gap-3 mb-8">
-        <div className="bg-red-50 rounded-lg p-3">
-          <p className="text-2xl font-bold text-red-600">{stats.again}</p>
-          <p className="text-xs text-gray-500">Again</p>
-        </div>
-        <div className="bg-orange-50 rounded-lg p-3">
-          <p className="text-2xl font-bold text-orange-600">{stats.hard}</p>
-          <p className="text-xs text-gray-500">Hard</p>
-        </div>
-        <div className="bg-green-50 rounded-lg p-3">
-          <p className="text-2xl font-bold text-green-600">{stats.good}</p>
-          <p className="text-xs text-gray-500">Good</p>
-        </div>
-        <div className="bg-blue-50 rounded-lg p-3">
-          <p className="text-2xl font-bold text-blue-600">{stats.easy}</p>
-          <p className="text-xs text-gray-500">Easy</p>
-        </div>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(4, 1fr)",
+          gap: 10,
+          marginTop: 36,
+          marginBottom: 36,
+        }}
+      >
+        {BUCKETS.map((b) => (
+          <div
+            key={b.key}
+            style={{
+              padding: "20px 14px",
+              background: "var(--paper-deep)",
+              border: "1px solid var(--rule)",
+              borderRadius: 8,
+              position: "relative",
+              overflow: "hidden",
+              textAlign: "left",
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                bottom: 0,
+                width: 3,
+                background: b.color,
+              }}
+            />
+            <div
+              className="display"
+              style={{
+                fontSize: 28,
+                fontWeight: 500,
+                color: "var(--ink)",
+                letterSpacing: "-0.01em",
+              }}
+            >
+              {stats[b.key]}
+            </div>
+            <div
+              className="mono"
+              style={{
+                fontSize: 10,
+                letterSpacing: "0.1em",
+                color: "var(--ink-faint)",
+                textTransform: "uppercase",
+                marginTop: 4,
+              }}
+            >
+              {b.label}
+            </div>
+          </div>
+        ))}
       </div>
 
-      <div className="flex gap-3 justify-center">
-        <button
-          onClick={onRestart}
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
+      <div
+        style={{ display: "flex", gap: 10, justifyContent: "center" }}
+      >
+        <button onClick={onRestart} className="btn btn-primary sans">
           Review more
         </button>
-        <button
-          onClick={onClose}
-          className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-        >
+        <button onClick={onClose} className="btn sans">
           Done
         </button>
       </div>

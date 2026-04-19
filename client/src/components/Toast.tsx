@@ -54,16 +54,28 @@ function ToastNotification({
     return () => clearTimeout(timer);
   }, [item.id, onDismiss]);
 
-  const colors = {
-    success: "bg-green-600",
-    error: "bg-red-600",
-    info: "bg-gray-800",
-  };
+  const bg = {
+    success: "oklch(0.5 0.12 150)",
+    error: "var(--accent)",
+    info: "var(--ink)",
+  }[item.type];
 
   return (
     <div
-      className={`${colors[item.type]} text-white px-4 py-2.5 rounded-lg shadow-lg text-sm max-w-sm pointer-events-auto animate-[fadeIn_0.2s_ease-out]`}
+      className="sans"
       onClick={() => onDismiss(item.id)}
+      style={{
+        background: bg,
+        color: "var(--paper)",
+        padding: "10px 14px",
+        borderRadius: 8,
+        boxShadow: "var(--shadow-lg)",
+        fontSize: 13,
+        maxWidth: 380,
+        pointerEvents: "auto",
+        cursor: "pointer",
+        animation: "fadeIn 0.2s ease-out",
+      }}
     >
       {item.message}
     </div>

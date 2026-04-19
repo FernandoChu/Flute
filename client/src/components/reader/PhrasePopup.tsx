@@ -81,53 +81,112 @@ export default function PhrasePopup({
   return createPortal(
     <div
       ref={popupRef}
-      className="absolute z-50 bg-white rounded-lg shadow-lg border border-gray-200 p-4 w-90"
       style={{
+        position: "absolute",
         top: position?.top ?? 0,
         left: position?.left ?? 0,
         visibility: position ? "visible" : "hidden",
+        width: 360,
         maxWidth: 360,
+        zIndex: 50,
+        background: "var(--paper-deep)",
+        border: "1px solid var(--rule)",
+        borderRadius: 8,
+        boxShadow: "var(--shadow-lg)",
+        padding: 16,
       }}
     >
-      <div className="flex items-start justify-between mb-3">
-        <p className="font-medium text-sm text-gray-800 leading-snug pr-2">
+      <div
+        style={{
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          marginBottom: 12,
+          gap: 8,
+        }}
+      >
+        <p
+          style={{
+            fontSize: 13,
+            color: "var(--ink)",
+            lineHeight: 1.4,
+            fontStyle: "italic",
+            margin: 0,
+            flex: 1,
+          }}
+        >
           {phrase}
         </p>
         <button
           onClick={onClose}
-          className="text-gray-400 hover:text-gray-600 text-xl leading-none shrink-0"
+          className="btn btn-ghost"
+          style={{
+            padding: "2px 6px",
+            fontSize: 18,
+            lineHeight: 1,
+            color: "var(--ink-faint)",
+          }}
         >
-          &times;
+          ×
         </button>
       </div>
 
       {translation && (
-        <p className="text-sm text-gray-700 bg-gray-50 rounded px-3 py-2 mb-3">
+        <p
+          style={{
+            fontSize: 13,
+            color: "var(--ink)",
+            background: "var(--paper-sunk)",
+            border: "1px solid var(--rule-soft)",
+            borderRadius: 5,
+            padding: "8px 12px",
+            marginBottom: 12,
+            lineHeight: 1.4,
+          }}
+        >
           {translation}
         </p>
       )}
 
-      {error && <p className="text-xs text-red-500 mb-3">{error}</p>}
+      {error && (
+        <p
+          className="mono"
+          style={{
+            fontSize: 11,
+            color: "var(--accent)",
+            letterSpacing: "0.04em",
+            marginBottom: 12,
+          }}
+        >
+          {error}
+        </p>
+      )}
 
-      {sourceLang && targetLang && (
+      {sourceLang && targetLang ? (
         <button
           onClick={handleTranslate}
           disabled={translating}
-          className="w-full py-1.5 bg-blue-50 text-blue-600 border border-blue-200 rounded text-sm hover:bg-blue-100 transition-colors disabled:opacity-50"
+          className="btn sans"
+          style={{ width: "100%" }}
         >
           {translating
-            ? "Translating..."
+            ? "Translating…"
             : translation
               ? "Translate again"
               : "Translate"}
         </button>
-      )}
-
-      {!sourceLang || !targetLang ? (
-        <p className="text-xs text-gray-400">
+      ) : (
+        <p
+          className="mono"
+          style={{
+            fontSize: 10,
+            color: "var(--ink-faint)",
+            letterSpacing: "0.04em",
+          }}
+        >
           Language codes unavailable for translation.
         </p>
-      ) : null}
+      )}
     </div>,
     document.body,
   );

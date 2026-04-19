@@ -2,6 +2,16 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "../lib/api";
 
+const labelStyle: React.CSSProperties = {
+  display: "block",
+  fontFamily: "var(--font-mono)",
+  fontSize: 10,
+  letterSpacing: "0.1em",
+  color: "var(--ink-faint)",
+  textTransform: "uppercase",
+  marginBottom: 6,
+};
+
 export default function EditLessonModal({
   lessonId,
   initialTitle,
@@ -44,58 +54,114 @@ export default function EditLessonModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "oklch(0 0 0 / 0.4)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 100,
+      }}
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-lg p-6 w-full max-w-lg"
         onClick={(e) => e.stopPropagation()}
+        style={{
+          background: "var(--paper)",
+          border: "1px solid var(--rule)",
+          borderRadius: 10,
+          boxShadow: "var(--shadow-lg)",
+          padding: 28,
+          width: "100%",
+          maxWidth: 640,
+          margin: "0 16px",
+        }}
       >
-        <h2 className="text-xl font-bold mb-4">Edit Lesson</h2>
+        <div
+          className="mono"
+          style={{
+            fontSize: 10,
+            letterSpacing: "0.14em",
+            color: "var(--ink-faint)",
+            textTransform: "uppercase",
+            marginBottom: 6,
+          }}
+        >
+          Edit lesson
+        </div>
+        <h2
+          className="display"
+          style={{
+            margin: 0,
+            marginBottom: 20,
+            fontSize: 28,
+            fontWeight: 500,
+            letterSpacing: "-0.02em",
+            color: "var(--ink)",
+          }}
+        >
+          Revise the text.
+        </h2>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Title
-            </label>
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: 14 }}>
+            <label style={labelStyle}>Title</label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="input"
               required
               autoFocus
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Text Content
-            </label>
+          <div style={{ marginBottom: 14 }}>
+            <label style={labelStyle}>Text content</label>
             <textarea
               value={textContent}
               onChange={(e) => setTextContent(e.target.value)}
-              rows={12}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+              rows={14}
+              className="input"
+              style={{
+                resize: "vertical",
+                lineHeight: 1.5,
+                fontFamily: "var(--font-body)",
+              }}
               required
             />
           </div>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
-
-          <div className="flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+          {error && (
+            <p
+              className="mono"
+              style={{
+                fontSize: 11,
+                color: "var(--accent)",
+                letterSpacing: "0.04em",
+                marginBottom: 12,
+              }}
             >
+              {error}
+            </p>
+          )}
+
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              gap: 8,
+            }}
+          >
+            <button type="button" onClick={onClose} className="btn sans">
               Cancel
             </button>
             <button
               type="submit"
               disabled={updateLesson.isPending || !hasChanges}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              className="btn btn-primary sans"
             >
-              {updateLesson.isPending ? "Saving..." : "Save"}
+              {updateLesson.isPending ? "Saving…" : "Save"}
             </button>
           </div>
         </form>

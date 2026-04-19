@@ -21,13 +21,14 @@ interface WordPopupProps {
   onClose: () => void;
 }
 
-const STATUS_BUTTONS = [
-  { label: "1", value: WordStatus.Learning1, color: "bg-status-learning1" },
-  { label: "2", value: WordStatus.Learning2, color: "bg-status-learning2" },
-  { label: "3", value: WordStatus.Learning3, color: "bg-status-learning3" },
-  { label: "4", value: WordStatus.Learning4, color: "bg-status-learning4" },
-  { label: "K", value: WordStatus.Known, color: "bg-status-known-light" },
-  { label: "X", value: WordStatus.Ignored, color: "bg-status-ignored" },
+const STATUS_BUTTONS: { key: number; short: string; hue: string }[] = [
+  { key: WordStatus.New, short: "N", hue: "var(--st-new)" },
+  { key: WordStatus.Learning1, short: "1", hue: "var(--st-l1)" },
+  { key: WordStatus.Learning2, short: "2", hue: "var(--st-l2)" },
+  { key: WordStatus.Learning3, short: "3", hue: "var(--st-l3)" },
+  { key: WordStatus.Learning4, short: "4", hue: "var(--st-l4)" },
+  { key: WordStatus.Known, short: "K", hue: "var(--st-known)" },
+  { key: WordStatus.Ignored, short: "×", hue: "var(--st-ignored)" },
 ];
 
 export default function WordPopup({
@@ -42,10 +43,9 @@ export default function WordPopup({
   const [notes, setNotes] = useState(word?.notes ?? "");
   const [saving, setSaving] = useState(false);
   const popupRef = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState<{
-    top: number;
-    left: number;
-  } | null>(null);
+  const [position, setPosition] = useState<{ top: number; left: number } | null>(
+    null,
+  );
 
   const closeRef = useRef<() => void>(() => {});
   closeRef.current = () => {
@@ -63,13 +63,11 @@ export default function WordPopup({
 
   useEffect(() => {
     const rect = anchorEl.getBoundingClientRect();
-    const top = rect.bottom + window.scrollY + 8;
-    let left = rect.left + window.scrollX;
-    // Keep popup within viewport
-    const popupWidth = 320;
-    if (left + popupWidth > window.innerWidth) {
+    const popupWidth = 360;
+    const top = rect.bottom + window.scrollY + 10;
+    let left = rect.left + window.scrollX + rect.width / 2 - popupWidth / 2;
+    if (left + popupWidth > window.innerWidth - 16)
       left = window.innerWidth - popupWidth - 16;
-    }
     if (left < 16) left = 16;
     setPosition({ top, left });
   }, [anchorEl]);
@@ -121,75 +119,210 @@ export default function WordPopup({
     }
   };
 
+  const currentStatus = word?.status ?? WordStatus.New;
+
   return createPortal(
     <div
       ref={popupRef}
-      className="absolute z-50 bg-white rounded-lg shadow-lg border border-gray-200 p-4 w-80"
       style={{
+        position: "absolute",
         top: position?.top ?? 0,
         left: position?.left ?? 0,
+        width: 360,
+        zIndex: 50,
         visibility: position ? "visible" : "hidden",
+        background: "var(--paper-deep)",
+        border: "1px solid var(--rule)",
+        borderRadius: 8,
+        boxShadow: "var(--shadow-lg)",
+        overflow: "hidden",
       }}
     >
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="font-bold text-lg">{term}</h3>
-        <button
-          onClick={() => closeRef.current()}
-          className="text-gray-400 hover:text-gray-600 text-xl leading-none"
+      {/* Header: term + close */}
+      <div
+        style={{
+          padding: "14px 16px 10px",
+          borderBottom: "1px solid var(--rule-soft)",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "baseline",
+            justifyContent: "space-between",
+            gap: 10,
+          }}
         >
-          &times;
-        </button>
+          <div
+            className="display"
+            style={{
+              fontSize: 26,
+              fontWeight: 500,
+              letterSpacing: "-0.01em",
+              color: "var(--ink)",
+              minWidth: 0,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {term}
+          </div>
+          <button
+            onClick={() => closeRef.current()}
+            className="btn btn-ghost"
+            style={{
+              padding: "4px 8px",
+              fontSize: 18,
+              lineHeight: 1,
+              color: "var(--ink-faint)",
+            }}
+            aria-label="Close"
+          >
+            ×
+          </button>
+        </div>
       </div>
 
-      <div className="mb-3">
+      {/* Translation */}
+      <div
+        style={{
+          padding: "12px 16px",
+          borderBottom: "1px solid var(--rule-soft)",
+        }}
+      >
+        <div
+          className="mono"
+          style={{
+            fontSize: 10,
+            letterSpacing: "0.1em",
+            color: "var(--ink-faint)",
+            textTransform: "uppercase",
+            marginBottom: 6,
+          }}
+        >
+          Translation
+        </div>
         <input
           type="text"
           value={translation}
           onChange={(e) => setTranslation(e.target.value)}
-          placeholder="Translation"
-          className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Add a translation…"
+          className="input"
+          style={{ fontSize: 14 }}
           onKeyDown={(e) => {
             if (e.key === "Enter") handleSaveTranslation();
           }}
         />
       </div>
 
-      <div className="mb-3">
+      {/* Status row */}
+      <div style={{ padding: "12px 16px" }}>
+        <div
+          className="mono"
+          style={{
+            fontSize: 10,
+            letterSpacing: "0.1em",
+            color: "var(--ink-faint)",
+            textTransform: "uppercase",
+            marginBottom: 8,
+            display: "flex",
+            justifyContent: "space-between",
+          }}
+        >
+          <span>Status</span>
+          <span style={{ color: "var(--ink-faint)" }}>1–4 · k · x</span>
+        </div>
+        <div style={{ display: "flex", gap: 4 }}>
+          {STATUS_BUTTONS.map((st) => {
+            const active = st.key === currentStatus;
+            return (
+              <button
+                key={st.key}
+                onClick={() => handleStatusChange(st.key)}
+                disabled={saving}
+                className="sans"
+                style={{
+                  flex: 1,
+                  padding: "8px 0",
+                  border: active
+                    ? "1px solid var(--ink)"
+                    : "1px solid var(--rule)",
+                  borderRadius: 5,
+                  background: active ? "var(--ink)" : "var(--paper)",
+                  color: active ? "var(--paper)" : "var(--ink-soft)",
+                  fontSize: 12,
+                  fontWeight: 500,
+                  cursor: saving ? "default" : "pointer",
+                  opacity: saving ? 0.6 : 1,
+                  transition: "all 100ms ease",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 4,
+                }}
+                title={`Status ${st.short}`}
+              >
+                <span
+                  style={{
+                    display: "inline-block",
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    background: st.hue,
+                    opacity: st.key === WordStatus.Known ? 0 : 1,
+                  }}
+                />
+                {st.short}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Notes */}
+      <div style={{ padding: "0 16px 14px" }}>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="Notes"
+          placeholder="Add a note…"
           rows={2}
-          className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+          className="sans"
+          style={{
+            width: "100%",
+            resize: "none",
+            background: "var(--paper)",
+            border: "1px solid var(--rule)",
+            borderRadius: 5,
+            padding: "8px 10px",
+            fontSize: 13,
+            color: "var(--ink)",
+            lineHeight: 1.4,
+          }}
         />
       </div>
 
-      <div className="flex gap-1.5">
-        {STATUS_BUTTONS.map((btn) => (
-          <button
-            key={btn.value}
-            onClick={() => handleStatusChange(btn.value)}
-            disabled={saving}
-            className={`flex-1 py-1.5 rounded text-sm font-medium ${btn.color} hover:opacity-80 transition-opacity disabled:opacity-50 ${
-              word?.status === btn.value
-                ? "ring-2 ring-blue-500"
-                : ""
-            }`}
-          >
-            {btn.label}
-          </button>
-        ))}
-      </div>
-
       {dictionaryLinks && dictionaryLinks.length > 0 && (
-        <div className="mt-3 pt-3 border-t border-gray-200 flex flex-wrap gap-1.5">
+        <div
+          style={{
+            padding: "10px 16px 14px",
+            borderTop: "1px solid var(--rule-soft)",
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 6,
+          }}
+        >
           {dictionaryLinks.map((dict, i) => (
             <a
               key={i}
-              href={dict.urlTemplate.replace("[FLUTE]", encodeURIComponent(term))}
+              href={dict.urlTemplate.replace(
+                "[FLUTE]",
+                encodeURIComponent(term),
+              )}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded transition-colors"
+              className="chip"
+              style={{ textDecoration: "none" }}
             >
               {dict.label} ↗
             </a>

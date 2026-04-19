@@ -1,48 +1,383 @@
 @import "tailwindcss";
 
+/* ==========================================================================
+   Flute — literary/editorial design system
+   ========================================================================== */
+
+:root {
+  /* Warm paper palette */
+  --paper: oklch(0.982 0.008 85);
+  --paper-deep: oklch(0.955 0.012 82);
+  --paper-ridge: oklch(0.935 0.014 80);
+  --paper-sunk: oklch(0.915 0.016 78);
+
+  --ink: oklch(0.22 0.01 60);
+  --ink-soft: oklch(0.38 0.01 60);
+  --ink-faint: oklch(0.58 0.008 60);
+  --ink-ghost: oklch(0.75 0.006 60);
+
+  --rule: oklch(0.88 0.012 75);
+  --rule-soft: oklch(0.92 0.01 75);
+
+  /* Single accent: ink-red */
+  --accent: oklch(0.52 0.14 28);
+  --accent-soft: oklch(0.62 0.1 28);
+  --accent-wash: oklch(0.94 0.035 30);
+
+  /* Word status colors — muted for literary feel */
+  --st-new: oklch(0.58 0.14 255);
+  --st-new-wash: oklch(0.94 0.04 255);
+  --st-l1: oklch(0.85 0.16 90);
+  --st-l2: oklch(0.82 0.15 82);
+  --st-l3: oklch(0.79 0.13 75);
+  --st-l4: oklch(0.76 0.11 68);
+  --st-known: oklch(0.58 0.01 60);
+  --st-ignored: oklch(0.72 0.006 60);
+
+  /* Shadows — thin, paper-like */
+  --shadow-sm: 0 1px 0 oklch(0.88 0.01 75 / 0.6),
+    0 1px 2px oklch(0.25 0.01 60 / 0.04);
+  --shadow-md: 0 2px 0 oklch(0.88 0.01 75 / 0.5),
+    0 8px 20px -8px oklch(0.25 0.01 60 / 0.12);
+  --shadow-lg: 0 20px 40px -20px oklch(0.25 0.01 60 / 0.25),
+    0 2px 0 oklch(0.88 0.01 75 / 0.5);
+
+  /* Type */
+  --font-display: "Fraunces", "Georgia", serif;
+  --font-body: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+  --font-sans: "Inter Tight", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --radius-sm: 4px;
+  --radius: 6px;
+  --radius-lg: 10px;
+  --radius-pill: 999px;
+
+  --col-narrow: 540px;
+  --col-med: 680px;
+  --col-wide: 820px;
+
+  /* Highlight fills (light paper) — dark text on light wash */
+  --hl-ink: var(--ink);
+  --hl-new: oklch(0.9 0.06 255);
+  --hl-l1: oklch(0.9 0.14 88);
+  --hl-l2: oklch(0.92 0.12 86);
+  --hl-l3: oklch(0.94 0.09 84);
+  --hl-l4: oklch(0.96 0.06 82);
+}
+
+[data-theme="sepia"] {
+  --paper: oklch(0.955 0.025 75);
+  --paper-deep: oklch(0.925 0.028 72);
+  --paper-ridge: oklch(0.895 0.03 70);
+  --paper-sunk: oklch(0.87 0.032 70);
+  --ink: oklch(0.28 0.03 45);
+  --ink-soft: oklch(0.42 0.025 45);
+  --ink-faint: oklch(0.58 0.02 45);
+  --rule: oklch(0.82 0.03 65);
+  --rule-soft: oklch(0.87 0.025 68);
+
+  /* Sepia highlight fills */
+  --hl-ink: oklch(0.22 0.04 40);
+  --hl-new: oklch(0.85 0.08 245);
+  --hl-l1: oklch(0.85 0.14 82);
+  --hl-l2: oklch(0.88 0.12 80);
+  --hl-l3: oklch(0.91 0.09 78);
+  --hl-l4: oklch(0.93 0.06 76);
+}
+
+[data-theme="dark"] {
+  --paper: oklch(0.19 0.008 60);
+  --paper-deep: oklch(0.22 0.01 60);
+  --paper-ridge: oklch(0.27 0.012 60);
+  --paper-sunk: oklch(0.24 0.01 60);
+  --ink: oklch(0.92 0.008 75);
+  --ink-soft: oklch(0.76 0.008 70);
+  --ink-faint: oklch(0.58 0.008 65);
+  --ink-ghost: oklch(0.42 0.008 60);
+  --rule: oklch(0.32 0.01 60);
+  --rule-soft: oklch(0.28 0.01 60);
+  --accent: oklch(0.72 0.14 28);
+  --accent-soft: oklch(0.62 0.12 28);
+  --accent-wash: oklch(0.32 0.06 30);
+  --st-new: oklch(0.68 0.14 255);
+  --st-new-wash: oklch(0.32 0.08 255);
+  --shadow-sm: 0 1px 0 oklch(0 0 0 / 0.4);
+  --shadow-md: 0 8px 20px -8px oklch(0 0 0 / 0.6);
+  --shadow-lg: 0 20px 40px -20px oklch(0 0 0 / 0.7);
+
+  /* Dark-mode highlights: saturated fills with light-ink text for contrast */
+  --hl-ink: oklch(0.97 0.01 80);
+  --hl-new: oklch(0.42 0.14 255);
+  --hl-l1: oklch(0.5 0.14 78);
+  --hl-l2: oklch(0.46 0.12 72);
+  --hl-l3: oklch(0.42 0.1 68);
+  --hl-l4: oklch(0.38 0.08 65);
+}
+
 @theme {
-  /* Word status colors — light backgrounds for reader tokens (dark text) */
-  --color-status-new: #bfdbfe;          /* blue-200 */
-  --color-status-learning1: #fecaca;    /* red-200 */
-  --color-status-learning2: #fed7aa;    /* orange-200 */
-  --color-status-learning3: #fef08a;    /* yellow-200 */
-  --color-status-learning4: #d9f99d;    /* lime-200 */
-  --color-status-known: transparent;
-  --color-status-ignored: transparent;
+  /* Expose status palette to Tailwind for utilities (bg-status-*, text-status-*) */
+  --color-status-new: var(--st-new);
+  --color-status-new-wash: var(--st-new-wash);
+  --color-status-learning1: var(--st-l1);
+  --color-status-learning2: var(--st-l2);
+  --color-status-learning3: var(--st-l3);
+  --color-status-learning4: var(--st-l4);
+  --color-status-known: var(--st-known);
+  --color-status-ignored: var(--st-ignored);
 
-  /* Saturated shade for dots and in-phrase backgrounds (white text) */
-  --color-status-new-vivid: #38bdf8;    /* sky-400 */
-  --color-status-learning1-vivid: #dc2626; /* red-600 */
-  --color-status-learning2-vivid: #ea580c; /* orange-600 */
-  --color-status-learning3-vivid: #ca8a04; /* yellow-600 */
-  --color-status-learning4-vivid: #65a30d; /* lime-600 */
+  --color-paper: var(--paper);
+  --color-paper-deep: var(--paper-deep);
+  --color-paper-ridge: var(--paper-ridge);
+  --color-paper-sunk: var(--paper-sunk);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-ink-ghost: var(--ink-ghost);
+  --color-rule: var(--rule);
+  --color-rule-soft: var(--rule-soft);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-wash: var(--accent-wash);
 
-  /* Badge: light bg + dark text pairs */
-  --color-status-new-light: #dbeafe;    /* blue-100 */
-  --color-status-new-text: #1d4ed8;     /* blue-700 */
-  --color-status-learning1-light: #fee2e2; /* red-100 */
-  --color-status-learning1-text: #b91c1c;  /* red-700 */
-  --color-status-learning2-light: #ffedd5; /* orange-100 */
-  --color-status-learning2-text: #c2410c;  /* orange-700 */
-  --color-status-learning3-light: #fef9c3; /* yellow-100 */
-  --color-status-learning3-text: #a16207;  /* yellow-700 */
-  --color-status-learning4-light: #ecfccb; /* lime-100 */
-  --color-status-learning4-text: #4d7c0f;  /* lime-700 */
-  --color-status-known-light: #dcfce7;  /* green-100 */
-  --color-status-known-text: #16a34a;   /* green-600 */
-  --color-status-ignored-light: #f3f4f6; /* gray-100 */
-  --color-status-ignored-text: #6b7280; /* gray-500 */
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+  --font-sans: "Inter Tight", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
 
-  /* Translation pill accent */
-  --color-pill: #7c3aed;               /* violet-600 */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Paper grain — very subtle */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    radial-gradient(oklch(0.25 0.01 60 / 0.015) 1px, transparent 1px),
+    radial-gradient(oklch(0.25 0.01 60 / 0.012) 1px, transparent 1px);
+  background-size:
+    3px 3px,
+    7px 7px;
+  background-position:
+    0 0,
+    1px 2px;
+  mix-blend-mode: multiply;
+  opacity: 0.7;
+}
+[data-theme="dark"] body::before {
+  mix-blend-mode: screen;
+  opacity: 0.4;
+}
+
+button {
+  font-family: inherit;
+}
+input,
+textarea,
+select {
+  font-family: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+::selection {
+  background: var(--accent-wash);
+  color: var(--ink);
+}
+
+/* Utility classes used in JSX */
+.mono {
+  font-family: var(--font-mono);
+  font-feature-settings: "ss01";
+}
+.sans {
+  font-family: var(--font-sans);
+}
+.display {
+  font-family: var(--font-display);
+  font-variation-settings:
+    "SOFT" 50,
+    "opsz" 144;
+  letter-spacing: -0.01em;
+}
+
+.hair {
+  border: 0;
+  border-top: 1px solid var(--rule);
+  margin: 0;
+}
+.hair-dotted {
+  border: 0;
+  border-top: 1px dotted var(--rule);
+  margin: 0;
+}
+
+.kbd {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 2px 6px;
+  border: 1px solid var(--rule);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: var(--paper);
+  color: var(--ink-soft);
+  display: inline-block;
+  line-height: 1;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-pill);
+  color: var(--ink-soft);
+  background: var(--paper);
+}
+
+.btn {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  padding: 8px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  color: var(--ink);
+  cursor: pointer;
+  transition: all 120ms ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.btn:hover:not(:disabled) {
+  background: var(--paper-deep);
+  border-color: var(--ink-ghost);
+}
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.btn-primary {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+.btn-primary:hover:not(:disabled) {
+  background: oklch(from var(--ink) calc(l + 0.08) c h);
+  border-color: var(--ink);
+}
+.btn-accent {
+  background: var(--accent);
+  color: var(--paper);
+  border-color: var(--accent);
+}
+.btn-accent:hover:not(:disabled) {
+  background: var(--accent-soft);
+  border-color: var(--accent-soft);
+}
+.btn-ghost {
+  border-color: transparent;
+  background: transparent;
+}
+.btn-ghost:hover:not(:disabled) {
+  background: var(--paper-deep);
+  border-color: var(--rule);
+}
+.btn-danger {
+  color: var(--accent);
+  border-color: var(--rule);
+  background: var(--paper);
+}
+.btn-danger:hover:not(:disabled) {
+  background: var(--accent-wash);
+  border-color: var(--accent);
+}
+
+.input {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  padding: 9px 12px;
+  background: var(--paper-sunk);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  color: var(--ink);
+  width: 100%;
+}
+.input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-wash);
+}
+
+.nice-scroll::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.nice-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.nice-scroll::-webkit-scrollbar-thumb {
+  background: var(--rule);
+  border-radius: 999px;
+  border: 2px solid var(--paper);
+}
+
+.dropcap::first-letter {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 4.2em;
+  float: left;
+  line-height: 0.85;
+  padding: 0.08em 0.08em 0 0;
+  color: var(--accent);
+  font-variation-settings:
+    "SOFT" 30,
+    "opsz" 144;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-/* Every word gets a fixed-height slot so lines never shift */
+/* Reader token slot — fixed-height area for translation annotations */
 .word-slot {
   display: inline-block;
   position: relative;
@@ -55,7 +390,6 @@
   width: 100%;
 }
 
-/* Translation text positioned in the padding-top area */
 .word-slot-annotation {
   position: absolute;
   top: 0;
@@ -66,12 +400,127 @@
   font-style: italic;
   line-height: 1.2rem;
   cursor: pointer;
+  color: var(--accent);
+  font-family: var(--font-body);
 }
 
 .phrase-selected {
-  background-color: var(--color-pill) !important;
-  color: white !important;
-  border-radius: 0;
+  background-color: var(--accent) !important;
+  color: var(--paper) !important;
+  border-radius: 2px;
 }
 
+/* Word-status viz variants — controlled by [data-status-viz] on text container */
 
+/* Default: underline growing thickness */
+[data-status-viz="underline"] [data-word-status="0"] {
+  border-bottom: 2px dashed var(--st-new);
+  padding-bottom: 1px;
+}
+[data-status-viz="underline"] [data-word-status="1"] {
+  border-bottom: 3px solid var(--st-l1);
+  padding-bottom: 1px;
+}
+[data-status-viz="underline"] [data-word-status="2"] {
+  border-bottom: 2.5px solid var(--st-l2);
+  padding-bottom: 1px;
+}
+[data-status-viz="underline"] [data-word-status="3"] {
+  border-bottom: 2px solid var(--st-l3);
+  padding-bottom: 1px;
+}
+[data-status-viz="underline"] [data-word-status="4"] {
+  border-bottom: 1.5px solid var(--st-l4);
+  padding-bottom: 1px;
+}
+[data-status-viz="underline"] [data-word-status="6"] {
+  color: var(--st-ignored);
+  font-style: italic;
+  opacity: 0.55;
+}
+
+/* Highlight: LingQ-style fill — theme-aware via --hl-* vars */
+[data-status-viz="highlight"] [data-word-status="0"],
+[data-status-viz="highlight"] [data-word-status="1"],
+[data-status-viz="highlight"] [data-word-status="2"],
+[data-status-viz="highlight"] [data-word-status="3"],
+[data-status-viz="highlight"] [data-word-status="4"] {
+  padding: 1px 3px;
+  margin: 0 -1px;
+  border-radius: 2px;
+  color: var(--hl-ink);
+}
+[data-status-viz="highlight"] [data-word-status="0"] {
+  background: var(--hl-new);
+}
+[data-status-viz="highlight"] [data-word-status="1"] {
+  background: var(--hl-l1);
+}
+[data-status-viz="highlight"] [data-word-status="2"] {
+  background: var(--hl-l2);
+}
+[data-status-viz="highlight"] [data-word-status="3"] {
+  background: var(--hl-l3);
+}
+[data-status-viz="highlight"] [data-word-status="4"] {
+  background: var(--hl-l4);
+}
+[data-status-viz="highlight"] [data-word-status="6"] {
+  color: var(--st-ignored);
+  opacity: 0.6;
+}
+
+/* Dot: small dot beneath word */
+[data-status-viz="dot"] [data-word-token] {
+  position: relative;
+}
+[data-status-viz="dot"] [data-word-token]::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: transparent;
+}
+[data-status-viz="dot"] [data-word-status="0"]::after {
+  background: var(--st-new);
+  width: 4px;
+  height: 4px;
+}
+[data-status-viz="dot"] [data-word-status="1"]::after {
+  background: var(--st-l1);
+}
+[data-status-viz="dot"] [data-word-status="2"]::after {
+  background: var(--st-l2);
+  opacity: 0.82;
+}
+[data-status-viz="dot"] [data-word-status="3"]::after {
+  background: var(--st-l3);
+  opacity: 0.64;
+}
+[data-status-viz="dot"] [data-word-status="4"]::after {
+  background: var(--st-l4);
+  opacity: 0.46;
+}
+[data-status-viz="dot"] [data-word-status="6"] {
+  color: var(--st-ignored);
+  opacity: 0.55;
+  font-style: italic;
+}
+
+/* Word token base */
+[data-word-token] {
+  cursor: pointer;
+  border-radius: 2px;
+  transition:
+    background 80ms ease,
+    box-shadow 80ms ease;
+}
+[data-word-token][data-word-active="true"] {
+  background: var(--accent-wash);
+  box-shadow: 0 0 0 2px var(--accent);
+  border-radius: 3px;
+}

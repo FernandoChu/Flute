@@ -22,9 +22,18 @@ interface Distractor {
   translation: string | null;
 }
 
-function HighlightedSentence({ sentence, term }: { sentence: string; term: string }) {
+function HighlightedSentence({
+  sentence,
+  term,
+}: {
+  sentence: string;
+  term: string;
+}) {
   const parts = useMemo(() => {
-    const regex = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
+    const regex = new RegExp(
+      `(${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
+      "gi",
+    );
     return sentence.split(regex);
   }, [sentence, term]);
 
@@ -34,7 +43,10 @@ function HighlightedSentence({ sentence, term }: { sentence: string; term: strin
         part.toLowerCase() === term.toLowerCase() ? (
           <span
             key={i}
-            className="text-blue-600 font-bold underline underline-offset-4 [text-decoration-skip-ink:none]"
+            style={{
+              borderBottom: "2px solid var(--accent)",
+              color: "var(--ink)",
+            }}
           >
             {part}
           </span>
@@ -69,15 +81,13 @@ export default function MultipleChoiceReview({
           .filter((t) => t && t !== correctAnswer);
 
         const allChoices = [correctAnswer, ...distractorTexts.slice(0, 3)];
-        // Pad if not enough distractors
-        while (allChoices.length < 4) {
-          allChoices.push("—");
-        }
-        // Shuffle
+        while (allChoices.length < 4) allChoices.push("—");
         setChoices(allChoices.sort(() => Math.random() - 0.5));
       },
       () => {
-        setChoices([correctAnswer, "—", "—", "—"].sort(() => Math.random() - 0.5));
+        setChoices(
+          [correctAnswer, "—", "—", "—"].sort(() => Math.random() - 0.5),
+        );
       },
     );
   }, [item.word.id, item.word.translation]);
@@ -88,43 +98,92 @@ export default function MultipleChoiceReview({
     setSelected(choice);
     setCorrect(isCorrect);
 
-    // Auto-advance after a short delay
     setTimeout(() => {
-      onRate(isCorrect ? 3 : 1); // Good on correct, Again on incorrect
+      onRate(isCorrect ? 3 : 1);
     }, 800);
   };
 
   const hasSentence = !!item.word.contextSentence;
 
   return (
-    <div className="max-w-lg mx-auto">
-      <div className="bg-white rounded-xl border-2 border-gray-200 p-8 text-center mb-6">
-        <p className="text-xs text-gray-400 mb-3">{item.word.language.name}</p>
+    <div>
+      <div
+        style={{
+          background: "var(--paper-deep)",
+          border: "1px solid var(--rule)",
+          borderRadius: 14,
+          padding: "48px 48px",
+          textAlign: "center",
+          marginBottom: 24,
+          boxShadow: "var(--shadow-md)",
+          position: "relative",
+        }}
+      >
+        <div
+          className="mono"
+          style={{
+            fontSize: 10,
+            color: "var(--ink-faint)",
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+            marginBottom: 20,
+          }}
+        >
+          {item.word.language.name}
+        </div>
         {hasSentence ? (
-          <p className="text-xl leading-relaxed">
+          <p
+            style={{
+              fontFamily: "var(--font-body)",
+              fontSize: 22,
+              lineHeight: 1.5,
+              color: "var(--ink)",
+              margin: 0,
+              maxWidth: 600,
+              marginLeft: "auto",
+              marginRight: "auto",
+            }}
+          >
             <HighlightedSentence
               sentence={item.word.contextSentence!}
               term={item.word.term}
             />
           </p>
         ) : (
-          <p className="text-3xl font-bold">{item.word.term}</p>
+          <div
+            className="display"
+            style={{
+              fontSize: 56,
+              fontWeight: 500,
+              color: "var(--ink)",
+              letterSpacing: "-0.02em",
+            }}
+          >
+            {item.word.term}
+          </div>
         )}
       </div>
 
-      <div className="grid grid-cols-1 gap-3">
+      <div style={{ display: "grid", gap: 10 }}>
         {choices.map((choice, i) => {
-          let className =
-            "w-full py-3 px-4 rounded-lg border-2 text-left transition-colors ";
+          const isCorrect = choice === (item.word.translation || "?");
+          const isSelected = selected === choice;
+          let borderColor = "var(--rule)";
+          let background = "var(--paper-deep)";
+          let color = "var(--ink)";
 
-          if (!selected) {
-            className += "border-gray-200 hover:border-blue-300 hover:bg-blue-50 cursor-pointer";
-          } else if (choice === (item.word.translation || "?")) {
-            className += "border-green-500 bg-green-50 text-green-700";
-          } else if (choice === selected) {
-            className += "border-red-500 bg-red-50 text-red-700";
-          } else {
-            className += "border-gray-200 opacity-50";
+          if (selected) {
+            if (isCorrect) {
+              borderColor = "oklch(0.55 0.12 150)";
+              background = "oklch(0.94 0.06 150)";
+              color = "oklch(0.3 0.1 150)";
+            } else if (isSelected) {
+              borderColor = "var(--accent)";
+              background = "var(--accent-wash)";
+              color = "var(--accent)";
+            } else {
+              color = "var(--ink-faint)";
+            }
           }
 
           return (
@@ -132,9 +191,24 @@ export default function MultipleChoiceReview({
               key={i}
               onClick={() => handleSelect(choice)}
               disabled={!!selected}
-              className={className}
+              className="sans"
+              style={{
+                width: "100%",
+                padding: "14px 18px",
+                fontSize: 15,
+                borderRadius: 8,
+                border: `1px solid ${borderColor}`,
+                background,
+                color,
+                textAlign: "left",
+                cursor: selected ? "default" : "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                transition: "all 120ms ease",
+              }}
             >
-              <span className="text-xs text-gray-400 mr-2">{i + 1}.</span>
+              <span className="kbd">{i + 1}</span>
               {choice}
             </button>
           );
@@ -143,11 +217,18 @@ export default function MultipleChoiceReview({
 
       {selected && (
         <p
-          className={`text-center mt-4 text-sm font-medium ${
-            correct ? "text-green-600" : "text-red-600"
-          }`}
+          className="mono"
+          style={{
+            textAlign: "center",
+            marginTop: 16,
+            fontSize: 12,
+            letterSpacing: "0.06em",
+            color: correct ? "oklch(0.4 0.12 150)" : "var(--accent)",
+          }}
         >
-          {correct ? "Correct!" : `Wrong — the answer is "${item.word.translation}"`}
+          {correct
+            ? "Correct."
+            : `The answer is "${item.word.translation}"`}
         </p>
       )}
     </div>

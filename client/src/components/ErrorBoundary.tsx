@@ -23,12 +23,55 @@ export default class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="max-w-md text-center p-8">
-            <h1 className="text-2xl font-bold text-gray-800 mb-2">
-              Something went wrong
+        <div
+          style={{
+            minHeight: "100vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "var(--paper)",
+          }}
+        >
+          <div
+            style={{
+              maxWidth: 440,
+              textAlign: "center",
+              padding: 32,
+            }}
+          >
+            <div
+              className="mono"
+              style={{
+                fontSize: 10,
+                letterSpacing: "0.14em",
+                color: "var(--ink-faint)",
+                textTransform: "uppercase",
+                marginBottom: 10,
+              }}
+            >
+              Unexpected error
+            </div>
+            <h1
+              className="display"
+              style={{
+                margin: 0,
+                fontSize: 28,
+                fontWeight: 500,
+                letterSpacing: "-0.02em",
+                color: "var(--ink)",
+                marginBottom: 10,
+              }}
+            >
+              Something went wrong.
             </h1>
-            <p className="text-gray-500 mb-4">
+            <p
+              style={{
+                color: "var(--ink-soft)",
+                marginBottom: 20,
+                fontSize: 14,
+                lineHeight: 1.5,
+              }}
+            >
               {this.state.error?.message || "An unexpected error occurred."}
             </p>
             <button
@@ -36,7 +79,7 @@ export default class ErrorBoundary extends Component<Props, State> {
                 this.setState({ hasError: false, error: null });
                 window.location.reload();
               }}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="btn btn-primary sans"
             >
               Reload page
             </button>

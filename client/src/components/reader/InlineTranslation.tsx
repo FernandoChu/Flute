@@ -104,11 +104,11 @@ export default function InlineTranslation({
       onClick={onClick}
     >
       <span
-        className="text-base italic whitespace-nowrap text-pill"
+        className="text-base italic whitespace-nowrap"
+        style={{ color: "var(--accent)", fontFamily: "var(--font-body)" }}
       >
         {content}
       </span>
-      {/* Upward-pointing caret connecting translation to the green pill */}
       <div
         className="absolute left-1/2 top-full -translate-x-1/2"
         style={{
@@ -116,7 +116,7 @@ export default function InlineTranslation({
           height: 0,
           borderLeft: "7px solid transparent",
           borderRight: "7px solid transparent",
-          borderBottom: "7px solid var(--color-pill)",
+          borderBottom: "7px solid var(--accent)",
         }}
       />
     </div>,

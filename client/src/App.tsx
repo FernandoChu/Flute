@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Route, Switch } from "wouter";
 import LoginPage from "./pages/LoginPage";
 import LibraryPage from "./pages/LibraryPage";
@@ -8,12 +9,18 @@ import ReviewPage from "./pages/ReviewPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NavBar from "./components/NavBar";
 import { useAuth } from "./hooks/useAuth";
+import { useReaderSettings } from "./hooks/useReaderSettings";
 
 export default function App() {
   const { isLoggedIn } = useAuth();
+  const { settings } = useReaderSettings();
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", settings.theme);
+  }, [settings.theme]);
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900">
+    <div className="min-h-screen" style={{ background: "var(--paper)", color: "var(--ink)" }}>
       {isLoggedIn && <NavBar />}
       <Switch>
         <Route path="/login" component={LoginPage} />
@@ -46,7 +53,9 @@ export default function App() {
         </Route>
         <Route>
           <div className="flex items-center justify-center min-h-screen">
-            <h1 className="text-2xl">404 — Not Found</h1>
+            <h1 className="display" style={{ fontSize: 28 }}>
+              404 — Not Found
+            </h1>
           </div>
         </Route>
       </Switch>

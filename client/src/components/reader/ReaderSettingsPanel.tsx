@@ -1,11 +1,11 @@
-import { useReaderSettings } from "../../hooks/useReaderSettings";
 import { useEffect, useRef, useState } from "react";
-
-const FONT_OPTIONS = [
-  { label: "Sans-serif", value: "sans-serif" },
-  { label: "Serif", value: "serif" },
-  { label: "Monospace", value: "monospace" },
-];
+import {
+  useReaderSettings,
+  type Theme,
+  type StatusViz,
+  type BodyFont,
+  type ColWidth,
+} from "../../hooks/useReaderSettings";
 
 interface Props {
   perPage: number;
@@ -16,7 +16,90 @@ interface Props {
   onGenerateAudio: () => void;
 }
 
-export default function ReaderSettingsPanel({ perPage, onPerPageChange, hasAudio, isGenerating, generateError, onGenerateAudio }: Props) {
+interface SegOpt<T extends string> {
+  value: T;
+  label: string;
+}
+
+function Segmented<T extends string>({
+  options,
+  value,
+  onChange,
+}: {
+  options: SegOpt<T>[];
+  value: T;
+  onChange: (v: T) => void;
+}) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        background: "var(--paper-sunk)",
+        border: "1px solid var(--rule)",
+        borderRadius: 6,
+        padding: 2,
+        gap: 2,
+      }}
+    >
+      {options.map((o) => (
+        <button
+          key={o.value}
+          onClick={() => onChange(o.value)}
+          className="sans"
+          style={{
+            flex: 1,
+            padding: "5px 8px",
+            fontSize: 11,
+            background: value === o.value ? "var(--paper)" : "transparent",
+            border: 0,
+            borderRadius: 4,
+            color: value === o.value ? "var(--ink)" : "var(--ink-soft)",
+            fontWeight: value === o.value ? 600 : 400,
+            cursor: "pointer",
+            boxShadow: value === o.value ? "var(--shadow-sm)" : "none",
+          }}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function Group({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <div
+        className="mono"
+        style={{
+          fontSize: 9,
+          letterSpacing: "0.14em",
+          color: "var(--ink-faint)",
+          textTransform: "uppercase",
+          marginBottom: 6,
+        }}
+      >
+        {label}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+export default function ReaderSettingsPanel({
+  perPage,
+  onPerPageChange,
+  hasAudio,
+  isGenerating,
+  generateError,
+  onGenerateAudio,
+}: Props) {
   const [open, setOpen] = useState(false);
   const [showAudioConfirm, setShowAudioConfirm] = useState(false);
   const { settings, update, reset } = useReaderSettings();
@@ -32,161 +115,289 @@ export default function ReaderSettingsPanel({ perPage, onPerPageChange, hasAudio
   }, [open]);
 
   return (
-    <div ref={ref} className="fixed bottom-4 right-4 z-50">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="bg-white border border-gray-300 rounded-lg p-2 shadow-sm hover:bg-gray-50 transition-colors"
-        title="Reader settings"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-          className="w-5 h-5 text-gray-600"
+    <div
+      ref={ref}
+      style={{ position: "fixed", bottom: 20, right: 20, zIndex: 60 }}
+    >
+      {!open && (
+        <button
+          onClick={() => setOpen(true)}
+          className="sans"
+          style={{
+            padding: "10px 14px",
+            background: "var(--paper-deep)",
+            border: "1px solid var(--rule)",
+            borderRadius: 999,
+            boxShadow: "var(--shadow-md)",
+            fontSize: 12,
+            fontWeight: 500,
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            cursor: "pointer",
+            color: "var(--ink)",
+          }}
+          title="Reader settings"
         >
-          <path
-            fillRule="evenodd"
-            d="M8.34 1.804A1 1 0 0 1 9.32 1h1.36a1 1 0 0 1 .98.804l.295 1.473c.497.144.971.342 1.416.587l1.25-.834a1 1 0 0 1 1.262.125l.962.962a1 1 0 0 1 .125 1.262l-.834 1.25c.245.445.443.919.587 1.416l1.473.295a1 1 0 0 1 .804.98v1.361a1 1 0 0 1-.804.98l-1.473.295a6.95 6.95 0 0 1-.587 1.416l.834 1.25a1 1 0 0 1-.125 1.262l-.962.962a1 1 0 0 1-1.262.125l-1.25-.834a6.953 6.953 0 0 1-1.416.587l-.295 1.473a1 1 0 0 1-.98.804H9.32a1 1 0 0 1-.98-.804l-.295-1.473a6.957 6.957 0 0 1-1.416-.587l-1.25.834a1 1 0 0 1-1.262-.125l-.962-.962a1 1 0 0 1-.125-1.262l.834-1.25a6.957 6.957 0 0 1-.587-1.416l-1.473-.295A1 1 0 0 1 1 10.68V9.32a1 1 0 0 1 .804-.98l1.473-.295c.144-.497.342-.971.587-1.416l-.834-1.25a1 1 0 0 1 .125-1.262l.962-.962A1 1 0 0 1 5.38 3.23l1.25.834a6.957 6.957 0 0 1 1.416-.587l.295-1.473ZM13 10a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
-            clipRule="evenodd"
+          <span
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: "50%",
+              background: "var(--accent)",
+            }}
           />
-        </svg>
-      </button>
+          Tweaks
+        </button>
+      )}
 
       {open && (
-        <div className="absolute bottom-12 right-0 w-72 bg-white border border-gray-200 rounded-lg shadow-lg p-4 space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-sm text-gray-700">Reader Settings</h3>
-            <button
-              onClick={reset}
-              className="text-xs text-gray-400 hover:text-gray-600"
+        <div
+          style={{
+            width: 300,
+            background: "var(--paper-deep)",
+            border: "1px solid var(--rule)",
+            borderRadius: 12,
+            boxShadow: "var(--shadow-lg)",
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              padding: "12px 16px",
+              borderBottom: "1px solid var(--rule)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <div
+              className="display"
+              style={{
+                fontSize: 16,
+                fontWeight: 500,
+                color: "var(--ink)",
+              }}
             >
-              Reset
-            </button>
-          </div>
-
-          {/* Font Size */}
-          <div>
-            <label className="text-xs text-gray-500 block mb-1">
-              Font Size: {settings.fontSize}px
-            </label>
-            <input
-              type="range"
-              min={12}
-              max={32}
-              step={1}
-              value={settings.fontSize}
-              onChange={(e) => update("fontSize", Number(e.target.value))}
-              className="w-full"
-            />
-          </div>
-
-          {/* Line Height */}
-          <div>
-            <label className="text-xs text-gray-500 block mb-1">
-              Line Height: {settings.lineHeight.toFixed(2)}
-            </label>
-            <input
-              type="range"
-              min={1}
-              max={3}
-              step={0.25}
-              value={settings.lineHeight}
-              onChange={(e) => update("lineHeight", Number(e.target.value))}
-              className="w-full"
-            />
-          </div>
-
-          {/* Font Family */}
-          <div>
-            <label className="text-xs text-gray-500 block mb-1">Font</label>
-            <div className="flex gap-1">
-              {FONT_OPTIONS.map((f) => (
-                <button
-                  key={f.value}
-                  onClick={() => update("fontFamily", f.value)}
-                  className={`flex-1 text-xs px-2 py-1.5 rounded border transition-colors ${
-                    settings.fontFamily === f.value
-                      ? "bg-blue-50 border-blue-400 text-blue-700"
-                      : "border-gray-200 text-gray-600 hover:bg-gray-50"
-                  }`}
-                >
-                  {f.label}
-                </button>
-              ))}
+              Tweaks
+            </div>
+            <div style={{ display: "flex", gap: 4 }}>
+              <button
+                onClick={reset}
+                className="btn btn-ghost"
+                style={{ padding: "2px 8px", fontSize: 11 }}
+              >
+                Reset
+              </button>
+              <button
+                onClick={() => setOpen(false)}
+                className="btn btn-ghost"
+                style={{ padding: "2px 6px", fontSize: 14, lineHeight: 1 }}
+              >
+                ×
+              </button>
             </div>
           </div>
 
-          {/* Text Align */}
-          <div>
-            <label className="text-xs text-gray-500 block mb-1">Alignment</label>
-            <div className="flex gap-1">
-              {(["left", "justify"] as const).map((a) => (
-                <button
-                  key={a}
-                  onClick={() => update("textAlign", a)}
-                  className={`flex-1 text-xs px-2 py-1.5 rounded border transition-colors ${
-                    settings.textAlign === a
-                      ? "bg-blue-50 border-blue-400 text-blue-700"
-                      : "border-gray-200 text-gray-600 hover:bg-gray-50"
-                  }`}
-                >
-                  {a === "left" ? "Left" : "Justify"}
-                </button>
-              ))}
-            </div>
-          </div>
+          <div
+            className="nice-scroll"
+            style={{
+              padding: "14px 16px",
+              maxHeight: "70vh",
+              overflowY: "auto",
+            }}
+          >
+            <Group label="Theme">
+              <Segmented<Theme>
+                options={[
+                  { value: "paper", label: "Paper" },
+                  { value: "sepia", label: "Sepia" },
+                  { value: "dark", label: "Dark" },
+                ]}
+                value={settings.theme}
+                onChange={(v) => update("theme", v)}
+              />
+            </Group>
 
-          {/* Paragraphs per page */}
-          <div>
-            <label className="text-xs text-gray-500 block mb-1">
-              Paragraphs per page: {perPage}
-            </label>
-            <input
-              type="range"
-              min={2}
-              max={30}
-              step={1}
-              value={perPage}
-              onChange={(e) => onPerPageChange(Number(e.target.value))}
-              className="w-full"
-            />
-          </div>
+            <Group label="Word status · viz">
+              <Segmented<StatusViz>
+                options={[
+                  { value: "underline", label: "Underline" },
+                  { value: "highlight", label: "Highlight" },
+                  { value: "dot", label: "Dot" },
+                ]}
+                value={settings.statusViz}
+                onChange={(v) => update("statusViz", v)}
+              />
+            </Group>
 
-          {/* Generate Audio */}
-          <div className="border-t border-gray-200 pt-4">
-            <label className="text-xs text-gray-500 block mb-2">Audio</label>
-            <button
-              onClick={() => setShowAudioConfirm(true)}
-              disabled={isGenerating}
-              className="w-full text-xs px-3 py-2 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
+            <Group label="Reader · body font">
+              <Segmented<BodyFont>
+                options={[
+                  { value: "serif", label: "Serif" },
+                  { value: "sans", label: "Sans" },
+                  { value: "mono", label: "Mono" },
+                ]}
+                value={settings.bodyFont}
+                onChange={(v) => update("bodyFont", v)}
+              />
+            </Group>
+
+            <Group label={`Reader · font size · ${settings.fontSize}px`}>
+              <input
+                type="range"
+                min={14}
+                max={26}
+                step={1}
+                value={settings.fontSize}
+                onChange={(e) => update("fontSize", Number(e.target.value))}
+                style={{ width: "100%", accentColor: "var(--accent)" }}
+              />
+            </Group>
+
+            <Group
+              label={`Reader · line height · ${settings.lineHeight.toFixed(2)}`}
             >
-              {isGenerating
-                ? "Generating..."
-                : hasAudio
-                  ? "Regenerate Audio (TTS)"
-                  : "Generate Audio (TTS)"}
-            </button>
-            {generateError && (
-              <p className="text-xs text-red-600 mt-1">{generateError.message}</p>
-            )}
+              <input
+                type="range"
+                min={1.4}
+                max={2.0}
+                step={0.05}
+                value={settings.lineHeight}
+                onChange={(e) => update("lineHeight", Number(e.target.value))}
+                style={{ width: "100%", accentColor: "var(--accent)" }}
+              />
+            </Group>
+
+            <Group label="Reader · column width">
+              <Segmented<ColWidth>
+                options={[
+                  { value: "narrow", label: "Narrow" },
+                  { value: "medium", label: "Medium" },
+                  { value: "wide", label: "Wide" },
+                ]}
+                value={settings.colWidth}
+                onChange={(v) => update("colWidth", v)}
+              />
+            </Group>
+
+            <Group label="Reader · alignment">
+              <Segmented<"left" | "justify">
+                options={[
+                  { value: "left", label: "Left" },
+                  { value: "justify", label: "Justify" },
+                ]}
+                value={settings.textAlign}
+                onChange={(v) => update("textAlign", v)}
+              />
+            </Group>
+
+            <Group label={`Paragraphs per page · ${perPage}`}>
+              <input
+                type="range"
+                min={2}
+                max={30}
+                step={1}
+                value={perPage}
+                onChange={(e) => onPerPageChange(Number(e.target.value))}
+                style={{ width: "100%", accentColor: "var(--accent)" }}
+              />
+            </Group>
+
+            <div
+              style={{
+                borderTop: "1px solid var(--rule-soft)",
+                paddingTop: 14,
+                marginTop: 4,
+              }}
+            >
+              <Group label="Audio">
+                <button
+                  onClick={() => setShowAudioConfirm(true)}
+                  disabled={isGenerating}
+                  className="btn sans"
+                  style={{
+                    width: "100%",
+                    fontSize: 12,
+                    padding: "8px 10px",
+                  }}
+                >
+                  {isGenerating
+                    ? "Generating…"
+                    : hasAudio
+                      ? "Regenerate audio (TTS)"
+                      : "Generate audio (TTS)"}
+                </button>
+                {generateError && (
+                  <p
+                    className="mono"
+                    style={{
+                      fontSize: 10,
+                      color: "var(--accent)",
+                      marginTop: 6,
+                    }}
+                  >
+                    {generateError.message}
+                  </p>
+                )}
+              </Group>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Confirmation modal */}
       {showAudioConfirm && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm mx-4">
-            <h3 className="font-semibold text-gray-800 mb-2">Generate Audio?</h3>
-            <p className="text-sm text-gray-600 mb-4">
-              This will use your TTS API to generate audio for the entire lesson
-              text. Depending on the length of the lesson and your provider, this
-              can be expensive.
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 100,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "oklch(0 0 0 / 0.4)",
+          }}
+        >
+          <div
+            style={{
+              background: "var(--paper)",
+              border: "1px solid var(--rule)",
+              borderRadius: 10,
+              boxShadow: "var(--shadow-lg)",
+              padding: 24,
+              maxWidth: 380,
+              margin: "0 16px",
+            }}
+          >
+            <div
+              className="display"
+              style={{
+                fontSize: 20,
+                fontWeight: 500,
+                color: "var(--ink)",
+                marginBottom: 8,
+              }}
+            >
+              Generate audio?
+            </div>
+            <p
+              style={{
+                fontSize: 13,
+                color: "var(--ink-soft)",
+                lineHeight: 1.5,
+                marginBottom: 18,
+              }}
+            >
+              This will use your TTS API to generate audio for the entire
+              lesson text. Depending on the length of the lesson and your
+              provider, this can be expensive.
             </p>
-            <div className="flex gap-2 justify-end">
+            <div
+              style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}
+            >
               <button
                 onClick={() => setShowAudioConfirm(false)}
-                className="px-4 py-2 text-sm rounded border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors"
+                className="btn sans"
               >
                 Cancel
               </button>
@@ -195,7 +406,7 @@ export default function ReaderSettingsPanel({ perPage, onPerPageChange, hasAudio
                   setShowAudioConfirm(false);
                   onGenerateAudio();
                 }}
-                className="px-4 py-2 text-sm rounded bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                className="btn btn-primary sans"
               >
                 Generate
               </button>

@@ -26,18 +26,35 @@ interface VocabularyTableProps {
 
 const STATUS_OPTIONS = [
   { value: WordStatus.New, label: "New" },
-  { value: WordStatus.Learning1, label: "1" },
-  { value: WordStatus.Learning2, label: "2" },
-  { value: WordStatus.Learning3, label: "3" },
-  { value: WordStatus.Learning4, label: "4" },
-  { value: WordStatus.Known, label: "K" },
-  { value: WordStatus.Ignored, label: "X" },
+  { value: WordStatus.Learning1, label: "Lv 1" },
+  { value: WordStatus.Learning2, label: "Lv 2" },
+  { value: WordStatus.Learning3, label: "Lv 3" },
+  { value: WordStatus.Learning4, label: "Lv 4" },
+  { value: WordStatus.Known, label: "Known" },
+  { value: WordStatus.Ignored, label: "Ignored" },
 ];
 
-function SortIndicator({ field, sortBy, sortDir }: { field: string; sortBy: string; sortDir: string }) {
-  if (field !== sortBy) return <span className="text-gray-300 ml-1">{"\u2195"}</span>;
-  return <span className="ml-1">{sortDir === "asc" ? "\u25B2" : "\u25BC"}</span>;
+function SortIndicator({
+  field,
+  sortBy,
+  sortDir,
+}: {
+  field: string;
+  sortBy: string;
+  sortDir: string;
+}) {
+  if (field !== sortBy)
+    return (
+      <span style={{ color: "var(--ink-ghost)", marginLeft: 4 }}>{"↕"}</span>
+    );
+  return (
+    <span style={{ marginLeft: 4, color: "var(--ink)" }}>
+      {sortDir === "asc" ? "▲" : "▼"}
+    </span>
+  );
 }
+
+const GRID = "36px 200px 1fr 120px 140px 1fr 120px 80px";
 
 export default function VocabularyTable({
   words,
@@ -79,156 +96,291 @@ export default function VocabularyTable({
     onWordUpdated();
   };
 
-  const allSelected = words.length > 0 && words.every((w) => selectedIds.has(w.id));
+  const allSelected =
+    words.length > 0 && words.every((w) => selectedIds.has(w.id));
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-gray-200 text-left">
-            <th className="py-3 px-3 w-10">
+    <div
+      style={{
+        border: "1px solid var(--rule)",
+        borderRadius: 10,
+        overflow: "hidden",
+        background: "var(--paper-deep)",
+      }}
+    >
+      <div
+        className="mono"
+        style={{
+          display: "grid",
+          gridTemplateColumns: GRID,
+          padding: "12px 18px",
+          borderBottom: "1px solid var(--rule)",
+          fontSize: 10,
+          letterSpacing: "0.12em",
+          color: "var(--ink-faint)",
+          textTransform: "uppercase",
+          alignItems: "center",
+          gap: 14,
+        }}
+      >
+        <div>
+          <input
+            type="checkbox"
+            checked={allSelected}
+            onChange={onToggleSelectAll}
+            style={{ accentColor: "var(--accent)" }}
+          />
+        </div>
+        <button
+          onClick={() => onSort("term")}
+          className="mono"
+          style={{
+            background: "transparent",
+            border: 0,
+            cursor: "pointer",
+            color: "inherit",
+            fontSize: "inherit",
+            letterSpacing: "inherit",
+            textTransform: "inherit",
+            textAlign: "left",
+            padding: 0,
+          }}
+        >
+          Term <SortIndicator field="term" sortBy={sortBy} sortDir={sortDir} />
+        </button>
+        <span>Translation</span>
+        <button
+          onClick={() => onSort("status")}
+          className="mono"
+          style={{
+            background: "transparent",
+            border: 0,
+            cursor: "pointer",
+            color: "inherit",
+            fontSize: "inherit",
+            letterSpacing: "inherit",
+            textTransform: "inherit",
+            textAlign: "left",
+            padding: 0,
+          }}
+        >
+          Status{" "}
+          <SortIndicator field="status" sortBy={sortBy} sortDir={sortDir} />
+        </button>
+        <span>Language</span>
+        <span>Notes</span>
+        <button
+          onClick={() => onSort("createdAt")}
+          className="mono"
+          style={{
+            background: "transparent",
+            border: 0,
+            cursor: "pointer",
+            color: "inherit",
+            fontSize: "inherit",
+            letterSpacing: "inherit",
+            textTransform: "inherit",
+            textAlign: "left",
+            padding: 0,
+          }}
+        >
+          Added{" "}
+          <SortIndicator field="createdAt" sortBy={sortBy} sortDir={sortDir} />
+        </button>
+        <span />
+      </div>
+
+      {words.length === 0 ? (
+        <div
+          className="mono"
+          style={{
+            padding: "60px 18px",
+            textAlign: "center",
+            color: "var(--ink-faint)",
+            fontSize: 12,
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
+          }}
+        >
+          No words found.
+        </div>
+      ) : (
+        words.map((word, i) => (
+          <div
+            key={word.id}
+            style={{
+              display: "grid",
+              gridTemplateColumns: GRID,
+              padding: "14px 18px",
+              borderBottom:
+                i < words.length - 1 ? "1px solid var(--rule-soft)" : 0,
+              fontSize: 14,
+              alignItems: "center",
+              gap: 14,
+              background: selectedIds.has(word.id)
+                ? "var(--accent-wash)"
+                : "transparent",
+            }}
+          >
+            <div>
               <input
                 type="checkbox"
-                checked={allSelected}
-                onChange={onToggleSelectAll}
-                className="rounded"
+                checked={selectedIds.has(word.id)}
+                onChange={() => onToggleSelect(word.id)}
+                style={{ accentColor: "var(--accent)" }}
               />
-            </th>
-            <th
-              className="py-3 px-3 cursor-pointer hover:text-blue-600 select-none"
-              onClick={() => onSort("term")}
+            </div>
+            <div
+              className="display"
+              style={{
+                fontSize: 17,
+                fontWeight: 500,
+                letterSpacing: "-0.005em",
+                color: "var(--ink)",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
             >
-              Term <SortIndicator field="term" sortBy={sortBy} sortDir={sortDir} />
-            </th>
-            <th className="py-3 px-3">Translation</th>
-            <th
-              className="py-3 px-3 cursor-pointer hover:text-blue-600 select-none"
-              onClick={() => onSort("status")}
+              {word.term}
+            </div>
+            <div
+              style={{
+                color: "var(--ink-soft)",
+                fontStyle: "italic",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: editingId === word.id ? "normal" : "nowrap",
+              }}
             >
-              Status <SortIndicator field="status" sortBy={sortBy} sortDir={sortDir} />
-            </th>
-            <th className="py-3 px-3">Language</th>
-            <th className="py-3 px-3">Notes</th>
-            <th
-              className="py-3 px-3 cursor-pointer hover:text-blue-600 select-none"
-              onClick={() => onSort("createdAt")}
-            >
-              Added <SortIndicator field="createdAt" sortBy={sortBy} sortDir={sortDir} />
-            </th>
-            <th className="py-3 px-3 w-20"></th>
-          </tr>
-        </thead>
-        <tbody>
-          {words.map((word) => (
-            <tr
-              key={word.id}
-              className={`border-b border-gray-100 hover:bg-gray-50 ${
-                selectedIds.has(word.id) ? "bg-blue-50" : ""
-              }`}
-            >
-              <td className="py-2.5 px-3">
+              {editingId === word.id ? (
                 <input
-                  type="checkbox"
-                  checked={selectedIds.has(word.id)}
-                  onChange={() => onToggleSelect(word.id)}
-                  className="rounded"
+                  type="text"
+                  value={editTranslation}
+                  onChange={(e) => setEditTranslation(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") saveEdit(word.id);
+                    if (e.key === "Escape") setEditingId(null);
+                  }}
+                  autoFocus
+                  className="input"
+                  style={{ fontSize: 13, padding: "6px 10px" }}
                 />
-              </td>
-              <td className="py-2.5 px-3 font-medium">{word.term}</td>
-              <td className="py-2.5 px-3">
-                {editingId === word.id ? (
-                  <input
-                    type="text"
-                    value={editTranslation}
-                    onChange={(e) => setEditTranslation(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") saveEdit(word.id);
-                      if (e.key === "Escape") setEditingId(null);
-                    }}
-                    className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    autoFocus
-                  />
-                ) : (
-                  <span className="text-gray-600">{word.translation || "—"}</span>
-                )}
-              </td>
-              <td className="py-2.5 px-3">
-                <select
-                  value={word.status}
-                  onChange={(e) => updateStatus(word.id, Number(e.target.value))}
-                  className="text-xs border border-gray-200 rounded px-1.5 py-1 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500"
-                >
-                  {STATUS_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-                <span className="ml-2">
-                  <StatusBadge status={word.status} />
-                </span>
-              </td>
-              <td className="py-2.5 px-3 text-gray-500">{word.language.name}</td>
-              <td className="py-2.5 px-3">
-                {editingId === word.id ? (
-                  <textarea
-                    value={editNotes}
-                    onChange={(e) => setEditNotes(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-                        e.preventDefault();
-                        saveEdit(word.id);
-                      }
-                      if (e.key === "Escape") setEditingId(null);
-                    }}
-                    rows={2}
-                    className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
-                  />
-                ) : (
-                  <span className="text-gray-500 text-xs whitespace-pre-wrap">
-                    {word.notes || ""}
-                  </span>
-                )}
-              </td>
-              <td className="py-2.5 px-3 text-gray-400 text-xs">
-                {new Date(word.createdAt).toLocaleDateString()}
-              </td>
-              <td className="py-2.5 px-3">
-                {editingId === word.id ? (
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => saveEdit(word.id)}
-                      className="text-xs text-green-600 hover:text-green-800"
-                    >
-                      Save
-                    </button>
-                    <button
-                      onClick={() => setEditingId(null)}
-                      className="text-xs text-gray-500 hover:text-gray-700"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                ) : (
+              ) : (
+                word.translation || "—"
+              )}
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <StatusBadge status={word.status} />
+              <select
+                value={word.status}
+                onChange={(e) => updateStatus(word.id, Number(e.target.value))}
+                className="mono"
+                style={{
+                  fontSize: 10,
+                  padding: "3px 4px",
+                  background: "transparent",
+                  border: "1px solid var(--rule)",
+                  borderRadius: 4,
+                  color: "var(--ink-soft)",
+                }}
+              >
+                {STATUS_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div
+              className="mono"
+              style={{ fontSize: 11, color: "var(--ink-faint)" }}
+            >
+              {word.language.name}
+            </div>
+            <div
+              style={{
+                color: "var(--ink-faint)",
+                fontSize: 12,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: editingId === word.id ? "normal" : "nowrap",
+              }}
+            >
+              {editingId === word.id ? (
+                <textarea
+                  value={editNotes}
+                  onChange={(e) => setEditNotes(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                      e.preventDefault();
+                      saveEdit(word.id);
+                    }
+                    if (e.key === "Escape") setEditingId(null);
+                  }}
+                  rows={2}
+                  className="input"
+                  style={{ fontSize: 12, padding: "6px 10px", resize: "none" }}
+                />
+              ) : (
+                word.notes || ""
+              )}
+            </div>
+            <div
+              className="mono"
+              style={{ fontSize: 11, color: "var(--ink-faint)" }}
+            >
+              {new Date(word.createdAt).toLocaleDateString()}
+            </div>
+            <div
+              style={{
+                display: "flex",
+                gap: 6,
+                justifyContent: "flex-end",
+              }}
+            >
+              {editingId === word.id ? (
+                <>
                   <button
-                    onClick={() => startEdit(word)}
-                    className="text-xs text-blue-600 hover:text-blue-800"
+                    onClick={() => saveEdit(word.id)}
+                    className="btn btn-ghost"
+                    style={{
+                      fontSize: 11,
+                      padding: "4px 8px",
+                      color: "var(--accent)",
+                    }}
                   >
-                    Edit
+                    Save
                   </button>
-                )}
-              </td>
-            </tr>
-          ))}
-          {words.length === 0 && (
-            <tr>
-              <td colSpan={8} className="py-8 text-center text-gray-500">
-                No words found.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+                  <button
+                    onClick={() => setEditingId(null)}
+                    className="btn btn-ghost"
+                    style={{
+                      fontSize: 11,
+                      padding: "4px 8px",
+                      color: "var(--ink-faint)",
+                    }}
+                  >
+                    ×
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => startEdit(word)}
+                  className="btn btn-ghost"
+                  style={{
+                    fontSize: 11,
+                    padding: "4px 8px",
+                    color: "var(--ink-faint)",
+                  }}
+                >
+                  Edit
+                </button>
+              )}
+            </div>
+          </div>
+        ))
+      )}
     </div>
   );
 }
