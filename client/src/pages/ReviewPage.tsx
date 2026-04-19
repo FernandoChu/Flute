@@ -202,7 +202,7 @@ export default function ReviewPage() {
         style={{
           maxWidth: 540,
           margin: "0 auto",
-          padding: "36px 48px 120px",
+          padding: "36px 48px 48px",
           position: "relative",
           zIndex: 1,
         }}
@@ -397,7 +397,7 @@ export default function ReviewPage() {
         style={{
           maxWidth: 640,
           margin: "0 auto",
-          padding: "36px 48px 120px",
+          padding: "36px 48px 48px",
           position: "relative",
           zIndex: 1,
         }}
@@ -440,7 +440,7 @@ export default function ReviewPage() {
       style={{
         maxWidth: 900,
         margin: "0 auto",
-        padding: "36px 48px 120px",
+        padding: "36px 48px 48px",
         minHeight: "calc(100vh - 58px)",
         display: "flex",
         flexDirection: "column",

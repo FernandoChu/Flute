@@ -128,64 +128,75 @@ function LangSection({
         style={{
           display: "grid",
           gridTemplateColumns: "1fr auto 1fr",
+          gridTemplateRows: "auto auto",
+          columnGap: 14,
+          rowGap: 6,
           alignItems: "center",
-          gap: 14,
           marginBottom: 14,
         }}
       >
-        <div>
-          <div
-            className="mono"
-            style={{
-              fontSize: 10,
-              color: "var(--ink-faint)",
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              marginBottom: 6,
-            }}
-          >
-            Studying
-          </div>
-          <select
-            value={studyLangId}
-            onChange={(e: any) => setStudyLangId(e.target.value)}
-            style={selectStyle}
-          >
-            <option value="">Select language</option>
-            {languages?.data.map((lang: Language) => (
-              <option key={lang.id} value={lang.id}>
-                {lang.name}
-              </option>
-            ))}
-          </select>
+        <div
+          className="mono"
+          style={{
+            gridColumn: 1,
+            fontSize: 10,
+            color: "var(--ink-faint)",
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+          }}
+        >
+          Studying
         </div>
-        <div style={{ color: "var(--ink-faint)", fontSize: 18 }}>→</div>
-        <div>
-          <div
-            className="mono"
-            style={{
-              fontSize: 10,
-              color: "var(--ink-faint)",
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              marginBottom: 6,
-            }}
-          >
-            Translating to
-          </div>
-          <select
-            value={nativeLangId}
-            onChange={(e: any) => setNativeLangId(e.target.value)}
-            style={selectStyle}
-          >
-            <option value="">Select language</option>
-            {languages?.data.map((lang: Language) => (
-              <option key={lang.id} value={lang.id}>
-                {lang.name}
-              </option>
-            ))}
-          </select>
+        <div style={{ gridColumn: 2 }} />
+        <div
+          className="mono"
+          style={{
+            gridColumn: 3,
+            fontSize: 10,
+            color: "var(--ink-faint)",
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+          }}
+        >
+          Translating to
         </div>
+
+        <select
+          value={studyLangId}
+          onChange={(e: any) => setStudyLangId(e.target.value)}
+          style={{ ...selectStyle, gridColumn: 1 }}
+        >
+          <option value="">Select language</option>
+          {languages?.data.map((lang: Language) => (
+            <option key={lang.id} value={lang.id}>
+              {lang.name}
+            </option>
+          ))}
+        </select>
+        <div
+          style={{
+            gridColumn: 2,
+            color: "var(--ink-faint)",
+            fontSize: 18,
+            lineHeight: 1,
+            textAlign: "center",
+          }}
+          aria-hidden
+        >
+          →
+        </div>
+        <select
+          value={nativeLangId}
+          onChange={(e: any) => setNativeLangId(e.target.value)}
+          style={{ ...selectStyle, gridColumn: 3 }}
+        >
+          <option value="">Select language</option>
+          {languages?.data.map((lang: Language) => (
+            <option key={lang.id} value={lang.id}>
+              {lang.name}
+            </option>
+          ))}
+        </select>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <button
@@ -1090,7 +1101,7 @@ export default function SettingsPage() {
       style={{
         maxWidth: 1100,
         margin: "0 auto",
-        padding: "36px 48px 120px",
+        padding: "36px 48px 48px",
         position: "relative",
         zIndex: 1,
       }}
@@ -1119,7 +1130,7 @@ export default function SettingsPage() {
             color: "var(--ink)",
           }}
         >
-          The instrument.
+          Tuning the instrument.
         </h1>
       </div>
 

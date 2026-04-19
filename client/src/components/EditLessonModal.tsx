@@ -59,9 +59,11 @@ export default function EditLessonModal({
         inset: 0,
         background: "oklch(0 0 0 / 0.4)",
         display: "flex",
-        alignItems: "center",
+        alignItems: "flex-start",
         justifyContent: "center",
+        padding: "90px 16px 32px",
         zIndex: 100,
+        overflowY: "auto",
       }}
       onClick={onClose}
     >
@@ -72,10 +74,12 @@ export default function EditLessonModal({
           border: "1px solid var(--rule)",
           borderRadius: 10,
           boxShadow: "var(--shadow-lg)",
-          padding: 28,
+          padding: 24,
           width: "100%",
-          maxWidth: 640,
-          margin: "0 16px",
+          maxWidth: 560,
+          maxHeight: "calc(100vh - 120px)",
+          display: "flex",
+          flexDirection: "column",
         }}
       >
         <div
@@ -104,7 +108,15 @@ export default function EditLessonModal({
           Revise the text.
         </h2>
 
-        <form onSubmit={handleSubmit}>
+        <form
+          onSubmit={handleSubmit}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            minHeight: 0,
+            flex: 1,
+          }}
+        >
           <div style={{ marginBottom: 14 }}>
             <label style={labelStyle}>Title</label>
             <input
@@ -116,14 +128,24 @@ export default function EditLessonModal({
               autoFocus
             />
           </div>
-          <div style={{ marginBottom: 14 }}>
+          <div
+            style={{
+              marginBottom: 14,
+              display: "flex",
+              flexDirection: "column",
+              minHeight: 0,
+              flex: 1,
+            }}
+          >
             <label style={labelStyle}>Text content</label>
             <textarea
               value={textContent}
               onChange={(e) => setTextContent(e.target.value)}
-              rows={14}
+              rows={10}
               className="input"
               style={{
+                flex: 1,
+                minHeight: 160,
                 resize: "vertical",
                 lineHeight: 1.5,
                 fontFamily: "var(--font-body)",

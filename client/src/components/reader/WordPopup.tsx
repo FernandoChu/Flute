@@ -19,6 +19,7 @@ interface WordPopupProps {
     notes?: string;
   }) => Promise<void>;
   onClose: () => void;
+  onPlay?: () => void;
 }
 
 const STATUS_BUTTONS: { key: number; short: string; hue: string }[] = [
@@ -38,6 +39,7 @@ export default function WordPopup({
   dictionaryLinks,
   onUpdateWord,
   onClose,
+  onPlay,
 }: WordPopupProps) {
   const [translation, setTranslation] = useState(word?.translation ?? "");
   const [notes, setNotes] = useState(word?.notes ?? "");
@@ -148,25 +150,83 @@ export default function WordPopup({
         <div
           style={{
             display: "flex",
-            alignItems: "baseline",
+            alignItems: "center",
             justifyContent: "space-between",
             gap: 10,
           }}
         >
           <div
-            className="display"
             style={{
-              fontSize: 26,
-              fontWeight: 500,
-              letterSpacing: "-0.01em",
-              color: "var(--ink)",
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
               minWidth: 0,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
+              flex: 1,
             }}
           >
-            {term}
+            <div
+              className="display"
+              style={{
+                fontSize: 26,
+                fontWeight: 500,
+                letterSpacing: "-0.01em",
+                color: "var(--ink)",
+                minWidth: 0,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {term}
+            </div>
+            {onPlay && (
+              <button
+                onClick={() => onPlay()}
+                title="Play pronunciation"
+                aria-label="Play pronunciation"
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: "50%",
+                  border: "1px solid var(--rule)",
+                  background: "var(--paper)",
+                  color: "var(--ink)",
+                  cursor: "pointer",
+                  padding: 0,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                <svg
+                  width="13"
+                  height="13"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  aria-hidden
+                >
+                  <path
+                    d="M3 6 H5 L9 3 V13 L5 10 H3 Z"
+                    fill="currentColor"
+                  />
+                  <path
+                    d="M11 6 Q12.5 8 11 10"
+                    stroke="currentColor"
+                    strokeWidth="1.2"
+                    strokeLinecap="round"
+                    fill="none"
+                  />
+                  <path
+                    d="M12.5 4.5 Q15 8 12.5 11.5"
+                    stroke="currentColor"
+                    strokeWidth="1.2"
+                    strokeLinecap="round"
+                    fill="none"
+                  />
+                </svg>
+              </button>
+            )}
           </div>
           <button
             onClick={() => closeRef.current()}

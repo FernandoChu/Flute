@@ -377,43 +377,50 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
   const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
   const lastPhraseRef = useRef<string | null>(null);
 
-  const handlePlayTts = useCallback(async () => {
-    const text = lastPhraseRef.current;
-    const lang = lesson?.data.collection.sourceLanguage?.code;
-    if (!text || !lang) return;
+  const playTtsText = useCallback(
+    async (text: string | null | undefined) => {
+      const lang = lesson?.data.collection.sourceLanguage?.code;
+      if (!text || !lang) return;
 
-    const cacheKey = `${lang}|${text}`;
+      const cacheKey = `${lang}|${text}`;
 
-    if (ttsAudioRef.current) {
-      ttsAudioRef.current.pause();
-      ttsAudioRef.current = null;
-    }
-
-    let blobUrl = ttsAudioCache.current.get(cacheKey);
-    if (!blobUrl) {
-      try {
-        const username = localStorage.getItem("username");
-        const res = await fetch("/api/tts/speak", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(username ? { "x-username": username } : {}),
-          },
-          body: JSON.stringify({ text, lang }),
-        });
-        if (!res.ok) return;
-        const blob = await res.blob();
-        blobUrl = URL.createObjectURL(blob);
-        ttsAudioCache.current.set(cacheKey, blobUrl);
-      } catch {
-        return;
+      if (ttsAudioRef.current) {
+        ttsAudioRef.current.pause();
+        ttsAudioRef.current = null;
       }
-    }
 
-    const audio = new Audio(blobUrl);
-    ttsAudioRef.current = audio;
-    audio.play();
-  }, [lesson]);
+      let blobUrl = ttsAudioCache.current.get(cacheKey);
+      if (!blobUrl) {
+        try {
+          const username = localStorage.getItem("username");
+          const res = await fetch("/api/tts/speak", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(username ? { "x-username": username } : {}),
+            },
+            body: JSON.stringify({ text, lang }),
+          });
+          if (!res.ok) return;
+          const blob = await res.blob();
+          blobUrl = URL.createObjectURL(blob);
+          ttsAudioCache.current.set(cacheKey, blobUrl);
+        } catch {
+          return;
+        }
+      }
+
+      const audio = new Audio(blobUrl);
+      ttsAudioRef.current = audio;
+      audio.play();
+    },
+    [lesson],
+  );
+
+  const handlePlayTts = useCallback(
+    () => playTtsText(lastPhraseRef.current),
+    [playTtsText],
+  );
 
   const handlePrevPage = useCallback(() => {
     setPopup(null);
@@ -753,7 +760,12 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
               Library
             </Link>
             <span>·</span>
-            <span>{lessonData.collection.title}</span>
+            <Link
+              href={`/collection/${lessonData.collection.id}`}
+              style={{ color: "var(--ink-faint)", textDecoration: "none" }}
+            >
+              {lessonData.collection.title}
+            </Link>
             <span>·</span>
             <LessonSelector
               lessons={lessons}
@@ -978,6 +990,7 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
           dictionaryLinks={dictionaryLinks}
           onUpdateWord={handleUpdateWord}
           onClose={() => setWordPopupTarget(null)}
+          onPlay={() => playTtsText(wordPopupTarget.term)}
         />
       )}
     </div>

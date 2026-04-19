@@ -223,7 +223,7 @@ export default function VocabularyPage() {
       style={{
         maxWidth: 1280,
         margin: "0 auto",
-        padding: "36px 48px 120px",
+        padding: "36px 48px 48px",
         position: "relative",
         zIndex: 1,
       }}

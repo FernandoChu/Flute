@@ -164,11 +164,11 @@ export default function LoginPage() {
               color: "var(--ink-soft)",
             }}
           >
-            Import any text — a novel, a news site, a subtitle file — and learn
-            by doing. Click words for instant translation, watch your
-            known-word count grow, review with spaced repetition.{" "}
+            Import any text — a novel, a subtitle file — and learn by doing.
+            Click words for instant translation, generate pronunciation for any
+            word or sentence, and review with spaced repetition.{" "}
             <span style={{ fontStyle: "italic" }}>
-              Lute3 in a warmer room.
+              Learn by reading the texts you already love.
             </span>
           </p>
         </div>

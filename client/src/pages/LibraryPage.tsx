@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { WordStatus } from "shared";
 import { apiFetch } from "../lib/api";
 import CreateCollectionModal from "../components/CreateCollectionModal";
@@ -738,7 +738,7 @@ function CollectionDetail({
       style={{
         maxWidth: 1280,
         margin: "0 auto",
-        padding: "28px 48px 120px",
+        padding: "28px 48px 48px",
         position: "relative",
         zIndex: 1,
       }}
@@ -899,12 +899,9 @@ function CollectionDetail({
           color: "var(--ink-faint)",
           textTransform: "uppercase",
           marginBottom: 14,
-          display: "flex",
-          justifyContent: "space-between",
         }}
       >
-        <span>Lessons</span>
-        <span>Sort: position</span>
+        Lessons
       </div>
 
       {isLoading ? (
@@ -1576,14 +1573,8 @@ function ChangeLanguagesModal({
 // Library page
 
 export default function LibraryPage() {
-  const queryClient = useQueryClient();
+  const [, navigate] = useLocation();
   const [showCreateCollection, setShowCreateCollection] = useState(false);
-  const [lessonModalCollectionId, setLessonModalCollectionId] = useState<
-    string | null
-  >(null);
-  const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(
-    null,
-  );
 
   const { data: collections, isLoading } = useQuery({
     queryKey: ["collections"],
@@ -1621,15 +1612,6 @@ export default function LibraryPage() {
     );
   };
 
-  const deleteCollection = useMutation({
-    mutationFn: (id: string) =>
-      apiFetch(`/collections/${id}`, { method: "DELETE" }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["collections"] });
-      setSelectedCollectionId(null);
-    },
-  });
-
   if (isLoading) {
     return (
       <div
@@ -1650,39 +1632,6 @@ export default function LibraryPage() {
 
   const stats = statsData?.data;
   const collectionList = collections?.data ?? [];
-  const selectedCollection = collectionList.find(
-    (c) => c.id === selectedCollectionId,
-  );
-
-  // Detail view
-  if (selectedCollection) {
-    return (
-      <>
-        <CollectionDetail
-          collection={selectedCollection}
-          onBack={() => setSelectedCollectionId(null)}
-          onAddLesson={() =>
-            setLessonModalCollectionId(selectedCollection.id)
-          }
-          onDeleteCollection={() => {
-            if (
-              confirm(
-                "Delete this collection and all its lessons? This cannot be undone.",
-              )
-            ) {
-              deleteCollection.mutate(selectedCollection.id);
-            }
-          }}
-        />
-        {lessonModalCollectionId && (
-          <CreateLessonModal
-            collectionId={lessonModalCollectionId}
-            onClose={() => setLessonModalCollectionId(null)}
-          />
-        )}
-      </>
-    );
-  }
 
   // Grid view
   return (
@@ -1690,7 +1639,7 @@ export default function LibraryPage() {
       style={{
         maxWidth: 1280,
         margin: "0 auto",
-        padding: "36px 48px 120px",
+        padding: "36px 48px 48px",
         position: "relative",
         zIndex: 1,
       }}
@@ -1836,7 +1785,7 @@ export default function LibraryPage() {
               key={col.id}
               collection={col}
               composition={compositionForCollection(col.id)}
-              onClick={() => setSelectedCollectionId(col.id)}
+              onClick={() => navigate(`/collection/${col.id}`)}
             />
           ))}
         </div>
@@ -1848,12 +1797,100 @@ export default function LibraryPage() {
         />
       )}
 
-      {lessonModalCollectionId && (
+    </div>
+  );
+}
+
+// ----------------------------------------------------------------------------
+// Collection page (route: /collection/:collectionId)
+
+export function CollectionPage({ collectionId }: { collectionId: string }) {
+  const queryClient = useQueryClient();
+  const [, navigate] = useLocation();
+  const [lessonModalOpen, setLessonModalOpen] = useState(false);
+
+  const { data: collections, isLoading } = useQuery({
+    queryKey: ["collections"],
+    queryFn: () => apiFetch<{ data: CollectionWithMeta[] }>("/collections"),
+  });
+
+  const deleteCollection = useMutation({
+    mutationFn: () =>
+      apiFetch(`/collections/${collectionId}`, { method: "DELETE" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["collections"] });
+      navigate("/");
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div
+        className="mono"
+        style={{
+          padding: "80px 48px",
+          textAlign: "center",
+          color: "var(--ink-faint)",
+          fontSize: 12,
+          letterSpacing: "0.12em",
+          textTransform: "uppercase",
+        }}
+      >
+        Loading collection…
+      </div>
+    );
+  }
+
+  const collection = collections?.data.find((c) => c.id === collectionId);
+
+  if (!collection) {
+    return (
+      <div
+        style={{
+          padding: "80px 48px",
+          textAlign: "center",
+          color: "var(--ink-faint)",
+        }}
+      >
+        <div
+          className="display"
+          style={{ fontSize: 22, marginBottom: 8, color: "var(--ink)" }}
+        >
+          Collection not found.
+        </div>
+        <button
+          onClick={() => navigate("/")}
+          className="btn sans"
+          style={{ marginTop: 12 }}
+        >
+          ← Library
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <CollectionDetail
+        collection={collection}
+        onBack={() => navigate("/")}
+        onAddLesson={() => setLessonModalOpen(true)}
+        onDeleteCollection={() => {
+          if (
+            confirm(
+              "Delete this collection and all its lessons? This cannot be undone.",
+            )
+          ) {
+            deleteCollection.mutate();
+          }
+        }}
+      />
+      {lessonModalOpen && (
         <CreateLessonModal
-          collectionId={lessonModalCollectionId}
-          onClose={() => setLessonModalCollectionId(null)}
+          collectionId={collection.id}
+          onClose={() => setLessonModalOpen(false)}
         />
       )}
-    </div>
+    </>
   );
 }

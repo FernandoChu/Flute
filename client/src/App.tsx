@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Route, Switch } from "wouter";
 import LoginPage from "./pages/LoginPage";
-import LibraryPage from "./pages/LibraryPage";
+import LibraryPage, { CollectionPage } from "./pages/LibraryPage";
 import ReaderPage from "./pages/ReaderPage";
 import SettingsPage from "./pages/SettingsPage";
 import VocabularyPage from "./pages/VocabularyPage";
@@ -43,6 +43,16 @@ export default function App() {
           <ProtectedRoute>
             <SettingsPage />
           </ProtectedRoute>
+        </Route>
+        <Route path="/collection/:collectionId">
+          {(params) => (
+            <ProtectedRoute>
+              <CollectionPage
+                key={params.collectionId}
+                collectionId={params.collectionId}
+              />
+            </ProtectedRoute>
+          )}
         </Route>
         <Route path="/reader/:lessonId">
           {(params) => (
