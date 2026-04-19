@@ -48,10 +48,12 @@ COPY --from=build-server /app/server/prisma/generated server/prisma/generated
 # Copy built client
 COPY --from=build-client /app/client/dist client/dist
 
-# Install tsx for running TypeScript directly
-RUN npm install tsx --save-dev -w server
+# Install runtime CLIs that were excluded by --omit=dev (tsx runs TS sources;
+# prisma CLI runs `migrate deploy`). --no-save keeps package.json unchanged.
+RUN npm install --no-save -w server tsx prisma
 
 EXPOSE 3001
 
-# Run migrations, seed, then start
-CMD sh -c "npx prisma migrate deploy --schema=server/prisma/schema.prisma && npx tsx server/prisma/seed.ts && npx tsx server/src/index.ts"
+# Run migrations, seed, then start (run from server/ so prisma.config.ts is auto-loaded)
+WORKDIR /app/server
+CMD sh -c "npx prisma migrate deploy && npx tsx prisma/seed.ts && npx tsx src/index.ts"
