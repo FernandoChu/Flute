@@ -42,9 +42,8 @@ COPY server/src/ server/src/
 COPY server/prisma/ server/prisma/
 COPY server/prisma.config.ts server/
 
-# Copy generated Prisma client
-COPY --from=build-server /app/node_modules/.prisma node_modules/.prisma
-COPY --from=build-server /app/node_modules/@prisma/client node_modules/@prisma/client
+# Copy generated Prisma client (custom output path from schema.prisma)
+COPY --from=build-server /app/server/prisma/generated server/prisma/generated
 
 # Copy built client
 COPY --from=build-client /app/client/dist client/dist
