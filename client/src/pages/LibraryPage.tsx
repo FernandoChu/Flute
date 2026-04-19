@@ -1,10 +1,12 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
+import { createPortal } from "react-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { WordStatus } from "shared";
 import { apiFetch } from "../lib/api";
 import CreateCollectionModal from "../components/CreateCollectionModal";
 import CreateLessonModal from "../components/CreateLessonModal";
+import EditLessonModal from "../components/EditLessonModal";
 
 // ----------------------------------------------------------------------------
 // Types
@@ -314,20 +316,82 @@ function KebabMenu({
   align?: "left" | "right";
 }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const MENU_WIDTH = 220;
+  const MENU_GAP = 4;
+
+  const computePosition = () => {
+    const btn = triggerRef.current;
+    if (!btn) return;
+    const rect = btn.getBoundingClientRect();
+    const menuHeight = menuRef.current?.offsetHeight ?? 0;
+    const scrollX = window.scrollX;
+    const scrollY = window.scrollY;
+
+    // Horizontal: align to the chosen edge of the trigger, clamp to viewport
+    let left =
+      align === "right"
+        ? rect.right + scrollX - MENU_WIDTH
+        : rect.left + scrollX;
+    const minLeft = scrollX + 8;
+    const maxLeft = scrollX + window.innerWidth - MENU_WIDTH - 8;
+    if (left < minLeft) left = minLeft;
+    if (left > maxLeft) left = maxLeft;
+
+    // Vertical: below by default; flip up if there isn't room
+    let top = rect.bottom + scrollY + MENU_GAP;
+    const spaceBelow = window.innerHeight - rect.bottom;
+    if (menuHeight > 0 && spaceBelow < menuHeight + MENU_GAP + 8) {
+      top = rect.top + scrollY - menuHeight - MENU_GAP;
+    }
+
+    setPosition({ top, left });
+  };
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    computePosition();
+    const onResize = () => computePosition();
+    const onScroll = () => computePosition();
+    window.addEventListener("resize", onResize);
+    window.addEventListener("scroll", onScroll, true);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("scroll", onScroll, true);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
     const h = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      const t = e.target as Node;
+      if (
+        !triggerRef.current?.contains(t) &&
+        !menuRef.current?.contains(t)
+      ) {
+        setOpen(false);
+      }
+    };
+    const esc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
     };
     document.addEventListener("mousedown", h);
-    return () => document.removeEventListener("mousedown", h);
+    document.addEventListener("keydown", esc);
+    return () => {
+      document.removeEventListener("mousedown", h);
+      document.removeEventListener("keydown", esc);
+    };
   }, [open]);
 
   return (
     <div
-      ref={ref}
       style={{ position: "relative" }}
       onClick={(e) => {
         e.stopPropagation();
@@ -335,6 +399,7 @@ function KebabMenu({
       }}
     >
       <button
+        ref={triggerRef}
         onClick={() => setOpen((o) => !o)}
         style={{
           width: 28,
@@ -354,83 +419,91 @@ function KebabMenu({
       >
         ⋯
       </button>
-      {open && (
-        <div
-          style={{
-            position: "absolute",
-            top: "calc(100% + 4px)",
-            [align]: 0,
-            minWidth: 200,
-            zIndex: 30,
-            background: "var(--paper-deep)",
-            border: "1px solid var(--rule)",
-            borderRadius: 8,
-            boxShadow: "var(--shadow-md)",
-            padding: 4,
-          }}
-        >
-          {items.map((it, i) =>
-            it === "sep" ? (
-              <div
-                key={i}
-                style={{
-                  height: 1,
-                  background: "var(--rule-soft)",
-                  margin: "4px 0",
-                }}
-              />
-            ) : (
-              <button
-                key={i}
-                disabled={it.disabled}
-                onClick={() => {
-                  it.onClick?.();
-                  setOpen(false);
-                }}
-                className="sans"
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  width: "100%",
-                  padding: "7px 10px",
-                  fontSize: 13,
-                  background: "transparent",
-                  border: 0,
-                  borderRadius: 5,
-                  textAlign: "left",
-                  color: it.danger ? "var(--accent)" : "var(--ink)",
-                  cursor: it.disabled ? "not-allowed" : "pointer",
-                  opacity: it.disabled ? 0.4 : 1,
-                }}
-                onMouseEnter={(e) => {
-                  if (!it.disabled)
+      {open &&
+        createPortal(
+          <div
+            ref={menuRef}
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+            }}
+            style={{
+              position: "absolute",
+              top: position?.top ?? 0,
+              left: position?.left ?? 0,
+              width: MENU_WIDTH,
+              zIndex: 200,
+              background: "var(--paper-deep)",
+              border: "1px solid var(--rule)",
+              borderRadius: 8,
+              boxShadow: "var(--shadow-md)",
+              padding: 4,
+              visibility: position ? "visible" : "hidden",
+            }}
+          >
+            {items.map((it, i) =>
+              it === "sep" ? (
+                <div
+                  key={i}
+                  style={{
+                    height: 1,
+                    background: "var(--rule-soft)",
+                    margin: "4px 0",
+                  }}
+                />
+              ) : (
+                <button
+                  key={i}
+                  disabled={it.disabled}
+                  onClick={() => {
+                    it.onClick?.();
+                    setOpen(false);
+                  }}
+                  className="sans"
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    width: "100%",
+                    padding: "7px 10px",
+                    fontSize: 13,
+                    background: "transparent",
+                    border: 0,
+                    borderRadius: 5,
+                    textAlign: "left",
+                    color: it.danger ? "var(--accent)" : "var(--ink)",
+                    cursor: it.disabled ? "not-allowed" : "pointer",
+                    opacity: it.disabled ? 0.4 : 1,
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!it.disabled)
+                      (e.currentTarget as HTMLButtonElement).style.background =
+                        "var(--paper-sunk)";
+                  }}
+                  onMouseLeave={(e) => {
                     (e.currentTarget as HTMLButtonElement).style.background =
-                      "var(--paper-sunk)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.background =
-                    "transparent";
-                }}
-              >
-                <span>{it.label}</span>
-                {it.shortcut && (
-                  <span
-                    className="mono"
-                    style={{
-                      fontSize: 10,
-                      color: "var(--ink-faint)",
-                      letterSpacing: "0.04em",
-                    }}
-                  >
-                    {it.shortcut}
-                  </span>
-                )}
-              </button>
-            ),
-          )}
-        </div>
-      )}
+                      "transparent";
+                  }}
+                >
+                  <span>{it.label}</span>
+                  {it.shortcut && (
+                    <span
+                      className="mono"
+                      style={{
+                        fontSize: 10,
+                        color: "var(--ink-faint)",
+                        letterSpacing: "0.04em",
+                      }}
+                    >
+                      {it.shortcut}
+                    </span>
+                  )}
+                </button>
+              ),
+            )}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
@@ -551,6 +624,14 @@ function CollectionDetail({
   onDeleteCollection: () => void;
 }) {
   const queryClient = useQueryClient();
+  const [showChangeLanguages, setShowChangeLanguages] = useState(false);
+  const [renameCollectionOpen, setRenameCollectionOpen] = useState(false);
+  const [editLesson, setEditLesson] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
+  const audioInputRef = useRef<HTMLInputElement>(null);
+  const audioLessonIdRef = useRef<string | null>(null);
 
   const { data: lessonsData, isLoading } = useQuery({
     queryKey: ["lessons", collection.id],
@@ -567,6 +648,76 @@ function CollectionDetail({
       queryClient.invalidateQueries({ queryKey: ["collections"] });
     },
   });
+
+  const renameCollection = useMutation({
+    mutationFn: (title: string) =>
+      apiFetch(`/collections/${collection.id}`, {
+        method: "PUT",
+        body: JSON.stringify({ title }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["collections"] });
+    },
+  });
+
+  const duplicateLesson = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiFetch<{
+        data: { title: string; textContent: string };
+      }>(`/lessons/${id}`);
+      return apiFetch(`/collections/${collection.id}/lessons`, {
+        method: "POST",
+        body: JSON.stringify({
+          title: `${res.data.title} (copy)`,
+          textContent: res.data.textContent,
+        }),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["lessons", collection.id] });
+      queryClient.invalidateQueries({ queryKey: ["collections"] });
+    },
+  });
+
+  const uploadAudio = useMutation({
+    mutationFn: async (vars: { id: string; file: File }) => {
+      const formData = new FormData();
+      formData.append("audio", vars.file);
+      const username = localStorage.getItem("username");
+      const res = await fetch(`/api/lessons/${vars.id}/audio`, {
+        method: "POST",
+        headers: username ? { "x-username": username } : {},
+        body: formData,
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(
+          body?.error?.message || `Audio upload failed: ${res.status}`,
+        );
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["lessons", collection.id] });
+    },
+  });
+
+  const handleAudioPicked = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    const lessonId = audioLessonIdRef.current;
+    e.target.value = "";
+    if (!file || !lessonId) return;
+    uploadAudio.mutate({ id: lessonId, file });
+  };
+
+  const triggerAudioPick = (lessonId: string) => {
+    audioLessonIdRef.current = lessonId;
+    audioInputRef.current?.click();
+  };
+
+  const handleRenameCollectionSave = (next: string) => {
+    renameCollection.mutate(next);
+    setRenameCollectionOpen(false);
+  };
 
   const lessons = lessonsData?.data ?? [];
   const collectionComp = lessons.reduce(
@@ -721,12 +872,14 @@ function CollectionDetail({
           <KebabMenu
             items={[
               { label: "Add lesson…", onClick: onAddLesson },
-              { label: "Rename" },
-              { label: "Change cover" },
-              { label: "Change languages" },
-              "sep",
-              { label: "Export as .epub" },
-              { label: "Archive" },
+              {
+                label: "Rename",
+                onClick: () => setRenameCollectionOpen(true),
+              },
+              {
+                label: "Change languages",
+                onClick: () => setShowChangeLanguages(true),
+              },
               "sep",
               {
                 label: "Delete collection",
@@ -934,27 +1087,32 @@ function CollectionDetail({
                     </div>
                   )}
                 </div>
-                <div onClick={(e) => e.preventDefault()}>
-                  <KebabMenu
-                    items={[
-                      { label: "Rename" },
-                      { label: "Attach audio" },
-                      { label: "Reset progress" },
-                      "sep",
-                      { label: "Move to…" },
-                      { label: "Duplicate" },
-                      "sep",
-                      {
-                        label: "Delete lesson",
-                        danger: true,
-                        onClick: () => {
-                          if (confirm("Delete this lesson?"))
-                            deleteLesson.mutate(l.id);
-                        },
+                <KebabMenu
+                  items={[
+                    {
+                      label: "Edit",
+                      onClick: () =>
+                        setEditLesson({ id: l.id, title: l.title }),
+                    },
+                    {
+                      label: l.audioUrl ? "Replace audio" : "Attach audio",
+                      onClick: () => triggerAudioPick(l.id),
+                    },
+                    {
+                      label: "Duplicate",
+                      onClick: () => duplicateLesson.mutate(l.id),
+                    },
+                    "sep",
+                    {
+                      label: "Delete lesson",
+                      danger: true,
+                      onClick: () => {
+                        if (confirm("Delete this lesson?"))
+                          deleteLesson.mutate(l.id);
                       },
-                    ]}
-                  />
-                </div>
+                    },
+                  ]}
+                />
                 <div
                   style={{
                     color: "var(--ink-faint)",
@@ -990,6 +1148,424 @@ function CollectionDetail({
           }}
         >
           {lessons.length} of {collection._count.lessons} shown
+        </div>
+      </div>
+
+      <input
+        ref={audioInputRef}
+        type="file"
+        accept=".mp3,.wav,.ogg,.m4a,audio/*"
+        onChange={handleAudioPicked}
+        style={{ display: "none" }}
+      />
+
+      {renameCollectionOpen && (
+        <RenameModal
+          kind="collection"
+          current={collection.title}
+          pending={renameCollection.isPending}
+          onCancel={() => setRenameCollectionOpen(false)}
+          onSave={handleRenameCollectionSave}
+        />
+      )}
+
+      {editLesson && (
+        <EditLessonLoader
+          lessonId={editLesson.id}
+          fallbackTitle={editLesson.title}
+          onClose={() => setEditLesson(null)}
+        />
+      )}
+
+      {showChangeLanguages && (
+        <ChangeLanguagesModal
+          collection={collection}
+          onClose={() => setShowChangeLanguages(false)}
+          onSaved={() => {
+            queryClient.invalidateQueries({ queryKey: ["collections"] });
+            setShowChangeLanguages(false);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+// ----------------------------------------------------------------------------
+// Edit-lesson loader — fetches textContent then mounts the existing modal
+
+function EditLessonLoader({
+  lessonId,
+  fallbackTitle,
+  onClose,
+}: {
+  lessonId: string;
+  fallbackTitle: string;
+  onClose: () => void;
+}) {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["lesson", lessonId],
+    queryFn: () =>
+      apiFetch<{ data: { title: string; textContent: string } }>(
+        `/lessons/${lessonId}`,
+      ),
+  });
+
+  if (isLoading || isError || !data) {
+    return (
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          background: "oklch(0 0 0 / 0.4)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 100,
+        }}
+        onClick={onClose}
+      >
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="mono"
+          style={{
+            background: "var(--paper)",
+            border: "1px solid var(--rule)",
+            borderRadius: 10,
+            padding: "24px 32px",
+            fontSize: 12,
+            color: isError ? "var(--accent)" : "var(--ink-faint)",
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+          }}
+        >
+          {isError
+            ? `Couldn't load "${fallbackTitle}"`
+            : `Loading "${fallbackTitle}"…`}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <EditLessonModal
+      lessonId={lessonId}
+      initialTitle={data.data.title}
+      initialTextContent={data.data.textContent}
+      onClose={onClose}
+    />
+  );
+}
+
+// ----------------------------------------------------------------------------
+// Rename modal
+
+function RenameModal({
+  kind,
+  current,
+  pending,
+  onCancel,
+  onSave,
+}: {
+  kind: "collection" | "lesson";
+  current: string;
+  pending: boolean;
+  onCancel: () => void;
+  onSave: (next: string) => void;
+}) {
+  const [value, setValue] = useState(current);
+
+  const trimmed = value.trim();
+  const canSave = trimmed.length > 0 && trimmed !== current && !pending;
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!canSave) return;
+    onSave(trimmed);
+  };
+
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onCancel();
+    };
+    document.addEventListener("keydown", h);
+    return () => document.removeEventListener("keydown", h);
+  }, [onCancel]);
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "oklch(0 0 0 / 0.4)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 100,
+      }}
+      onClick={onCancel}
+    >
+      <form
+        onClick={(e) => e.stopPropagation()}
+        onSubmit={submit}
+        style={{
+          background: "var(--paper)",
+          border: "1px solid var(--rule)",
+          borderRadius: 10,
+          boxShadow: "var(--shadow-lg)",
+          padding: 28,
+          width: "100%",
+          maxWidth: 460,
+          margin: "0 16px",
+        }}
+      >
+        <div
+          className="mono"
+          style={{
+            fontSize: 10,
+            letterSpacing: "0.14em",
+            color: "var(--ink-faint)",
+            textTransform: "uppercase",
+            marginBottom: 6,
+          }}
+        >
+          Rename {kind}
+        </div>
+        <h2
+          className="display"
+          style={{
+            margin: 0,
+            marginBottom: 20,
+            fontSize: 24,
+            fontWeight: 500,
+            letterSpacing: "-0.02em",
+            color: "var(--ink)",
+          }}
+        >
+          {current}
+        </h2>
+
+        <label
+          className="mono"
+          style={{
+            display: "block",
+            fontSize: 10,
+            letterSpacing: "0.1em",
+            color: "var(--ink-faint)",
+            textTransform: "uppercase",
+            marginBottom: 6,
+          }}
+        >
+          Title
+        </label>
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          className="input"
+          autoFocus
+          onFocus={(e) => e.currentTarget.select()}
+        />
+
+        <div
+          style={{
+            display: "flex",
+            gap: 8,
+            justifyContent: "flex-end",
+            marginTop: 18,
+          }}
+        >
+          <button type="button" onClick={onCancel} className="btn sans">
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={!canSave}
+            className="btn btn-primary sans"
+          >
+            {pending ? "Saving…" : "Save"}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+// ----------------------------------------------------------------------------
+// Change-languages modal
+
+function ChangeLanguagesModal({
+  collection,
+  onClose,
+  onSaved,
+}: {
+  collection: CollectionWithMeta;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [sourceLangId, setSourceLangId] = useState(
+    String(collection.sourceLanguage.id),
+  );
+  const [targetLangId, setTargetLangId] = useState(
+    String(collection.targetLanguage.id),
+  );
+  const [error, setError] = useState("");
+
+  const { data: languages } = useQuery({
+    queryKey: ["languages"],
+    queryFn: () =>
+      apiFetch<{ data: { id: number; code: string; name: string }[] }>(
+        "/languages",
+      ),
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: () =>
+      apiFetch(`/collections/${collection.id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          sourceLanguageId: Number(sourceLangId),
+          targetLanguageId: Number(targetLangId),
+        }),
+      }),
+    onSuccess: () => onSaved(),
+    onError: (err: Error) => setError(err.message),
+  });
+
+  const labelStyle: React.CSSProperties = {
+    display: "block",
+    fontFamily: "var(--font-mono)",
+    fontSize: 10,
+    letterSpacing: "0.1em",
+    color: "var(--ink-faint)",
+    textTransform: "uppercase",
+    marginBottom: 6,
+  };
+
+  const selectStyle: React.CSSProperties = {
+    width: "100%",
+    padding: "9px 12px",
+    fontSize: 13,
+    background: "var(--paper-sunk)",
+    border: "1px solid var(--rule)",
+    borderRadius: 6,
+    color: "var(--ink)",
+    fontFamily: "var(--font-sans)",
+  };
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "oklch(0 0 0 / 0.4)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 100,
+      }}
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: "var(--paper)",
+          border: "1px solid var(--rule)",
+          borderRadius: 10,
+          boxShadow: "var(--shadow-lg)",
+          padding: 28,
+          width: "100%",
+          maxWidth: 460,
+          margin: "0 16px",
+        }}
+      >
+        <div
+          className="mono"
+          style={{
+            fontSize: 10,
+            letterSpacing: "0.14em",
+            color: "var(--ink-faint)",
+            textTransform: "uppercase",
+            marginBottom: 6,
+          }}
+        >
+          Change languages
+        </div>
+        <h2
+          className="display"
+          style={{
+            margin: 0,
+            marginBottom: 20,
+            fontSize: 24,
+            fontWeight: 500,
+            letterSpacing: "-0.02em",
+            color: "var(--ink)",
+          }}
+        >
+          {collection.title}
+        </h2>
+
+        <div style={{ marginBottom: 14 }}>
+          <label style={labelStyle}>I'm learning</label>
+          <select
+            value={sourceLangId}
+            onChange={(e) => setSourceLangId(e.target.value)}
+            style={selectStyle}
+          >
+            {languages?.data.map((l) => (
+              <option key={l.id} value={l.id}>
+                {l.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div style={{ marginBottom: 18 }}>
+          <label style={labelStyle}>Translate to</label>
+          <select
+            value={targetLangId}
+            onChange={(e) => setTargetLangId(e.target.value)}
+            style={selectStyle}
+          >
+            {languages?.data.map((l) => (
+              <option key={l.id} value={l.id}>
+                {l.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {error && (
+          <p
+            className="mono"
+            style={{
+              fontSize: 11,
+              color: "var(--accent)",
+              letterSpacing: "0.04em",
+              marginBottom: 12,
+            }}
+          >
+            {error}
+          </p>
+        )}
+
+        <div
+          style={{
+            display: "flex",
+            gap: 8,
+            justifyContent: "flex-end",
+          }}
+        >
+          <button onClick={onClose} className="btn sans">
+            Cancel
+          </button>
+          <button
+            onClick={() => saveMutation.mutate()}
+            disabled={saveMutation.isPending}
+            className="btn btn-primary sans"
+          >
+            {saveMutation.isPending ? "Saving…" : "Save"}
+          </button>
         </div>
       </div>
     </div>

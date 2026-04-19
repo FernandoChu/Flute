@@ -20,7 +20,10 @@ interface VocabularyFiltersProps {
 const STATUS_CHIPS = [
   { value: "", label: "All" },
   { value: "0", label: "New" },
-  { value: "1,2,3,4", label: "Learning" },
+  { value: "1", label: "Lv 1" },
+  { value: "2", label: "Lv 2" },
+  { value: "3", label: "Lv 3" },
+  { value: "4", label: "Lv 4" },
   { value: "5", label: "Known" },
   { value: "6", label: "Ignored" },
 ];
@@ -55,17 +58,7 @@ export default function VocabularyFilters({
     return () => clearTimeout(timer);
   }, [searchInput, onSearchChange]);
 
-  // Status chip handles single or comma values. Use individual single-status chips,
-  // with "Learning" a shortcut for any of 1-4 when clicked (we just use "1" as a proxy
-  // — simpler than multi-filter).
-  const currentChip =
-    status === ""
-      ? ""
-      : status === "0"
-        ? "0"
-        : ["1", "2", "3", "4"].includes(status)
-          ? "1,2,3,4"
-          : status;
+  const currentChip = status;
 
   return (
     <div
@@ -123,11 +116,7 @@ export default function VocabularyFilters({
         return (
           <button
             key={chip.value}
-            onClick={() => {
-              // Map "Learning" chip to status=1 (simplest approximation without multi-filter)
-              if (chip.value === "1,2,3,4") onStatusChange("1");
-              else onStatusChange(chip.value);
-            }}
+            onClick={() => onStatusChange(chip.value)}
             className="sans"
             style={{
               padding: "6px 12px",

@@ -1,9 +1,31 @@
-import { useState, useCallback } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState, useCallback, useEffect } from "react";
+import {
+  useQuery,
+  useQueryClient,
+  keepPreviousData,
+} from "@tanstack/react-query";
 import { apiFetch } from "../lib/api";
 import VocabularyFilters from "../components/vocabulary/VocabularyFilters";
 import VocabularyTable from "../components/vocabulary/VocabularyTable";
 import Pagination from "../components/common/Pagination";
+
+const REVIEW_FILTERS_STORAGE_KEY = "reviewFilters";
+
+function loadReviewFilters(): { languageId: string; wordStatus: string } {
+  try {
+    const v = localStorage.getItem(REVIEW_FILTERS_STORAGE_KEY);
+    if (!v) return { languageId: "", wordStatus: "" };
+    const parsed = JSON.parse(v);
+    return {
+      languageId:
+        typeof parsed.languageId === "string" ? parsed.languageId : "",
+      wordStatus:
+        typeof parsed.wordStatus === "string" ? parsed.wordStatus : "",
+    };
+  } catch {
+    return { languageId: "", wordStatus: "" };
+  }
+}
 
 interface VocabularyResponse {
   data: {
@@ -48,6 +70,7 @@ export default function VocabularyPage() {
   const { data: vocabData, isLoading } = useQuery({
     queryKey: ["vocabulary", queryParams],
     queryFn: () => apiFetch<VocabularyResponse>(`/vocabulary?${queryParams}`),
+    placeholderData: keepPreviousData,
   });
 
   const { data: statsData } = useQuery({
@@ -56,9 +79,40 @@ export default function VocabularyPage() {
       const params = languageId ? `?languageId=${languageId}` : "";
       return apiFetch<StatsResponse>(`/vocabulary/stats${params}`);
     },
+    placeholderData: keepPreviousData,
   });
 
   const stats = statsData?.data;
+
+  // Match the "Due reviews" card to whatever status filter is active on the
+  // Review page. React to cross-tab changes via the storage event.
+  const [reviewFilters, setReviewFilters] = useState(loadReviewFilters);
+  useEffect(() => {
+    const handler = (e: StorageEvent) => {
+      if (e.key === REVIEW_FILTERS_STORAGE_KEY) {
+        setReviewFilters(loadReviewFilters());
+      }
+    };
+    window.addEventListener("storage", handler);
+    return () => window.removeEventListener("storage", handler);
+  }, []);
+
+  const dueCountParams = new URLSearchParams();
+  const dueLanguageId = languageId || reviewFilters.languageId;
+  if (dueLanguageId) dueCountParams.set("languageId", dueLanguageId);
+  if (reviewFilters.wordStatus !== "")
+    dueCountParams.set("wordStatus", reviewFilters.wordStatus);
+
+  const { data: dueCountData } = useQuery({
+    queryKey: ["review-due-count", dueCountParams.toString()],
+    queryFn: () =>
+      apiFetch<{ data: { count: number } }>(
+        `/reviews/due/count?${dueCountParams.toString()}`,
+      ),
+    placeholderData: keepPreviousData,
+  });
+
+  const dueReviews = dueCountData?.data.count ?? stats?.dueReviews ?? 0;
 
   const handleSort = useCallback(
     (field: string) => {
@@ -158,7 +212,7 @@ export default function VocabularyPage() {
         { label: "Known", value: stats.known.toLocaleString() },
         {
           label: "Due reviews",
-          value: stats.dueReviews.toLocaleString(),
+          value: dueReviews.toLocaleString(),
           accent: true,
         },
       ]
