@@ -10,14 +10,30 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import NavBar from "./components/NavBar";
 import { useAuth } from "./hooks/useAuth";
 import { useReaderSettings } from "./hooks/useReaderSettings";
+import { apiFetch } from "./lib/api";
 
 export default function App() {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, username, logout } = useAuth();
   const { settings } = useReaderSettings();
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", settings.theme);
   }, [settings.theme]);
+
+  // Validate stored username against the backend on mount. If the DB was
+  // reset (e.g. fresh Docker volume) but the browser still has a username
+  // cached, clear it so the user lands on the login page instead of a
+  // broken Library view.
+  useEffect(() => {
+    if (!username) return;
+    let cancelled = false;
+    apiFetch("/auth/me").catch(() => {
+      if (!cancelled) logout();
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [username, logout]);
 
   return (
     <div className="min-h-screen" style={{ background: "var(--paper)", color: "var(--ink)" }}>

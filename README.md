@@ -6,92 +6,29 @@ A reading-based language learning app inspired by Lute3, LingQ, and Readlang. Im
 
 The name Flute is to pay respect to Lute3, which stands for (Learning Using Texts). I'll let you decide what the `F` in Flute stands for.
 
-Below, an AI-generated description.
+## Installation
 
-## Features
+The recommended installation method is to run it using [docker](https://docs.docker.com/engine/install/). 
+- Build with `docker compose build --no-cache && docker compose up`. Open the app at http://localhost:3001.
+- Create an account in DeepL and get an [api key](https://www.deepl.com/en/your-account/keys). Put it in the settings in Flute.
+- Create an account in Google Console, and then make a project. Get an [api key](https://console.cloud.google.com/apis/credentials) for `Cloud Text-to-Speech API`. Put it in the settings in Flute, and choose your preferred model and voice. I suggest the Chirp HD model for accuracy/price (roughly 15-20 hours of audio in the free tier).
+  - WARNING: Unlike DeepL, Google Console can consume more tokens beyond the ones in the free tier and will charge you for this. Also, not all models are free.
 
-- **Interactive Reader** — Click any word for translations, status tracking, and notes. Select phrases for sentence-level translation.
-- **Vocabulary Tracking** — Words progress through stages: New → Learning (1–4) → Known/Ignored. Filter, sort, and browse your full vocabulary.
-- **Spaced Repetition** — Review due words with FSRS scheduling (Again/Hard/Good/Easy ratings).
-- **Content Import** — Upload `.txt`, `.epub` (chapters become lessons), and `.srt` subtitle files. Attach audio to lessons.
-- **Translation Providers** — Bring your own Google Translate or DeepL API key. Keys are encrypted at rest (AES-256-GCM).
-- **Multi-language** — Supports CJK and space-delimited languages with appropriate tokenization.
-- **Multi-user** — Header-based auth (`x-username`), per-user vocabulary and settings.
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|------------|
-| Client | React 19, Vite 6, Tailwind CSS 4, Wouter, TanStack Query |
-| Server | Express 4, Prisma 7, PostgreSQL |
-| Shared | TypeScript types, constants, tokenizer |
-| SRS | ts-fsrs |
-
-Monorepo managed with npm workspaces (`shared/`, `server/`, `client/`).
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js
-- PostgreSQL
-
-### Setup
-
-```bash
-npm install
-
-# Configure server environment
-cp server/.env.example server/.env
-# Edit server/.env with:
-#   DATABASE_URL=postgresql://...
-#   ENCRYPTION_KEY=<32-byte hex key>
-#   PORT=3001
-
-# Initialize database
-npm run db:migrate -w server
-npm run db:seed -w server      # Seeds 20 languages
-
-# Start development
-npm run dev                    # Server (3001) + Client (5173)
+To update just run:
+```
+git pull
+docker compose build --no-cache
+docker compose up -d
 ```
 
-## Commands
+To pause run `docker compose stop`, to re-start `docker compose up -d`.
 
-```bash
-# Development
-npm run dev              # Start server + client concurrently
-npm run dev:server       # Server only (port 3001)
-npm run dev:client       # Client only (port 5173)
+## Suggested usage flow
 
-# Testing
-npm run test             # Run all tests
-npm run test -w server   # Server tests only
-npm run test -w shared   # Shared tests only
-
-# Database
-npm run db:migrate -w server   # Run Prisma migrations
-npm run db:seed -w server      # Seed languages
-npm run db:studio -w server    # Visual DB editor (Prisma Studio)
-
-# Build
-npm run build -w client  # TypeScript + Vite build
-npm run build -w server  # TypeScript build
-```
-
-## Project Structure
-
-```
-shared/          Types, constants, tokenizer (used by both server and client)
-server/
-  src/
-    routes/      Express route handlers
-    services/    Business logic (translation, SRS, file parsing, encryption)
-  prisma/        Schema and migrations
-client/
-  src/
-    pages/       LoginPage, LibraryPage, ReaderPage, VocabularyPage, ReviewPage, SettingsPage
-    components/  Reader, vocabulary, modals, layout
-    hooks/       useAuth, useWordStatuses (useSyncExternalStore for performance)
-    lib/         API client with x-username header injection
-```
+1. Get an `epub` version of the book you want to read in the language you want to learn. 
+   - You can use the [translate-book](https://github.com/FernandoChu/translate-book`) skill to translate a source epub to your target language, further specifying difficulty level.
+   - The TOC of the epub splits the import into "lessons", so ensure it is correct.
+2. Import the epub in the app (Library > New collection > Import file).
+3. Read, and select words/sentences to translate them if needed.
+4. Mark the status of the word by hovering over it and pressing numbers 1-5 (or by right clicking). Mark the words with a 1 that you wish to review later.
+5. Go to the review section, and practice the flashcards, filter by status (e.g. by `1`).
