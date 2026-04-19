@@ -316,6 +316,32 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
     queryFn: () => apiFetch<{ data: LessonDetail }>(`/lessons/${lessonId}`),
   });
 
+  const { data: progressData } = useQuery({
+    queryKey: ["lesson-progress", lessonId],
+    queryFn: () =>
+      apiFetch<{ data: { currentPage: number } | null }>(
+        `/lessons/${lessonId}/progress`,
+      ),
+  });
+  // undefined while the query is still loading; once resolved, treat a missing
+  // row as page 0 so the "touch on open" effect below still fires for fresh
+  // lessons and the library banner picks them up.
+  const initialPage = progressData
+    ? (progressData.data?.currentPage ?? 0)
+    : undefined;
+
+  const queryClient = useQueryClient();
+  const saveProgress = useMutation({
+    mutationFn: (currentPage: number) =>
+      apiFetch(`/lessons/${lessonId}/progress`, {
+        method: "PUT",
+        body: JSON.stringify({ currentPage }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["progress-recent"] });
+    },
+  });
+
   const fullText = lesson?.data.textContent ?? "";
   const {
     page,
@@ -326,7 +352,25 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
     goToPage,
     perPage,
     setPerPage,
-  } = useReaderPagination(fullText);
+  } = useReaderPagination(fullText, initialPage);
+
+  // Persist page changes (user navigation, not the initial restore from query).
+  // We skip the very first render and any time currentPage equals the loaded
+  // initialPage to avoid an immediate redundant write.
+  const lastSavedRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (initialPage === undefined) return; // wait for progress to load
+    if (lastSavedRef.current === currentPage) return;
+    if (lastSavedRef.current === null && currentPage === initialPage) {
+      lastSavedRef.current = currentPage;
+      // Touch openedAt so this lesson becomes "most recent" even without nav.
+      saveProgress.mutate(currentPage);
+      return;
+    }
+    lastSavedRef.current = currentPage;
+    saveProgress.mutate(currentPage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, initialPage]);
 
   const languageId = lesson?.data.collection.sourceLanguageId ?? null;
 

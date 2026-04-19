@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import { tokenize } from "shared";
 
 const STORAGE_KEY = "readerParagraphsPerPage";
@@ -18,9 +18,19 @@ export interface PageData {
   tokenOffset: number;
 }
 
-export function useReaderPagination(fullText: string) {
-  const [currentPage, setCurrentPage] = useState(0);
+export function useReaderPagination(fullText: string, initialPage?: number) {
+  const [currentPage, setCurrentPage] = useState(initialPage ?? 0);
   const [perPage, setPerPageRaw] = useState(loadPerPage);
+
+  // Apply initialPage once it's known (it arrives async from a query). We only
+  // honor the *first* defined value so that user navigation isn't overwritten.
+  const appliedInitialRef = useRef(false);
+  useEffect(() => {
+    if (appliedInitialRef.current) return;
+    if (initialPage === undefined) return;
+    appliedInitialRef.current = true;
+    if (initialPage > 0) setCurrentPage(initialPage);
+  }, [initialPage]);
 
   const setPerPage = useCallback((n: number) => {
     setPerPageRaw(n);

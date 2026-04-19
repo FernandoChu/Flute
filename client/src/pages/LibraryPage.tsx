@@ -29,15 +29,6 @@ interface LessonSummary {
   statusCounts: Record<number, number>;
 }
 
-interface DashboardStats {
-  total: number;
-  new: number;
-  learning: number;
-  known: number;
-  ignored: number;
-  dueReviews: number;
-}
-
 interface Composition {
   new: number;
   l1: number;
@@ -504,6 +495,170 @@ function KebabMenu({
           </div>,
           document.body,
         )}
+    </div>
+  );
+}
+
+// ----------------------------------------------------------------------------
+// Continue-reading banner
+
+interface RecentProgress {
+  currentPage: number;
+  openedAt: string;
+  lesson: {
+    id: string;
+    title: string;
+    position: number;
+    audioUrl: string | null;
+    preview: string;
+    collection: {
+      id: string;
+      title: string;
+      sourceLanguage: { id: number; code: string; name: string };
+      targetLanguage: { id: number; code: string; name: string };
+    };
+  };
+}
+
+function ContinueBanner({
+  recent,
+  composition,
+  onOpenCollection,
+}: {
+  recent: RecentProgress;
+  composition: Composition;
+  onOpenCollection: () => void;
+}) {
+  const { lesson, currentPage } = recent;
+  const collection = lesson.collection;
+  const knownPct = compKnownPct(composition);
+  const total = compTotal(composition);
+
+  return (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "140px 1fr auto",
+        gap: 28,
+        alignItems: "center",
+        background: "var(--paper-deep)",
+        border: "1px solid var(--rule)",
+        borderRadius: 10,
+        padding: "20px 24px",
+        marginBottom: 48,
+      }}
+    >
+      <Link
+        href={`/collection/${collection.id}`}
+        style={{ cursor: "pointer", textDecoration: "none" }}
+      >
+        <CoverArt
+          id={collection.id}
+          title={collection.title}
+          langCode={collection.sourceLanguage.code}
+        />
+      </Link>
+      <div style={{ minWidth: 0 }}>
+        <div
+          className="mono"
+          style={{
+            fontSize: 10,
+            letterSpacing: "0.14em",
+            color: "var(--ink-faint)",
+            textTransform: "uppercase",
+            marginBottom: 8,
+          }}
+        >
+          Continue reading · {collection.title}
+        </div>
+        <div
+          className="display"
+          style={{
+            fontSize: 28,
+            fontWeight: 500,
+            letterSpacing: "-0.01em",
+            color: "var(--ink)",
+            marginBottom: 4,
+            lineHeight: 1.15,
+          }}
+        >
+          {lesson.title}
+        </div>
+        {lesson.preview && (
+          <div
+            style={{
+              color: "var(--ink-soft)",
+              fontSize: 14,
+              marginBottom: 14,
+              fontStyle: "italic",
+              lineHeight: 1.4,
+            }}
+          >
+            “{lesson.preview}”
+          </div>
+        )}
+        <div
+          className="mono"
+          style={{
+            display: "flex",
+            gap: 12,
+            alignItems: "center",
+            fontSize: 12,
+            color: "var(--ink-faint)",
+            letterSpacing: "0.04em",
+          }}
+        >
+          <span>Paused on page {currentPage + 1}</span>
+          {total > 0 && (
+            <>
+              <span>·</span>
+              <span>{knownPct}% known</span>
+              <span>·</span>
+              <span>{total.toLocaleString()} words</span>
+            </>
+          )}
+          {lesson.audioUrl && (
+            <>
+              <span>·</span>
+              <span>audio</span>
+            </>
+          )}
+        </div>
+      </div>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 8,
+          alignItems: "stretch",
+        }}
+      >
+        <Link
+          href={`/reader/${lesson.id}`}
+          className="btn btn-primary sans"
+          style={{
+            padding: "10px 20px",
+            textDecoration: "none",
+            textAlign: "center",
+          }}
+        >
+          Resume reading →
+        </Link>
+        <button
+          onClick={onOpenCollection}
+          className="sans"
+          style={{
+            background: "transparent",
+            border: 0,
+            cursor: "pointer",
+            color: "var(--ink-faint)",
+            fontSize: 12,
+            padding: "4px 0",
+          }}
+        >
+          Open collection
+        </button>
+      </div>
     </div>
   );
 }
@@ -1581,11 +1736,6 @@ export default function LibraryPage() {
     queryFn: () => apiFetch<{ data: CollectionWithMeta[] }>("/collections"),
   });
 
-  const { data: statsData } = useQuery({
-    queryKey: ["vocabulary-stats"],
-    queryFn: () => apiFetch<{ data: DashboardStats }>("/vocabulary/stats"),
-  });
-
   // Pre-fetch lesson composition for each collection so cards show the bar
   const collectionIds = (collections?.data ?? []).map((c) => c.id);
   const { data: allLessonsData } = useQuery({
@@ -1612,6 +1762,22 @@ export default function LibraryPage() {
     );
   };
 
+  const { data: recentProgress } = useQuery({
+    queryKey: ["progress-recent"],
+    queryFn: () =>
+      apiFetch<{ data: RecentProgress | null }>("/progress/recent"),
+  });
+
+  const resumeLessonComposition = (() => {
+    const recent = recentProgress?.data;
+    if (!recent || !allLessonsData) return emptyComposition();
+    const row = allLessonsData.find(
+      (r) => r.id === recent.lesson.collection.id,
+    );
+    const lesson = row?.lessons.find((l) => l.id === recent.lesson.id);
+    return lesson ? compFromStatusCounts(lesson.statusCounts) : emptyComposition();
+  })();
+
   if (isLoading) {
     return (
       <div
@@ -1630,7 +1796,6 @@ export default function LibraryPage() {
     );
   }
 
-  const stats = statsData?.data;
   const collectionList = collections?.data ?? [];
 
   // Grid view
@@ -1691,62 +1856,14 @@ export default function LibraryPage() {
         </div>
       </div>
 
-      {stats && stats.total > 0 && (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(5, 1fr)",
-            border: "1px solid var(--rule)",
-            borderRadius: 10,
-            overflow: "hidden",
-            marginBottom: 36,
-            background: "var(--paper-deep)",
-          }}
-        >
-          {[
-            { label: "Total", value: stats.total },
-            { label: "New", value: stats.new },
-            { label: "Learning", value: stats.learning },
-            { label: "Known", value: stats.known },
-            {
-              label: "Due reviews",
-              value: stats.dueReviews,
-              accent: true,
-            },
-          ].map((s, i) => (
-            <div
-              key={s.label}
-              style={{
-                padding: "18px 22px",
-                borderRight: i < 4 ? "1px solid var(--rule)" : 0,
-              }}
-            >
-              <div
-                className="mono"
-                style={{
-                  fontSize: 10,
-                  letterSpacing: "0.12em",
-                  color: "var(--ink-faint)",
-                  textTransform: "uppercase",
-                }}
-              >
-                {s.label}
-              </div>
-              <div
-                className="display"
-                style={{
-                  fontSize: 32,
-                  fontWeight: 500,
-                  letterSpacing: "-0.01em",
-                  color: s.accent ? "var(--accent)" : "var(--ink)",
-                  marginTop: 4,
-                }}
-              >
-                {s.value.toLocaleString()}
-              </div>
-            </div>
-          ))}
-        </div>
+      {recentProgress?.data && (
+        <ContinueBanner
+          recent={recentProgress.data}
+          composition={resumeLessonComposition}
+          onOpenCollection={() =>
+            navigate(`/collection/${recentProgress.data!.lesson.collection.id}`)
+          }
+        />
       )}
 
       {collectionList.length === 0 && (

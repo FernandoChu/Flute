@@ -22,6 +22,7 @@ model User {
   words           Word[]
   apiKeys         ApiKey[]
   dictionaryUrls  DictionaryUrl[]
+  lessonProgress  LessonProgress[]
 
   @@map("users")
 }
@@ -82,8 +83,24 @@ model Lesson {
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  progress     LessonProgress[]
 
   @@map("lessons")
+}
+
+model LessonProgress {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  lessonId    String   @map("lesson_id")
+  currentPage Int      @default(0) @map("current_page")
+  openedAt    DateTime @default(now()) @updatedAt @map("opened_at")
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+  @@index([userId, openedAt])
+  @@map("lesson_progress")
 }
 
 model Word {
