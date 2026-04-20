@@ -30,6 +30,7 @@ export function dbToCard(review: {
   reps: number;
   lapses: number;
   state: number;
+  learningSteps: number;
   lastReview: Date | null;
 }): Card {
   return {
@@ -40,7 +41,7 @@ export function dbToCard(review: {
     scheduled_days: review.scheduledDays,
     reps: review.reps,
     lapses: review.lapses,
-    learning_steps: 0,
+    learning_steps: review.learningSteps,
     state: review.state as Card["state"],
   };
 }
@@ -56,6 +57,7 @@ export function cardToDb(card: Card) {
     reps: card.reps,
     lapses: card.lapses,
     state: card.state as number,
+    learningSteps: card.learning_steps,
     lastReview: new Date(),
   };
 }

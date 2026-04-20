@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { WordStatus } from "shared";
 import { apiFetch } from "../../lib/api";
 
 interface ReviewItem {
@@ -7,6 +8,7 @@ interface ReviewItem {
     id: string;
     term: string;
     translation: string | null;
+    status: number;
     notes: string | null;
     contextSentence: string | null;
     language: { name: string };
@@ -15,9 +17,20 @@ interface ReviewItem {
 
 interface WordEdits {
   translation?: string | null;
+  status?: number;
   notes?: string | null;
   contextSentence?: string | null;
 }
+
+const STATUS_BUTTONS: { key: number; short: string; hue: string }[] = [
+  { key: WordStatus.New, short: "N", hue: "var(--st-new)" },
+  { key: WordStatus.Learning1, short: "1", hue: "var(--st-l1)" },
+  { key: WordStatus.Learning2, short: "2", hue: "var(--st-l2)" },
+  { key: WordStatus.Learning3, short: "3", hue: "var(--st-l3)" },
+  { key: WordStatus.Learning4, short: "4", hue: "var(--st-l4)" },
+  { key: WordStatus.Known, short: "K", hue: "var(--st-known)" },
+  { key: WordStatus.Ignored, short: "×", hue: "var(--st-ignored)" },
+];
 
 interface FlashcardReviewProps {
   item: ReviewItem;
@@ -99,6 +112,7 @@ export default function FlashcardReview({
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [translation, setTranslation] = useState(item.word.translation ?? "");
+  const [status, setStatus] = useState(item.word.status);
   const [notes, setNotes] = useState(item.word.notes ?? "");
   const [contextSentence, setContextSentence] = useState(
     item.word.contextSentence ?? "",
@@ -109,6 +123,7 @@ export default function FlashcardReview({
     setPreview(null);
     setEditing(false);
     setTranslation(item.word.translation ?? "");
+    setStatus(item.word.status);
     setNotes(item.word.notes ?? "");
     setContextSentence(item.word.contextSentence ?? "");
     apiFetch<{ data: Preview }>(`/reviews/preview/${item.word.id}`).then(
@@ -118,6 +133,7 @@ export default function FlashcardReview({
   }, [
     item.word.id,
     item.word.translation,
+    item.word.status,
     item.word.notes,
     item.word.contextSentence,
   ]);
@@ -127,6 +143,7 @@ export default function FlashcardReview({
     try {
       await onUpdate({
         translation: translation.trim() || null,
+        status,
         notes: notes.trim() || null,
         contextSentence: contextSentence.trim() || null,
       });
@@ -138,6 +155,7 @@ export default function FlashcardReview({
 
   const handleCancel = () => {
     setTranslation(item.word.translation ?? "");
+    setStatus(item.word.status);
     setNotes(item.word.notes ?? "");
     setContextSentence(item.word.contextSentence ?? "");
     setEditing(false);
@@ -208,6 +226,38 @@ export default function FlashcardReview({
                 autoFocus
                 className="input"
               />
+            </div>
+            <div>
+              <div className="mono mb-1.5 text-[10px] uppercase tracking-[0.1em] text-ink-faint">
+                Status
+              </div>
+              <div className="flex gap-1">
+                {STATUS_BUTTONS.map((st) => {
+                  const active = st.key === status;
+                  return (
+                    <button
+                      key={st.key}
+                      type="button"
+                      onClick={() => setStatus(st.key)}
+                      className={`sans inline-flex flex-1 cursor-pointer items-center justify-center gap-1 rounded-[5px] border py-2 text-[12px] font-medium transition-all duration-100 ${
+                        active
+                          ? "border-ink bg-ink text-paper"
+                          : "border-rule bg-paper text-ink-soft"
+                      }`}
+                      title={`Status ${st.short}`}
+                    >
+                      <span
+                        className="inline-block h-1.5 w-1.5 rounded-full"
+                        style={{
+                          background: st.hue,
+                          opacity: st.key === WordStatus.Known ? 0 : 1,
+                        }}
+                      />
+                      {st.short}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
             <div>
               <div className="mono mb-1.5 text-[10px] uppercase tracking-[0.1em] text-ink-faint">

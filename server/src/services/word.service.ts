@@ -57,6 +57,7 @@ export async function createWord(data: {
         reps: card.reps,
         lapses: card.lapses,
         state: card.state,
+        learningSteps: card.learning_steps,
         lastReview: card.last_review ?? null,
       },
     });
@@ -99,6 +100,7 @@ export async function updateWord(
         reps: card.reps,
         lapses: card.lapses,
         state: card.state,
+        learningSteps: card.learning_steps,
         lastReview: card.last_review ?? null,
       },
     });
@@ -141,6 +143,7 @@ export async function batchUpdateStatus(
           reps: card.reps,
           lapses: card.lapses,
           state: card.state,
+          learningSteps: card.learning_steps,
           lastReview: card.last_review ?? null,
         })),
       });

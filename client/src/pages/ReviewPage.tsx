@@ -110,6 +110,7 @@ export default function ReviewPage() {
   const handleUpdate = useCallback(
     async (edits: {
       translation?: string | null;
+      status?: number;
       notes?: string | null;
       contextSentence?: string | null;
     }) => {

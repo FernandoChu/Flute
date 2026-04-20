@@ -90,6 +90,7 @@ describe("dbToCard / cardToDb", () => {
       reps: dbData.reps,
       lapses: dbData.lapses,
       state: dbData.state,
+      learningSteps: dbData.learningSteps,
       lastReview: dbData.lastReview,
     });
 
@@ -98,6 +99,28 @@ describe("dbToCard / cardToDb", () => {
     expect(restored.reps).toBe(original.reps);
     expect(restored.lapses).toBe(original.lapses);
     expect(restored.state).toBe(original.state);
+    expect(restored.learning_steps).toBe(original.learning_steps);
+  });
+
+  it("persists learning_steps progression through a Good rating", () => {
+    // A card mid-way through the learning ladder should round-trip without
+    // losing its step index — otherwise FSRS can't graduate it via Good.
+    const scheduled = {
+      due: new Date(),
+      stability: 1.5,
+      difficulty: 5,
+      elapsedDays: 0,
+      scheduledDays: 0,
+      reps: 1,
+      lapses: 0,
+      state: 1,
+      learningSteps: 1,
+      lastReview: new Date(),
+    };
+    const card = dbToCard(scheduled);
+    expect(card.learning_steps).toBe(1);
+    const roundTripped = cardToDb(card);
+    expect(roundTripped.learningSteps).toBe(1);
   });
 });
 
