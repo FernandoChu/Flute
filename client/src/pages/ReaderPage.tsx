@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link, useLocation } from "wouter";
+import { Link, useLocation, useSearch } from "wouter";
 import { normalizeWord, tokenize, extractSentence, WordStatus } from "shared";
 import { apiFetch } from "../lib/api";
 import { useWordStatuses } from "../hooks/useWordStatuses";
@@ -227,7 +227,8 @@ function LessonSelector({
               key={lesson.id}
               onClick={() => {
                 setOpen(false);
-                if (lesson.id !== currentLessonId) navigate(`/reader/${lesson.id}`);
+                if (lesson.id !== currentLessonId)
+                  navigate(`/reader/${lesson.id}?fresh=1`);
               }}
               className="sans"
               style={{
@@ -291,6 +292,19 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
   } | null>(null);
   const textContainerRef = useRef<HTMLDivElement>(null);
 
+  const [, navigate] = useLocation();
+  const search = useSearch();
+  // Captured once on mount — the dropdown navigates with `?fresh=1` to signal
+  // "open this lesson at page 1 regardless of stored progress."
+  const startFreshRef = useRef(new URLSearchParams(search).has("fresh"));
+
+  useEffect(() => {
+    if (!startFreshRef.current) return;
+    // Strip ?fresh=1 so a refresh doesn't keep re-resetting to page 1.
+    navigate(`/reader/${lessonId}`, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const [persistedTranslations, setPersistedTranslations] = useState<
     Map<number, string>
   >(new Map());
@@ -316,9 +330,13 @@ export default function ReaderPage({ lessonId }: { lessonId: string }) {
   // undefined while the query is still loading; once resolved, treat a missing
   // row as page 0 so the "touch on open" effect below still fires for fresh
   // lessons and the library banner picks them up.
-  const initialPage = progressData
-    ? (progressData.data?.currentPage ?? 0)
-    : undefined;
+  // When the user opened this lesson via the in-reader dropdown (`?fresh=1`),
+  // force page 0 regardless of any stored progress.
+  const initialPage = startFreshRef.current
+    ? 0
+    : progressData
+      ? (progressData.data?.currentPage ?? 0)
+      : undefined;
 
   const queryClient = useQueryClient();
   const saveProgress = useMutation({
