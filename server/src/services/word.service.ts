@@ -16,6 +16,7 @@ export async function createWord(data: {
   status?: number;
   notes?: string;
   contextSentence?: string;
+  contextSentenceTranslation?: string;
 }) {
   const word = await prisma.word.upsert({
     where: {
@@ -30,6 +31,9 @@ export async function createWord(data: {
       ...(data.status !== undefined && { status: data.status }),
       ...(data.notes !== undefined && { notes: data.notes }),
       ...(data.contextSentence !== undefined && { contextSentence: data.contextSentence }),
+      ...(data.contextSentenceTranslation !== undefined && {
+        contextSentenceTranslation: data.contextSentenceTranslation,
+      }),
     },
     create: {
       userId: data.userId,
@@ -39,6 +43,7 @@ export async function createWord(data: {
       status: data.status ?? 0,
       notes: data.notes ?? null,
       contextSentence: data.contextSentence ?? null,
+      contextSentenceTranslation: data.contextSentenceTranslation ?? null,
     },
     include: { review: true },
   });
@@ -73,6 +78,7 @@ export async function updateWord(
     status?: number;
     notes?: string;
     contextSentence?: string;
+    contextSentenceTranslation?: string;
   },
 ) {
   const word = await prisma.word.update({
@@ -82,6 +88,9 @@ export async function updateWord(
       ...(data.status !== undefined && { status: data.status }),
       ...(data.notes !== undefined && { notes: data.notes }),
       ...(data.contextSentence !== undefined && { contextSentence: data.contextSentence }),
+      ...(data.contextSentenceTranslation !== undefined && {
+        contextSentenceTranslation: data.contextSentenceTranslation,
+      }),
     },
     include: { review: true },
   });

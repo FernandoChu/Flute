@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { WordStatus } from "shared";
 import { apiFetch } from "../../lib/api";
 
@@ -11,6 +11,7 @@ interface ReviewItem {
     status: number;
     notes: string | null;
     contextSentence: string | null;
+    contextSentenceTranslation: string | null;
     language: { name: string };
   };
 }
@@ -20,6 +21,7 @@ interface WordEdits {
   status?: number;
   notes?: string | null;
   contextSentence?: string | null;
+  contextSentenceTranslation?: string | null;
 }
 
 const STATUS_BUTTONS: { key: number; short: string; hue: string }[] = [
@@ -117,6 +119,14 @@ export default function FlashcardReview({
   const [contextSentence, setContextSentence] = useState(
     item.word.contextSentence ?? "",
   );
+  const [contextSentenceTranslation, setContextSentenceTranslation] = useState(
+    item.word.contextSentenceTranslation ?? "",
+  );
+  const [sentenceTranslation, setSentenceTranslation] = useState<string | null>(
+    item.word.contextSentenceTranslation,
+  );
+  const [sentenceTranslating, setSentenceTranslating] = useState(false);
+  const sentenceFetchRef = useRef<string | null>(null);
 
   useEffect(() => {
     setFlipped(false);
@@ -126,6 +136,10 @@ export default function FlashcardReview({
     setStatus(item.word.status);
     setNotes(item.word.notes ?? "");
     setContextSentence(item.word.contextSentence ?? "");
+    setContextSentenceTranslation(item.word.contextSentenceTranslation ?? "");
+    setSentenceTranslation(item.word.contextSentenceTranslation);
+    setSentenceTranslating(false);
+    sentenceFetchRef.current = null;
     apiFetch<{ data: Preview }>(`/reviews/preview/${item.word.id}`).then(
       (res) => setPreview(res.data),
       () => {},
@@ -136,7 +150,32 @@ export default function FlashcardReview({
     item.word.status,
     item.word.notes,
     item.word.contextSentence,
+    item.word.contextSentenceTranslation,
   ]);
+
+  useEffect(() => {
+    if (!flipped) return;
+    if (!item.word.contextSentence) return;
+    if (item.word.contextSentenceTranslation) return;
+    if (sentenceFetchRef.current === item.word.id) return;
+
+    sentenceFetchRef.current = item.word.id;
+    setSentenceTranslating(true);
+    apiFetch<{ data: { translation: string | null } }>(
+      `/reviews/${item.word.id}/translate-context`,
+      { method: "POST" },
+    )
+      .then((res) => {
+        if (sentenceFetchRef.current !== item.word.id) return;
+        if (res.data.translation) setSentenceTranslation(res.data.translation);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (sentenceFetchRef.current === item.word.id) {
+          setSentenceTranslating(false);
+        }
+      });
+  }, [flipped, item.word.id, item.word.contextSentence, item.word.contextSentenceTranslation]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -146,6 +185,7 @@ export default function FlashcardReview({
         status,
         notes: notes.trim() || null,
         contextSentence: contextSentence.trim() || null,
+        contextSentenceTranslation: contextSentenceTranslation.trim() || null,
       });
       setEditing(false);
     } finally {
@@ -158,6 +198,7 @@ export default function FlashcardReview({
     setStatus(item.word.status);
     setNotes(item.word.notes ?? "");
     setContextSentence(item.word.contextSentence ?? "");
+    setContextSentenceTranslation(item.word.contextSentenceTranslation ?? "");
     setEditing(false);
   };
 
@@ -283,6 +324,18 @@ export default function FlashcardReview({
                 className="input resize-y"
               />
             </div>
+            <div>
+              <div className="mono mb-1.5 text-[10px] uppercase tracking-[0.1em] text-ink-faint">
+                Context translation
+              </div>
+              <textarea
+                value={contextSentenceTranslation}
+                onChange={(e) => setContextSentenceTranslation(e.target.value)}
+                placeholder="Translation of context sentence"
+                rows={2}
+                className="input resize-y"
+              />
+            </div>
             <div className="mt-2 flex gap-2">
               <button
                 onClick={handleSave}
@@ -321,8 +374,14 @@ export default function FlashcardReview({
                 <div className="mb-3 font-body text-[26px] font-normal italic text-ink">
                   {item.word.translation || "—"}
                 </div>
+                {hasSentence && (
+                  <p className="mx-auto mt-4 max-w-[600px] font-body text-[17px] italic leading-[1.5] text-ink-soft">
+                    {sentenceTranslation ||
+                      (sentenceTranslating ? "Translating\u2026" : null)}
+                  </p>
+                )}
                 {item.word.notes && (
-                  <div className="mt-1.5 whitespace-pre-wrap text-[13px] text-ink-faint">
+                  <div className="mt-3 whitespace-pre-wrap text-[13px] text-ink-faint">
                     {item.word.notes}
                   </div>
                 )}

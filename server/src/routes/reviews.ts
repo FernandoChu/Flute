@@ -10,6 +10,8 @@ import {
   previewRatings,
   formatInterval,
 } from "../services/srs.service.js";
+import { decrypt } from "../services/encryption.js";
+import { getProvider } from "../services/translation/factory.js";
 
 const router = Router();
 router.use(requireAuth);
@@ -39,6 +41,7 @@ router.get("/due", async (req: Request, res: Response, next: NextFunction) => {
             status: true,
             notes: true,
             contextSentence: true,
+            contextSentenceTranslation: true,
             languageId: true,
             language: { select: { code: true, name: true } },
           },
@@ -169,6 +172,86 @@ router.get(
 
       res.json({ data: preview });
     } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// POST /api/reviews/:wordId/translate-context — translate word.contextSentence into user's native language, persist, and return it
+router.post(
+  "/:wordId/translate-context",
+  async (req: Request<{ wordId: string }>, res: Response, next: NextFunction) => {
+    try {
+      const { wordId } = req.params;
+
+      const word = await prisma.word.findUnique({
+        where: { id: wordId },
+        include: { language: { select: { code: true } } },
+      });
+
+      if (!word) {
+        res.status(404).json({ error: { message: "Word not found" } });
+        return;
+      }
+      if (word.userId !== req.user.id) {
+        res.status(403).json({ error: { message: "Forbidden" } });
+        return;
+      }
+      if (!word.contextSentence) {
+        res.status(400).json({ error: { message: "Word has no context sentence" } });
+        return;
+      }
+
+      if (word.contextSentenceTranslation) {
+        res.json({ data: { translation: word.contextSentenceTranslation } });
+        return;
+      }
+
+      if (!req.user.nativeLanguageId) {
+        res.status(400).json({
+          error: { message: "Native language not set. Configure it in Settings." },
+        });
+        return;
+      }
+
+      const nativeLang = await prisma.language.findUnique({
+        where: { id: req.user.nativeLanguageId },
+        select: { code: true },
+      });
+      if (!nativeLang) {
+        res.status(400).json({ error: { message: "Native language not found" } });
+        return;
+      }
+
+      const key = await prisma.apiKey.findFirst({ where: { userId: req.user.id } });
+      if (!key) {
+        res.status(400).json({
+          error: { message: "No translation API key configured. Add one in Settings." },
+        });
+        return;
+      }
+
+      const provider = getProvider(key.provider, decrypt(key.apiKeyEncrypted));
+      const result = await provider.translateSentence(
+        word.contextSentence,
+        word.language.code,
+        nativeLang.code,
+      );
+
+      const updated = await prisma.word.update({
+        where: { id: wordId },
+        data: { contextSentenceTranslation: result.translation },
+        select: { contextSentenceTranslation: true },
+      });
+
+      res.json({ data: { translation: updated.contextSentenceTranslation } });
+    } catch (err: any) {
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        res.status(400).json({
+          error: { message: "Translation API key is invalid or expired. Update it in Settings." },
+        });
+        return;
+      }
       next(err);
     }
   },

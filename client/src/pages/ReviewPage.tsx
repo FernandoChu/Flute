@@ -25,6 +25,7 @@ interface ReviewItem {
     status: number;
     notes: string | null;
     contextSentence: string | null;
+    contextSentenceTranslation: string | null;
     languageId: number;
     language: { code: string; name: string };
   };
@@ -113,6 +114,7 @@ export default function ReviewPage() {
       status?: number;
       notes?: string | null;
       contextSentence?: string | null;
+      contextSentenceTranslation?: string | null;
     }) => {
       if (!currentItem) return;
       const wordId = currentItem.word.id;

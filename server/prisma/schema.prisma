@@ -111,7 +111,8 @@ model Word {
   translation     String?
   status          Int      @default(0)
   notes           String?
-  contextSentence String?  @map("context_sentence")
+  contextSentence            String? @map("context_sentence")
+  contextSentenceTranslation String? @map("context_sentence_translation")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 

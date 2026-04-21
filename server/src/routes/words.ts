@@ -30,7 +30,15 @@ router.get("/", async (req: Request, res: Response, next: NextFunction) => {
 // POST /api/words
 router.post("/", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { languageId, term, translation, status, notes, contextSentence } = req.body;
+    const {
+      languageId,
+      term,
+      translation,
+      status,
+      notes,
+      contextSentence,
+      contextSentenceTranslation,
+    } = req.body;
 
     if (!languageId || !term?.trim()) {
       res
@@ -47,6 +55,7 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
       status: status !== undefined ? Number(status) : undefined,
       notes,
       contextSentence,
+      contextSentenceTranslation,
     });
 
     res.status(201).json({ data: word });
@@ -76,12 +85,19 @@ router.put(
         return;
       }
 
-      const { translation, status, notes, contextSentence } = req.body;
+      const {
+        translation,
+        status,
+        notes,
+        contextSentence,
+        contextSentenceTranslation,
+      } = req.body;
       const word = await updateWord(id, {
         translation,
         status: status !== undefined ? Number(status) : undefined,
         notes,
         contextSentence,
+        contextSentenceTranslation,
       });
 
       res.json({ data: word });

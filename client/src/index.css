@@ -392,13 +392,13 @@ select {
 
 .word-slot-annotation {
   position: absolute;
-  top: 0;
+  top: 0.3rem;
   left: 50%;
   transform: translateX(-50%);
   white-space: nowrap;
   font-size: 0.875rem;
   font-style: italic;
-  line-height: 1.2rem;
+  line-height: 1.4rem;
   cursor: pointer;
   color: var(--accent);
   font-family: var(--font-body);
