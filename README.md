@@ -28,7 +28,7 @@ To pause run `docker compose stop`, to re-start `docker compose up -d`.
 ## Suggested usage flow
 
 1. Get an `epub` version of the book you want to read in the language you want to learn. 
-   - You can use the [translate-book](https://github.com/FernandoChu/translate-book`) skill to translate a source epub to your target language, further specifying difficulty level.
+   - You can use the [translate-book](https://github.com/FernandoChu/translate-book) skill to translate a source epub to your target language, further specifying difficulty level.
    - The TOC of the epub splits the import into "lessons", so ensure it is correct.
 2. Import the epub in the app (Library > New collection > Import file).
 3. Read, and select words/sentences to translate them if needed.
